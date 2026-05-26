@@ -33,6 +33,17 @@ class _AdminShellState extends State<AdminShell> {
         activeIcon: Icons.notifications,  labelAr: 'الإشعارات', labelEn: 'Notify'),
     _NavItem(path: Routes.adminUsers,     icon: Icons.people_outline,
         activeIcon: Icons.people,         labelAr: 'المستخدمون',labelEn: 'Users'),
+    // CMS Content Management
+    _NavItem(path: Routes.adminCmsBibles,     icon: Icons.book_outlined,
+        activeIcon: Icons.book,            labelAr: 'الكتب المقدسة', labelEn: 'Bibles'),
+    _NavItem(path: Routes.adminCmsHymns,      icon: Icons.music_note_outlined,
+        activeIcon: Icons.music_note,      labelAr: 'التسابيح',  labelEn: 'Hymns'),
+    _NavItem(path: Routes.adminCmsPrayers,    icon: Icons.favorite_outline,
+        activeIcon: Icons.favorite,        labelAr: 'الصلوات',   labelEn: 'Prayers'),
+    _NavItem(path: Routes.adminCmsLiturgies,  icon: Icons.church_outlined,
+        activeIcon: Icons.church,          labelAr: 'القداسات',  labelEn: 'Liturgies'),
+    _NavItem(path: Routes.adminCmsSaints,     icon: Icons.person_outline,
+        activeIcon: Icons.person,          labelAr: 'القديسون',  labelEn: 'Saints'),
   ];
 
   @override

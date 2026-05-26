@@ -113,7 +113,7 @@ class ServiceLocator {
     sl.registerSingleton<SessionService>(
       SessionService(sl<SharedPreferences>()),
     );
-    sl.registerFactory<SettingsCubit>(
+    sl.registerLazySingleton<SettingsCubit>(
       () => SettingsCubit(sl<SettingsService>()),
     );
     sl.registerFactory<AuthCubit>(

@@ -24,9 +24,11 @@ import 'package:go_router/go_router.dart';
 import '../../admin/admin_shell.dart';
 import '../../admin/books/books_manager_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
+import '../../admin/content/cms_additional_content.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
 import '../../admin/notifications/admin_notification_screen.dart';
 import '../../admin/users/admin_users_screen.dart';
+import '../../admin/content/cms_content_manager.dart';
 import '../../data/models/book_model.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/splash_screen.dart';
@@ -53,6 +55,13 @@ abstract class Routes {
   static const String adminBooks      = '/admin/books';
   static const String adminNotify     = '/admin/notify';
   static const String adminUsers      = '/admin/users';
+
+  // CMS
+  static const String adminCmsBibles     = '/admin/cms/bibles';
+  static const String adminCmsHymns      = '/admin/cms/hymns';
+  static const String adminCmsPrayers    = '/admin/cms/prayers';
+  static const String adminCmsLiturgies  = '/admin/cms/liturgies';
+  static const String adminCmsSaints     = '/admin/cms/saints';
 
   // Helpers
   static String bookDetailPath(String id) => '/home/book/$id';
@@ -188,6 +197,31 @@ class AppRouter {
             path:    Routes.adminUsers,
             name:    'adminUsers',
             builder: (_, __) => const AdminUsersScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsBibles,
+            name:    'adminCmsBibles',
+            builder: (_, __) => const BiblesManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsHymns,
+            name:    'adminCmsHymns',
+            builder: (_, __) => const HymnsManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsPrayers,
+            name:    'adminCmsPrayers',
+            builder: (_, __) => const PrayersManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsLiturgies,
+            name:    'adminCmsLiturgies',
+            builder: (_, __) => const LiturgiesManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsSaints,
+            name:    'adminCmsSaints',
+            builder: (_, __) => const SaintsManagerScreen(),
           ),
         ],
       ),

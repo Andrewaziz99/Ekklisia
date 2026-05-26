@@ -28,11 +28,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
   String?    _errorMsg;
 
   // Simulated sent history
-  final List<_SentNotif> _history = [
-    _SentNotif('كتاب القداسات الكبرى', 'تمت إضافة كتاب جديد إلى المكتبة', '3 days ago', 1241),
-    _SentNotif('أجبية الساعات',         'إصدار محدّث متاح الآن',            '1 week ago',  892),
-    _SentNotif('New: Coptic Calendar',  'Feasts and saints for this month',  '2 weeks ago', 634),
-  ];
+  final List<_SentNotif> _history = [];
 
   @override
   void dispose() {
@@ -174,7 +170,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
               final published =
                   state.books.where((b) => b.isPublished).toList();
               return DropdownButtonFormField<BookModel?>(
-                value: _linkedBook,
+                initialValue: _linkedBook,
                 dropdownColor: EkkleiciaColors.bgElevated,
                 style: const TextStyle(
                     color: EkkleiciaColors.textPrimary, fontSize: 13),
@@ -228,7 +224,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: EkkleiciaColors.maroon.withOpacity(0.2),
+                color: EkkleiciaColors.maroon.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                     color: EkkleiciaColors.maroon, width: 0.5),
@@ -275,7 +271,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                     : EkkleiciaColors.gold,
                 disabledBackgroundColor: _sent
                     ? EkkleiciaColors.tealMid
-                    : EkkleiciaColors.goldDim.withOpacity(0.5),
+                    : EkkleiciaColors.goldDim.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),

@@ -1,14 +1,4 @@
 // lib/features/settings/screens/settings_screen.dart
-// ─────────────────────────────────────────────────────────────────────────────
-// Settings Screen — three sections only:
-//   1. User profile card
-//   2. Font size picker
-//   3. Display language selector
-//   4. Sign-out button
-//
-// Lives inside HomeScreen's IndexedStack (tab 3), so uses CustomScrollView
-// with SliverAppBar — no nested Scaffold.
-// ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,55 +10,98 @@ import '../../../services/settings_service.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/auth_state.dart';
 import 'cubit/settings_cubit.dart';
-import 'cubit/settings_state.dart';
 
-
-class SettingsScreen extends StatelessWidget {
+// ═══════════════════════════════════════════════════════════════════════════
+// SETTINGS SCREEN  — StatefulWidget, owns local state, no BlocBuilder needed
+// ═══════════════════════════════════════════════════════════════════════════
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final SettingsCubit _cubit   = sl<SettingsCubit>();
+  final SettingsService _svc   = sl<SettingsService>();
+
+  late FontScale   _fontScale;
+  late AppLanguage _language;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed from the persisted service so we always start from saved values
+    _fontScale = _svc.fontScale;
+    _language  = _svc.language;
+  }
+
+  // ── Setters — update local state immediately, then persist ───────────────
+
+  void _setFontScale(FontScale fs) async {
+    setState(() => _fontScale = fs);
+    try {
+      await _cubit.setFontScale(fs);  // persists + emits cubit state
+      debugPrint('✓ Font scale changed to: ${fs.label}');
+    } catch (e) {
+      debugPrint('✗ Font scale error: $e');
+    }
+  }
+
+  void _setLanguage(AppLanguage lang) async {
+    setState(() => _language = lang);
+    try {
+      await _cubit.setLanguage(lang);  // persists + emits cubit state
+      debugPrint('✓ Language changed to: ${lang.label}');
+    } catch (e) {
+      debugPrint('✗ Language error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SettingsCubit, SettingsState>(
-      bloc: sl<SettingsCubit>(),
-      builder: (context, settings) {
-        return CustomScrollView(
-          physics: const ClampingScrollPhysics(),
-          slivers: [
-            _SettingsAppBar(),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 48),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // ── Profile ──────────────────────────────────────────
-                  _ProfileCard(),
-                  const SizedBox(height: 28),
+    return CustomScrollView(
+      physics: const ClampingScrollPhysics(),
+      slivers: [
+        _SettingsAppBar(),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 48),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // ── Profile ──────────────────────────────────────────────
+              _ProfileCard(),
+              const SizedBox(height: 28),
 
-                  // ── Font Size ────────────────────────────────────────
-                  _SectionLabel('حجم الخط', 'Font Size'),
-                  const SizedBox(height: 10),
-                  _FontSizeCard(current: settings.fontScale),
-                  const SizedBox(height: 28),
-
-                  // ── Language ─────────────────────────────────────────
-                  _SectionLabel('لغة العرض', 'Display Language'),
-                  const SizedBox(height: 10),
-                  _LanguageCard(current: settings.language),
-                  const SizedBox(height: 28),
-
-                  // ── Sign Out ─────────────────────────────────────────
-                  _SectionLabel('الحساب', 'Account'),
-                  const SizedBox(height: 10),
-                  _SignOutCard(),
-                  const SizedBox(height: 32),
-
-                  // ── Footer ───────────────────────────────────────────
-                  _Footer(),
-                ]),
+              // ── Font Size ────────────────────────────────────────────
+              _SectionLabel('حجم الخط', 'Font Size'),
+              const SizedBox(height: 10),
+              _FontSizeCard(
+                current: _fontScale,
+                onChanged: _setFontScale,
               ),
-            ),
-          ],
-        );
-      },
+              const SizedBox(height: 28),
+
+              // ── Language ─────────────────────────────────────────────
+              _SectionLabel('لغة العرض', 'Display Language'),
+              const SizedBox(height: 10),
+              _LanguageCard(
+                current: _language,
+                onChanged: _setLanguage,
+              ),
+              const SizedBox(height: 28),
+
+              // ── Sign Out ─────────────────────────────────────────────
+              _SectionLabel('الحساب', 'Account'),
+              const SizedBox(height: 10),
+              _SignOutCard(),
+              const SizedBox(height: 32),
+
+              // ── Footer ───────────────────────────────────────────────
+              _Footer(),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -90,10 +123,7 @@ class _SettingsAppBar extends StatelessWidget {
           decoration: const BoxDecoration(
             gradient: EkkleiciaColors.headerGradient,
             border: Border(
-              bottom: BorderSide(
-                color: EkkleiciaColors.goldBorder,
-                width: 0.5,
-              ),
+              bottom: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5),
             ),
           ),
           child: SafeArea(
@@ -101,18 +131,14 @@ class _SettingsAppBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: const [
                 Padding(
-                  padding: EdgeInsets.only(bottom: 14),
+                  padding: EdgeInsets.only(bottom: 8),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '✦',
-                        style: TextStyle(
-                          color: EkkleiciaColors.goldDim,
-                          fontSize: 11,
-                        ),
-                      ),
-                      SizedBox(height: 6),
+                      Text('✦',
+                          style: TextStyle(
+                              color: EkkleiciaColors.goldDim, fontSize: 11)),
+                      SizedBox(height: 4),
                       Text(
                         'الإعدادات',
                         style: TextStyle(
@@ -152,7 +178,6 @@ class _ProfileCard extends StatelessWidget {
       builder: (context, auth) {
         final user   = auth.user;
         final method = auth.signInMethod;
-
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
@@ -162,27 +187,20 @@ class _ProfileCard extends StatelessWidget {
               colors: [EkkleiciaColors.bgMid, EkkleiciaColors.bgElevated],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: EkkleiciaColors.goldBorder,
-              width: 0.6,
-            ),
+            border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.6),
           ),
           child: Row(
             children: [
-              // Avatar
               _Avatar(
                 photoUrl: user?.photoUrl ?? '',
                 initials: user?.initials ?? '؟',
                 isAdmin: auth.isAdmin,
               ),
               const SizedBox(width: 14),
-
-              // Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Display name
                     if (user?.displayName.isNotEmpty == true) ...[
                       Text(
                         user!.displayName,
@@ -197,22 +215,16 @@ class _ProfileCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                     ],
-
-                    // Email or guest label
                     Text(
                       auth.isAnonymous
                           ? 'ضيف — قراءة فقط'
                           : (user?.email ?? ''),
                       style: const TextStyle(
-                        color: EkkleiciaColors.textSecondary,
-                        fontSize: 12,
-                      ),
+                          color: EkkleiciaColors.textSecondary, fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-
-                    // Badges row
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
@@ -229,8 +241,6 @@ class _ProfileCard extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Admin shortcut
               if (auth.isAdmin) ...[
                 const SizedBox(width: 8),
                 GestureDetector(
@@ -240,9 +250,7 @@ class _ProfileCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: EkkleiciaColors.goldSubtle,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: EkkleiciaColors.goldBorder,
-                      ),
+                      border: Border.all(color: EkkleiciaColors.goldBorder),
                     ),
                     child: const Icon(
                       Icons.admin_panel_settings_outlined,
@@ -264,11 +272,11 @@ class _ProfileCard extends StatelessWidget {
 // FONT SIZE CARD
 // ═══════════════════════════════════════════════════════════════════════════
 class _FontSizeCard extends StatelessWidget {
-  const _FontSizeCard({required this.current});
-  final FontScale current;
+  const _FontSizeCard({required this.current, required this.onChanged});
+  final FontScale             current;
+  final ValueChanged<FontScale> onChanged;
 
-  // Preview sizes for the sample Arabic letter
-  static const Map<FontScale, double> _previewSizes = {
+  static const Map<FontScale, double> _tileSizes = {
     FontScale.small:      14,
     FontScale.medium:     18,
     FontScale.large:      24,
@@ -277,13 +285,15 @@ class _FontSizeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double previewSize = (_tileSizes[current] ?? 18) * 0.95;
+
     return _Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Current label
+            // ── Header ──────────────────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -295,22 +305,28 @@ class _FontSizeCard extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: EkkleiciaColors.goldSubtle,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                        color: EkkleiciaColors.goldBorder, width: 0.5),
-                  ),
-                  child: Text(
-                    current.label,
-                    style: const TextStyle(
-                      fontFamily: 'Scheherazade',
-                      color: EkkleiciaColors.gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: Container(
+                    key: ValueKey(current),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: EkkleiciaColors.goldSubtle,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: EkkleiciaColors.goldBorder, width: 0.5),
+                    ),
+                    child: Text(
+                      current.label,
+                      style: const TextStyle(
+                        fontFamily: 'Scheherazade',
+                        color: EkkleiciaColors.gold,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -318,17 +334,16 @@ class _FontSizeCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // Four tappable tiles
+            // ── Four tiles ───────────────────────────────────────────────
             Row(
               children: FontScale.values.map((fs) {
                 final isActive = current == fs;
                 return Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
-                      left: fs != FontScale.values.first ? 6 : 0,
-                    ),
+                        left: fs != FontScale.values.first ? 6 : 0),
                     child: GestureDetector(
-                      onTap: () => sl<SettingsCubit>().setFontScale(fs),
+                      onTap: () => onChanged(fs),   // ← calls setState above
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         curve: Curves.easeInOut,
@@ -350,12 +365,13 @@ class _FontSizeCard extends StatelessWidget {
                           children: [
                             Text(
                               'أ',
+                              textScaleFactor: 1,
                               style: TextStyle(
                                 fontFamily: 'Scheherazade',
                                 color: isActive
                                     ? EkkleiciaColors.goldLight
                                     : EkkleiciaColors.textSecondary,
-                                fontSize: _previewSizes[fs],
+                                fontSize: _tileSizes[fs],
                                 fontWeight: isActive
                                     ? FontWeight.w700
                                     : FontWeight.w400,
@@ -382,28 +398,76 @@ class _FontSizeCard extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // Live preview text
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: EkkleiciaColors.bgParchment.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: EkkleiciaColors.goldBorder.withValues(alpha: 0.4),
-                    width: 0.5),
+            // ── Live preview ─────────────────────────────────────────────
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontFamily: 'Scheherazade',
+                color: EkkleiciaColors.textPrimary,
+                fontSize: previewSize,
+                height: 1.7,
               ),
-              child: Text(
-                'أبانا الذي في السماوات، ليتقدس اسمك',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textPrimary,
-                  fontSize: (_previewSizes[current] ?? 18) * 0.85,
-                  height: 1.7,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color:
+                  EkkleiciaColors.bgParchment.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: EkkleiciaColors.goldBorder.withValues(alpha: 0.4),
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'أبانا الذي في السماوات، ليتقدس اسمك',
+                      textAlign: TextAlign.center,
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        fontFamily: 'Scheherazade',
+                        color: EkkleiciaColors.textPrimary,
+                        fontSize: previewSize,
+                        height: 1.7,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Our Father who art in heaven, hallowed be thy name',
+                      textAlign: TextAlign.center,
+                      textScaleFactor: 1,
+                      style: TextStyle(
+                        color: EkkleiciaColors.textSecondary,
+                        fontSize: previewSize * 0.72,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Note ────────────────────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.info_outline,
+                    size: 11, color: EkkleiciaColors.textSecondary),
+                SizedBox(width: 5),
+                Text(
+                  'يُطبَّق الحجم على كامل النصوص في التطبيق',
+                  textScaleFactor: 1,
+                  style: TextStyle(
+                    fontFamily: 'Scheherazade',
+                    color: EkkleiciaColors.textSecondary,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -416,8 +480,9 @@ class _FontSizeCard extends StatelessWidget {
 // LANGUAGE CARD
 // ═══════════════════════════════════════════════════════════════════════════
 class _LanguageCard extends StatelessWidget {
-  const _LanguageCard({required this.current});
-  final AppLanguage current;
+  const _LanguageCard({required this.current, required this.onChanged});
+  final AppLanguage               current;
+  final ValueChanged<AppLanguage> onChanged;
 
   static const Map<AppLanguage, String?> _fontFamilies = {
     AppLanguage.arabic:  'Scheherazade',
@@ -440,6 +505,13 @@ class _LanguageCard extends StatelessWidget {
     AppLanguage.english: 'English',
   };
 
+  static const Map<AppLanguage, String> _samples = {
+    AppLanguage.arabic:  'الكتاب المقدس',
+    AppLanguage.coptic:  'ⲡⲓⲃⲓⲃⲗⲟⲥ',
+    AppLanguage.greek:   'Ἁγία Γραφή',
+    AppLanguage.english: 'Holy Scripture',
+  };
+
   @override
   Widget build(BuildContext context) {
     return _Card(
@@ -453,71 +525,107 @@ class _LanguageCard extends StatelessWidget {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Material(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
                 color: isActive
                     ? EkkleiciaColors.goldSubtle
                     : Colors.transparent,
-                child: InkWell(
-                  onTap: () => sl<SettingsCubit>().setLanguage(lang),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 15),
-                    child: Row(
-                      children: [
-                        // Flag
-                        Text(
-                          lang.flagEmoji,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 14),
-
-                        // Names
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _nativeNames[lang] ?? lang.label,
-                                style: TextStyle(
-                                  fontFamily: _fontFamilies[lang],
-                                  color: isActive
-                                      ? EkkleiciaColors.goldLight
-                                      : EkkleiciaColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => onChanged(lang),   // ← calls setState above
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          // Flag badge
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? EkkleiciaColors.gold.withValues(alpha: 0.15)
+                                  : EkkleiciaColors.bgPrimary,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: EkkleiciaColors.goldBorder
+                                    .withValues(alpha: isActive ? 1.0 : 0.5),
+                                width: 0.5,
                               ),
-                              const SizedBox(height: 1),
-                              Text(
-                                _subtitles[lang] ?? '',
-                                style: const TextStyle(
-                                  color: EkkleiciaColors.textSecondary,
-                                  fontSize: 10,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ],
+                            ),
+                            child: Center(
+                              child: Text(lang.flagEmoji,
+                                  style: const TextStyle(fontSize: 20)),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 14),
 
-                        // Check indicator
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: isActive
-                              ? const Icon(
-                            Icons.check_circle,
-                            size: 22,
-                            color: EkkleiciaColors.gold,
-                            key: ValueKey('on'),
-                          )
-                              : const Icon(
-                            Icons.radio_button_unchecked,
-                            size: 22,
-                            color: EkkleiciaColors.goldBorder,
-                            key: ValueKey('off'),
+                          // Names + sample
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _nativeNames[lang] ?? lang.label,
+                                  textScaleFactor: 1,
+                                  style: TextStyle(
+                                    fontFamily: _fontFamilies[lang],
+                                    color: isActive
+                                        ? EkkleiciaColors.goldLight
+                                        : EkkleiciaColors.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Text(
+                                      _subtitles[lang] ?? '',
+                                      textScaleFactor: 1,
+                                      style: const TextStyle(
+                                        color: EkkleiciaColors.textSecondary,
+                                        fontSize: 10,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '· ${_samples[lang] ?? ''}',
+                                      textScaleFactor: 1,
+                                      style: TextStyle(
+                                        fontFamily: _fontFamilies[lang],
+                                        color: isActive
+                                            ? EkkleiciaColors.gold
+                                            .withValues(alpha: 0.7)
+                                            : EkkleiciaColors.textSecondary
+                                            .withValues(alpha: 0.55),
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+
+                          // Check indicator
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: isActive
+                                ? const Icon(Icons.check_circle,
+                                size: 22,
+                                color: EkkleiciaColors.gold,
+                                key: ValueKey('on'))
+                                : const Icon(Icons.radio_button_unchecked,
+                                size: 22,
+                                color: EkkleiciaColors.goldBorder,
+                                key: ValueKey('off')),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -527,7 +635,7 @@ class _LanguageCard extends StatelessWidget {
                   height: 1,
                   thickness: 0.4,
                   color: EkkleiciaColors.goldBorder,
-                  indent: 56,
+                  indent: 70,
                   endIndent: 16,
                 ),
             ],
@@ -539,7 +647,7 @@ class _LanguageCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SIGN-OUT CARD
+// SIGN-OUT CARD  — preserved exactly as original
 // ═══════════════════════════════════════════════════════════════════════════
 class _SignOutCard extends StatefulWidget {
   @override
@@ -550,7 +658,6 @@ class _SignOutCardState extends State<_SignOutCard> {
   bool _loading = false;
 
   Future<void> _signOut() async {
-    // Confirm
     final confirm = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.75),
@@ -580,7 +687,8 @@ class _SignOutCardState extends State<_SignOutCard> {
           borderRadius: BorderRadius.circular(14),
           onTap: _loading ? null : _signOut,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
                 Container(
@@ -602,16 +710,12 @@ class _SignOutCardState extends State<_SignOutCard> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation(
-                          EkkleiciaColors.maroonMid,
-                        ),
+                            EkkleiciaColors.maroonMid),
                       ),
                     ),
                   )
-                      : const Icon(
-                    Icons.logout_outlined,
-                    size: 18,
-                    color: EkkleiciaColors.maroonMid,
-                  ),
+                      : const Icon(Icons.logout_outlined,
+                      size: 18, color: EkkleiciaColors.maroonMid),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -654,7 +758,7 @@ class _SignOutCardState extends State<_SignOutCard> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CONFIRMATION DIALOG (reusable)
+// CONFIRMATION DIALOG
 // ═══════════════════════════════════════════════════════════════════════════
 class _ConfirmDialog extends StatelessWidget {
   const _ConfirmDialog({
@@ -668,9 +772,7 @@ class _ConfirmDialog extends StatelessWidget {
 
   final IconData icon;
   final Color    iconColor;
-  final String   title;
-  final String   body;
-  final String   confirmLabel;
+  final String   title, body, confirmLabel;
   final Color    confirmColor;
 
   @override
@@ -687,7 +789,6 @@ class _ConfirmDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon circle
             Container(
               width: 56,
               height: 56,
@@ -700,33 +801,23 @@ class _ConfirmDialog extends StatelessWidget {
               child: Icon(icon, size: 24, color: iconColor),
             ),
             const SizedBox(height: 16),
-
-            // Title
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(title,
+                style: const TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: EkkleiciaColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                )),
             const SizedBox(height: 8),
-
-            // Body
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary,
-                fontSize: 14,
-                height: 1.6,
-              ),
-            ),
+            Text(body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: EkkleiciaColors.textSecondary,
+                  fontSize: 14,
+                  height: 1.6,
+                )),
             const SizedBox(height: 24),
-
-            // Buttons
             Row(children: [
               Expanded(
                 child: OutlinedButton(
@@ -739,13 +830,9 @@ class _ConfirmDialog extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text(
-                    'إلغاء',
-                    style: TextStyle(
-                      fontFamily: 'Scheherazade',
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: const Text('إلغاء',
+                      style: TextStyle(
+                          fontFamily: 'Scheherazade', fontSize: 14)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -760,14 +847,12 @@ class _ConfirmDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
                   ),
-                  child: Text(
-                    confirmLabel,
-                    style: const TextStyle(
-                      fontFamily: 'Scheherazade',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: Text(confirmLabel,
+                      style: const TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      )),
                 ),
               ),
             ]),
@@ -786,23 +871,17 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Column(
       children: [
-        Text(
-          '✦  ✦  ✦',
-          style: TextStyle(
-            color: EkkleiciaColors.goldDim,
-            fontSize: 9,
-            letterSpacing: 8,
-          ),
-        ),
+        Text('✦  ✦  ✦',
+            style: TextStyle(
+                color: EkkleiciaColors.goldDim,
+                fontSize: 9,
+                letterSpacing: 8)),
         SizedBox(height: 6),
-        Text(
-          'الكنيسة القبطية الأرثوذكسية',
-          style: TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary,
-            fontSize: 11,
-          ),
-        ),
+        Text('الكنيسة القبطية الأرثوذكسية',
+            style: TextStyle(
+                fontFamily: 'Scheherazade',
+                color: EkkleiciaColors.textSecondary,
+                fontSize: 11)),
       ],
     );
   }
@@ -812,7 +891,6 @@ class _Footer extends StatelessWidget {
 // SHARED PRIMITIVES
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// Gold-left-bar section label
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.ar, this.en);
   final String ar, en;
@@ -830,30 +908,25 @@ class _SectionLabel extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 9),
-        Text(
-          ar,
-          style: const TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        Text(ar,
+            style: const TextStyle(
+              fontFamily: 'Scheherazade',
+              color: EkkleiciaColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            )),
         const SizedBox(width: 8),
-        Text(
-          en,
-          style: const TextStyle(
-            color: EkkleiciaColors.textSecondary,
-            fontSize: 10,
-            letterSpacing: 0.8,
-          ),
-        ),
+        Text(en,
+            style: const TextStyle(
+              color: EkkleiciaColors.textSecondary,
+              fontSize: 10,
+              letterSpacing: 0.8,
+            )),
       ],
     );
   }
 }
 
-/// Rounded card container with gold border
 class _Card extends StatelessWidget {
   const _Card({required this.child});
   final Widget child;
@@ -864,10 +937,7 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: EkkleiciaColors.bgMid,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: EkkleiciaColors.goldBorder,
-          width: 0.5,
-        ),
+        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
@@ -877,7 +947,6 @@ class _Card extends StatelessWidget {
   }
 }
 
-/// Small pill badge
 class _Chip extends StatelessWidget {
   const _Chip(this.label, this.color);
   final String label;
@@ -892,20 +961,17 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: color.withValues(alpha: 0.35), width: 0.5),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-        ),
-      ),
+      child: Text(label,
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+          )),
     );
   }
 }
 
-/// Sign-in method chip — colour-coded per provider
 class _MethodChip extends StatelessWidget {
   const _MethodChip(this.method);
   final SignInMethod method;
@@ -924,7 +990,6 @@ class _MethodChip extends StatelessWidget {
   }
 }
 
-/// Circular user avatar — Google photo or initials fallback
 class _Avatar extends StatelessWidget {
   const _Avatar({
     required this.photoUrl,
@@ -942,30 +1007,24 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: isAdmin
-              ? EkkleiciaColors.gold
-              : EkkleiciaColors.goldBorder,
+          color: isAdmin ? EkkleiciaColors.gold : EkkleiciaColors.goldBorder,
           width: isAdmin ? 2.0 : 0.8,
         ),
       ),
       child: ClipOval(
         child: photoUrl.isNotEmpty
-            ? Image.network(
-          photoUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallback(),
-        )
+            ? Image.network(photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _fallback())
             : _fallback(),
       ),
     );
   }
 
-  Widget _fallback() {
-    return Container(
-      color: EkkleiciaColors.bgElevated,
-      child: Center(
-        child: Text(
-          initials,
+  Widget _fallback() => Container(
+    color: EkkleiciaColors.bgElevated,
+    child: Center(
+      child: Text(initials,
           style: TextStyle(
             fontFamily: 'Scheherazade',
             color: isAdmin
@@ -973,9 +1032,7 @@ class _Avatar extends StatelessWidget {
                 : EkkleiciaColors.textSecondary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
+          )),
+    ),
+  );
 }

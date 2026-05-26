@@ -1,19 +1,7 @@
-// lib/app.dart
-// ─────────────────────────────────────────────────────────────────────────────
-// Root application widget.
-//
-// Provides at the very top of the widget tree:
-//   • AuthCubit   — must be above LoginScreen and AdminShell
-//   • BooksCubit  — used by both HomeScreen and AdminDashboardScreen
-//
-// Also wires:
-//   • go_router   (AppRouter)
-//   • Ekklecia dark theme
-//   • Arabic / Coptic / Greek localisation delegates
-//   • Notification tap handler → deep-link to tapped book
-//   • FCM token registration on first launch
-// ─────────────────────────────────────────────────────────────────────────────
+// lib/app.dart — ALTERNATIVE VERSION using BlocBuilder
+// Use this if context.select() isn't reliably picking up font scale changes
 import 'package:ekklisia/services/session_service.dart';
+import 'package:ekklisia/services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +15,8 @@ import 'data/repositories/books_repository.dart';
 import 'features/auth/auth_cubit.dart';
 import 'features/auth/auth_state.dart';
 import 'features/books/cubit/books_cubit.dart';
+import 'features/settings/cubit/settings_cubit.dart';
+import 'features/settings/cubit/settings_state.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 
@@ -47,16 +37,11 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
     _bootstrap();
   }
 
-  // ── Bootstrap ─────────────────────────────────────────────────────────────
-
   Future<void> _bootstrap() async {
     await _notificationService.init();
-
-    // Navigate to the tapped book when user opens a push notification
     _notificationService.onNotificationTap = (bookId) {
       AppRouter.router.push('/home/book/$bookId');
     };
-
     await _registerFcmToken();
   }
 
@@ -76,7 +61,7 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
     if (!mounted) return;
 
     final platform =
-        Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android';
+    Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android';
 
     await _booksRepository.saveOrUpdateFcmToken(
       userId:   userId,
@@ -91,46 +76,51 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        // ── AuthCubit: top-level so LoginScreen + AdminShell can find it ──
         BlocProvider<AuthCubit>(
           create: (_) => AuthCubit(sl<AuthService>(), sl<SessionService>()),
-          lazy: false,   // start listening to authStateChanges immediately
+          lazy: false,
         ),
-
-        // ── BooksCubit: shared between HomeScreen and AdminDashboard ──────
         BlocProvider<BooksCubit>(
           create: (_) => BooksCubit(sl<BooksRepository>())..watchBooks(),
         ),
-      ],
-      child: MaterialApp.router(
-        title:                    'إكليسيا',
-        debugShowCheckedModeBanner: false,
-
-        // ── Router ──────────────────────────────────────────────────────
-        routerConfig: AppRouter.router,
-
-        // ── Theme ────────────────────────────────────────────────────────
-        theme:     EkkleciaTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-
-        // ── Localisation ─────────────────────────────────────────────────
-        locale: const Locale('ar'),
-        supportedLocales: const [
-          Locale('ar'),
-          Locale('el'),
-          Locale('en'),
-        ],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-
-        // ── RTL (Arabic) ──────────────────────────────────────────────────
-        builder: (context, child) => Directionality(
-          textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
+        BlocProvider<SettingsCubit>(
+          create: (_) => sl<SettingsCubit>(),
+          lazy: false,
         ),
+      ],
+      child: BlocBuilder<SettingsCubit, SettingsState>(
+        bloc: sl<SettingsCubit>(),
+        builder: (context, settings) {
+          return MaterialApp.router(
+            title:                    'إكليسيا',
+            debugShowCheckedModeBanner: false,
+            routerConfig: AppRouter.router,
+            theme:     EkkleciaTheme.darkTheme,
+            themeMode: ThemeMode.dark,
+            locale: const Locale('ar'),
+            supportedLocales: const [
+              Locale('ar'),
+              Locale('el'),
+              Locale('en'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            builder: (context, child) {
+              return Directionality(
+                textDirection: TextDirection.rtl,
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(settings.fontScale.scale),
+                  ),
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
