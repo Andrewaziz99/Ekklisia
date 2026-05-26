@@ -4,6 +4,7 @@
 // Provides a bottom navigation bar ready for future tabs.
 // Currently only the Library tab is active.
 // ─────────────────────────────────────────────────────────────────────────────
+import 'package:ekklisia/features/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     BooksHomeScreen(),
     _PlaceholderTab(icon: Icons.calendar_month_outlined, label: 'التقويم'),
     _PlaceholderTab(icon: Icons.music_note_outlined,     label: 'التسابيح'),
-    _PlaceholderTab(icon: Icons.settings_outlined,       label: 'الإعدادات'),
+    SettingsScreen(),
   ];
 
   @override

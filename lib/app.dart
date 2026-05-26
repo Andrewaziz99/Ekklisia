@@ -13,10 +13,12 @@
 //   • Notification tap handler → deep-link to tapped book
 //   • FCM token registration on first launch
 // ─────────────────────────────────────────────────────────────────────────────
+import 'package:ekklisia/services/session_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
@@ -91,7 +93,7 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
       providers: [
         // ── AuthCubit: top-level so LoginScreen + AdminShell can find it ──
         BlocProvider<AuthCubit>(
-          create: (_) => AuthCubit(sl<AuthService>()),
+          create: (_) => AuthCubit(sl<AuthService>(), sl<SessionService>()),
           lazy: false,   // start listening to authStateChanges immediately
         ),
 
@@ -100,46 +102,34 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
           create: (_) => BooksCubit(sl<BooksRepository>())..watchBooks(),
         ),
       ],
-      child: BlocListener<AuthCubit, AuthState>(
-        // When auth state changes, tell the router notifier to re-evaluate
-        // the admin flag (handles sign-in / sign-out without page reload).
-        listenWhen: (prev, curr) =>
-            prev.isAdmin != curr.isAdmin ||
-            prev.isAuthenticated != curr.isAuthenticated,
-        listener: (_, state) async {
-          if (state.isAdmin) {
-            AppRouter.router.refresh();
-          }
-        },
-        child: MaterialApp.router(
-          title:                    'إكليسيا',
-          debugShowCheckedModeBanner: false,
+      child: MaterialApp.router(
+        title:                    'إكليسيا',
+        debugShowCheckedModeBanner: false,
 
-          // ── Router ──────────────────────────────────────────────────────
-          routerConfig: AppRouter.router,
+        // ── Router ──────────────────────────────────────────────────────
+        routerConfig: AppRouter.router,
 
-          // ── Theme ────────────────────────────────────────────────────────
-          theme:     EkkleciaTheme.darkTheme,
-          themeMode: ThemeMode.dark,
+        // ── Theme ────────────────────────────────────────────────────────
+        theme:     EkkleciaTheme.darkTheme,
+        themeMode: ThemeMode.dark,
 
-          // ── Localisation ─────────────────────────────────────────────────
-          locale: const Locale('ar'),
-          supportedLocales: const [
-            Locale('ar'),
-            Locale('el'),
-            Locale('en'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+        // ── Localisation ─────────────────────────────────────────────────
+        locale: const Locale('ar'),
+        supportedLocales: const [
+          Locale('ar'),
+          Locale('el'),
+          Locale('en'),
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
 
-          // ── RTL (Arabic) ──────────────────────────────────────────────────
-          builder: (context, child) => Directionality(
-            textDirection: TextDirection.rtl,
-            child: child ?? const SizedBox.shrink(),
-          ),
+        // ── RTL (Arabic) ──────────────────────────────────────────────────
+        builder: (context, child) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: child ?? const SizedBox.shrink(),
         ),
       ),
     );

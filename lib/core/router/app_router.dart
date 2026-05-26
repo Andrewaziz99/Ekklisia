@@ -36,6 +36,7 @@ import '../../features/home/home_screen.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../data/repositories/books_repository.dart';
+import '../../features/settings/settings_screen.dart';
 
 
 // ── Route constants ───────────────────────────────────────────────────────────
@@ -56,6 +57,12 @@ abstract class Routes {
   // Helpers
   static String bookDetailPath(String id) => '/home/book/$id';
   static String pdfViewerPath(String id)  => '/home/pdf/$id';
+
+
+  // Settings
+  static const String settings = '/settings';
+
+
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
@@ -183,6 +190,13 @@ class AppRouter {
             builder: (_, __) => const AdminUsersScreen(),
           ),
         ],
+      ),
+
+      // ── Settings ─────────────────────────────
+      GoRoute(
+        path:    Routes.settings,
+        name:    'settings',
+        builder: (_, __) => const SettingsScreen(),
       ),
     ],
 

@@ -103,6 +103,7 @@ dependencies:
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
   flutter_localization: ^0.4.0
+  google_sign_in: ^6.2.2
 
 
 

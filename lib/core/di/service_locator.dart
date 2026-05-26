@@ -8,14 +8,19 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../constants/app_constants.dart';
+import '../../features/auth/auth_cubit.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/datasources/firebase/firestore_datasource.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/settings_service.dart';
+import '../../services/session_service.dart';
+import '../../features/settings/cubit/settings_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -35,6 +40,19 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<SupabaseClient>(
       () => Supabase.instance.client,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    sl.registerSingleton<SharedPreferences>(prefs);
+
+    // ── Google Sign-In ────────────────────────────────────────────────────────
+    // GoogleSignIn.instance provides platform-specific initialization
+    sl.registerLazySingleton<GoogleSignIn>(
+      () => GoogleSignIn(
+        scopes: ['email', 'profile'],
+        // Optional: specify clientId for web (from Google Cloud Console)
+        //
+      ),
     );
 
     // ── Dio HTTP Client ───────────────────────────────────────────────────
@@ -77,6 +95,8 @@ class ServiceLocator {
       () => AuthService(
         firebaseAuth: sl<FirebaseAuth>(),
         firestore:    sl<FirebaseFirestore>(),
+        session:      sl<SessionService>(),
+        googleSignIn: sl<GoogleSignIn>(),
       ),
     );
     sl.registerLazySingleton<NotificationService>(
@@ -85,5 +105,21 @@ class ServiceLocator {
         supabase: sl<SupabaseClient>(),
       ),
     );
+    sl.registerLazySingleton<SettingsService>(
+      () => SettingsService(sl<SharedPreferences>()),
+    );
+
+    // ── Cubits ────────────────────────────────────────────────────────────
+    sl.registerSingleton<SessionService>(
+      SessionService(sl<SharedPreferences>()),
+    );
+    sl.registerFactory<SettingsCubit>(
+      () => SettingsCubit(sl<SettingsService>()),
+    );
+    sl.registerFactory<AuthCubit>(
+      () => AuthCubit(sl<AuthService>(), sl<SessionService>()),
+    );
+
+    await sl.allReady();
   }
 }

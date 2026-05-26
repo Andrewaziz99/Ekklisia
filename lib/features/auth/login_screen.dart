@@ -140,6 +140,8 @@ class _LoginScreenState extends State<LoginScreen>
                             const SizedBox(height: 20),
                             _buildDivider(),
                             const SizedBox(height: 16),
+                            _buildGoogleButton(),
+                            const SizedBox(height: 12),
                             _buildAnonymousButton(),
                             const SizedBox(height: 32),
                             _buildFooter(),
@@ -361,6 +363,58 @@ class _LoginScreenState extends State<LoginScreen>
       Expanded(child: Container(height: 0.5,
           color: EkkleiciaColors.goldBorder)),
     ]);
+  }
+
+  // ── Google Sign-In button ─────────────────────────────────────────────
+
+  Widget _buildGoogleButton() {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) => SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: state.isLoading
+              ? null
+              : () async {
+                  print('[LoginScreen] Google Sign-In button pressed');
+                  try {
+                    print('[LoginScreen] Attempting to sign in with Google...');
+                    await context.read<AuthCubit>().signInWithGoogle();
+                    print('[LoginScreen] Google Sign-In successful');
+                  } on UnimplementedError catch (e) {
+                    print('[LoginScreen] Google Sign-In not implemented: ${e.toString()}');
+                    if (mounted) {
+                      _showSnack('دخول Google غير مُفعّل حالياً. يرجى تكوين البيانات الأساسية.');
+                    }
+                  } catch (e) {
+                    print('[LoginScreen] Google Sign-In error: ${e.runtimeType} - ${e.toString()}');
+                    if (mounted) {
+                      _showSnack('خطأ في دخول Google: ${e.toString()}');
+                    }
+                  }
+                },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: EkkleiciaColors.textSecondary,
+            side: const BorderSide(
+                color: EkkleiciaColors.goldBorder, width: 0.5),
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.login, size: 16),
+              const SizedBox(width: 8),
+              const Text('دخول عبر Google',
+                  style: TextStyle(
+                    fontFamily: 'Scheherazade',
+                    fontSize: 14,
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // ── Anonymous button ──────────────────────────────────────────────────

@@ -1,11 +1,21 @@
 // lib/features/settings/screens/settings_screen.dart
+// ─────────────────────────────────────────────────────────────────────────────
+// Settings Screen — three sections only:
+//   1. User profile card
+//   2. Font size picker
+//   3. Display language selector
+//   4. Sign-out button
+//
+// Lives inside HomeScreen's IndexedStack (tab 3), so uses CustomScrollView
+// with SliverAppBar — no nested Scaffold.
+// ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/router/app_router.dart';
+
 import '../../../core/di/service_locator.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/theme/colors.dart';
 import '../../../services/settings_service.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/auth_state.dart';
@@ -13,720 +23,959 @@ import 'cubit/settings_cubit.dart';
 import 'cubit/settings_state.dart';
 
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  String _appVersion = '';
-  bool   _showResetConfirm = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVersion();
-  }
-
-  Future<void> _loadVersion() async {
-    final info = await PackageInfo.fromPlatform();
-    if (mounted) setState(() => _appVersion = '${info.version} (${info.buildNumber})');
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsState>(
       bloc: sl<SettingsCubit>(),
       builder: (context, settings) {
-        return Scaffold(
-          backgroundColor: EkkleiciaColors.bgPrimary,
-          body: CustomScrollView(
-            slivers: [
-              _buildAppBar(),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
+        return CustomScrollView(
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            _SettingsAppBar(),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 48),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // ── Profile ──────────────────────────────────────────
+                  _ProfileCard(),
+                  const SizedBox(height: 28),
 
-                    // ── User card ────────────────────────────────────────
-                    _buildUserCard(context),
-                    const SizedBox(height: 24),
+                  // ── Font Size ────────────────────────────────────────
+                  _SectionLabel('حجم الخط', 'Font Size'),
+                  const SizedBox(height: 10),
+                  _FontSizeCard(current: settings.fontScale),
+                  const SizedBox(height: 28),
 
-                    // ── Reading ──────────────────────────────────────────
-                    _SectionHeader('القراءة', 'Reading'),
-                    const SizedBox(height: 10),
-                    _buildReadingSection(settings),
-                    const SizedBox(height: 24),
+                  // ── Language ─────────────────────────────────────────
+                  _SectionLabel('لغة العرض', 'Display Language'),
+                  const SizedBox(height: 10),
+                  _LanguageCard(current: settings.language),
+                  const SizedBox(height: 28),
 
-                    // ── Language ─────────────────────────────────────────
-                    _SectionHeader('اللغة', 'Language'),
-                    const SizedBox(height: 10),
-                    _buildLanguageSection(settings),
-                    const SizedBox(height: 24),
+                  // ── Sign Out ─────────────────────────────────────────
+                  _SectionLabel('الحساب', 'Account'),
+                  const SizedBox(height: 10),
+                  _SignOutCard(),
+                  const SizedBox(height: 32),
 
-                    // ── Notifications ─────────────────────────────────────
-                    _SectionHeader('الإشعارات', 'Notifications'),
-                    const SizedBox(height: 10),
-                    _buildNotificationsSection(settings),
-                    const SizedBox(height: 24),
+                  // ── Footer ───────────────────────────────────────────
+                  _Footer(),
+                ]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
 
-                    // ── Account ────────────────────────────────────────────
-                    _SectionHeader('الحساب', 'Account'),
-                    const SizedBox(height: 10),
-                    _buildAccountSection(context),
-                    const SizedBox(height: 24),
+// ═══════════════════════════════════════════════════════════════════════════
+// APP BAR
+// ═══════════════════════════════════════════════════════════════════════════
+class _SettingsAppBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      expandedHeight: 110,
+      backgroundColor: EkkleiciaColors.bgDeep,
+      automaticallyImplyLeading: false,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: EkkleiciaColors.headerGradient,
+            border: Border(
+              bottom: BorderSide(
+                color: EkkleiciaColors.goldBorder,
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: const [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '✦',
+                        style: TextStyle(
+                          color: EkkleiciaColors.goldDim,
+                          fontSize: 11,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'الإعدادات',
+                        style: TextStyle(
+                          fontFamily: 'Scheherazade',
+                          color: EkkleiciaColors.goldLight,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'SETTINGS',
+                        style: TextStyle(
+                          color: EkkleiciaColors.goldDim,
+                          fontSize: 9,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-                    // ── About ──────────────────────────────────────────────
-                    _SectionHeader('حول التطبيق', 'About'),
-                    const SizedBox(height: 10),
-                    _buildAboutSection(),
-                    const SizedBox(height: 32),
+// ═══════════════════════════════════════════════════════════════════════════
+// PROFILE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _ProfileCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, auth) {
+        final user   = auth.user;
+        final method = auth.signInMethod;
 
-                    // Reset confirm
-                    if (_showResetConfirm) _buildResetConfirm(context),
-                  ]),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [EkkleiciaColors.bgMid, EkkleiciaColors.bgElevated],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: EkkleiciaColors.goldBorder,
+              width: 0.6,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              _Avatar(
+                photoUrl: user?.photoUrl ?? '',
+                initials: user?.initials ?? '؟',
+                isAdmin: auth.isAdmin,
+              ),
+              const SizedBox(width: 14),
+
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display name
+                    if (user?.displayName.isNotEmpty == true) ...[
+                      Text(
+                        user!.displayName,
+                        style: const TextStyle(
+                          fontFamily: 'Scheherazade',
+                          color: EkkleiciaColors.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                    ],
+
+                    // Email or guest label
+                    Text(
+                      auth.isAnonymous
+                          ? 'ضيف — قراءة فقط'
+                          : (user?.email ?? ''),
+                      style: const TextStyle(
+                        color: EkkleiciaColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Badges row
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (auth.isAdmin)
+                          _Chip('Admin', EkkleiciaColors.gold),
+                        if (auth.isAnonymous)
+                          _Chip('Guest', EkkleiciaColors.textSecondary)
+                        else
+                          _Chip('Reader', EkkleiciaColors.tealMid),
+                        _MethodChip(method),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+
+              // Admin shortcut
+              if (auth.isAdmin) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => context.go(Routes.adminDashboard),
+                  child: Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: EkkleiciaColors.goldSubtle,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: EkkleiciaColors.goldBorder,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.admin_panel_settings_outlined,
+                      size: 20,
+                      color: EkkleiciaColors.gold,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
       },
     );
   }
+}
 
-  // ── App Bar ────────────────────────────────────────────────────────────────
-  Widget _buildAppBar() => SliverAppBar(
-    pinned: true,
-    expandedHeight: 100,
-    backgroundColor: EkkleiciaColors.bgDeep,
-    flexibleSpace: FlexibleSpaceBar(
-      background: Container(
-        decoration: const BoxDecoration(
-          gradient: EkkleiciaColors.headerGradient,
-          border: Border(
-              bottom: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5)),
-        ),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const Text('الإعدادات', style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.goldLight,
-                fontSize: 24, fontWeight: FontWeight.w700,
-              )),
-              const Text('SETTINGS', style: TextStyle(
-                color: EkkleiciaColors.goldDim, fontSize: 9, letterSpacing: 4,
-              )),
-            ]),
-          ),
-        ),
-      ),
-    ),
-  );
+// ═══════════════════════════════════════════════════════════════════════════
+// FONT SIZE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _FontSizeCard extends StatelessWidget {
+  const _FontSizeCard({required this.current});
+  final FontScale current;
 
-  // ── User Card ──────────────────────────────────────────────────────────────
-  Widget _buildUserCard(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, auth) {
-        final user = auth.user;
-        return Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [EkkleiciaColors.bgMid, EkkleiciaColors.bgElevated],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
-          ),
-          child: Row(children: [
-            // Avatar / Google photo
-            _UserAvatar(photoUrl: user?.photoUrl ?? '',
-                initials: user?.initials ?? '?', isAdmin: auth.isAdmin),
-            const SizedBox(width: 14),
-            Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (user?.displayName.isNotEmpty == true)
-                Text(user!.displayName, style: const TextStyle(
-                    color: EkkleiciaColors.textPrimary,
-                    fontSize: 15, fontWeight: FontWeight.w700)),
-              Text(
-                auth.isAnonymous ? 'ضيف (قراءة فقط)'
-                    : (user?.email ?? ''),
-                style: const TextStyle(
+  // Preview sizes for the sample Arabic letter
+  static const Map<FontScale, double> _previewSizes = {
+    FontScale.small:      14,
+    FontScale.medium:     18,
+    FontScale.large:      24,
+    FontScale.extraLarge: 30,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Current label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'اختر الحجم المناسب',
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkkleiciaColors.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 6),
-              Row(children: [
-                if (auth.isAdmin) ...[
-                  _Chip('Admin', EkkleiciaColors.gold),
-                  const SizedBox(width: 6),
-                ],
-                if (auth.isAnonymous)
-                  _Chip('Guest', EkkleiciaColors.textSecondary)
-                else
-                  _Chip('Reader', EkkleiciaColors.tealMid),
-              ]),
-            ])),
-            if (auth.isAdmin)
-              GestureDetector(
-                onTap: () => context.go(Routes.adminDashboard),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
+                    color: EkkleiciaColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: EkkleiciaColors.goldSubtle,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: EkkleiciaColors.goldBorder),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: EkkleiciaColors.goldBorder, width: 0.5),
                   ),
-                  child: const Icon(Icons.admin_panel_settings_outlined,
-                      size: 18, color: EkkleiciaColors.gold),
+                  child: Text(
+                    current.label,
+                    style: const TextStyle(
+                      fontFamily: 'Scheherazade',
+                      color: EkkleiciaColors.gold,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Four tappable tiles
+            Row(
+              children: FontScale.values.map((fs) {
+                final isActive = current == fs;
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: fs != FontScale.values.first ? 6 : 0,
+                    ),
+                    child: GestureDetector(
+                      onTap: () => sl<SettingsCubit>().setFontScale(fs),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? EkkleiciaColors.goldSubtle
+                              : EkkleiciaColors.bgPrimary,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isActive
+                                ? EkkleiciaColors.gold
+                                : EkkleiciaColors.goldBorder,
+                            width: isActive ? 1.5 : 0.5,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'أ',
+                              style: TextStyle(
+                                fontFamily: 'Scheherazade',
+                                color: isActive
+                                    ? EkkleiciaColors.goldLight
+                                    : EkkleiciaColors.textSecondary,
+                                fontSize: _previewSizes[fs],
+                                fontWeight: isActive
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                            if (isActive)
+                              Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: EkkleiciaColors.gold,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Live preview text
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: EkkleiciaColors.bgParchment.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: EkkleiciaColors.goldBorder.withValues(alpha: 0.4),
+                    width: 0.5),
+              ),
+              child: Text(
+                'أبانا الذي في السماوات، ليتقدس اسمك',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: EkkleiciaColors.textPrimary,
+                  fontSize: (_previewSizes[current] ?? 18) * 0.85,
+                  height: 1.7,
                 ),
               ),
-          ]),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
+}
 
-  // ── Reading ────────────────────────────────────────────────────────────────
-  Widget _buildReadingSection(SettingsState s) {
-    return _SettingsCard(children: [
-      // Font size
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const _RowLabel('حجم الخط', 'Font Size'),
-            Text(s.fontScale.label, style: const TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.gold, fontSize: 13,
-                fontWeight: FontWeight.w600)),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: FontScale.values.map((fs) {
-            final active = s.fontScale == fs;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => sl<SettingsCubit>().setFontScale(fs),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: active
-                        ? EkkleiciaColors.goldSubtle
-                        : EkkleiciaColors.bgPrimary,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: active
-                          ? EkkleiciaColors.gold
-                          : EkkleiciaColors.goldBorder,
-                      width: active ? 1.0 : 0.5,
+// ═══════════════════════════════════════════════════════════════════════════
+// LANGUAGE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard({required this.current});
+  final AppLanguage current;
+
+  static const Map<AppLanguage, String?> _fontFamilies = {
+    AppLanguage.arabic:  'Scheherazade',
+    AppLanguage.coptic:  'CopticFont',
+    AppLanguage.greek:   'GFSDidot',
+    AppLanguage.english: null,
+  };
+
+  static const Map<AppLanguage, String> _nativeNames = {
+    AppLanguage.arabic:  'العربية',
+    AppLanguage.coptic:  'ⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ',
+    AppLanguage.greek:   'Ελληνικά',
+    AppLanguage.english: 'English',
+  };
+
+  static const Map<AppLanguage, String> _subtitles = {
+    AppLanguage.arabic:  'Arabic',
+    AppLanguage.coptic:  'Coptic',
+    AppLanguage.greek:   'Greek',
+    AppLanguage.english: 'English',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Column(
+        children: AppLanguage.values.asMap().entries.map((entry) {
+          final idx      = entry.key;
+          final lang     = entry.value;
+          final isActive = current == lang;
+          final isLast   = idx == AppLanguage.values.length - 1;
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Material(
+                color: isActive
+                    ? EkkleiciaColors.goldSubtle
+                    : Colors.transparent,
+                child: InkWell(
+                  onTap: () => sl<SettingsCubit>().setLanguage(lang),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 15),
+                    child: Row(
+                      children: [
+                        // Flag
+                        Text(
+                          lang.flagEmoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Names
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _nativeNames[lang] ?? lang.label,
+                                style: TextStyle(
+                                  fontFamily: _fontFamilies[lang],
+                                  color: isActive
+                                      ? EkkleiciaColors.goldLight
+                                      : EkkleiciaColors.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                _subtitles[lang] ?? '',
+                                style: const TextStyle(
+                                  color: EkkleiciaColors.textSecondary,
+                                  fontSize: 10,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Check indicator
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: isActive
+                              ? const Icon(
+                            Icons.check_circle,
+                            size: 22,
+                            color: EkkleiciaColors.gold,
+                            key: ValueKey('on'),
+                          )
+                              : const Icon(
+                            Icons.radio_button_unchecked,
+                            size: 22,
+                            color: EkkleiciaColors.goldBorder,
+                            key: ValueKey('off'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Center(child: Text(
-                    _fontScaleAbbrev(fs),
-                    style: TextStyle(
-                      color: active
-                          ? EkkleiciaColors.goldLight
-                          : EkkleiciaColors.textSecondary,
-                      fontSize: _fontScalePreviewSize(fs),
-                      fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  )),
                 ),
               ),
-            );
-          }).toList()),
-        ]),
+              if (!isLast)
+                const Divider(
+                  height: 1,
+                  thickness: 0.4,
+                  color: EkkleiciaColors.goldBorder,
+                  indent: 56,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }).toList(),
       ),
-      const _Divider(),
-      _ToggleRow(
-        icon:     Icons.screen_lock_portrait_outlined,
-        label:    'إبقاء الشاشة مضاءة',
-        labelEn:  'Keep Screen On',
-        sub:      'أثناء القراءة',
-        value:    s.keepScreenOn,
-        onChange: (_) => sl<SettingsCubit>().toggleKeepScreenOn(),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGN-OUT CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _SignOutCard extends StatefulWidget {
+  @override
+  State<_SignOutCard> createState() => _SignOutCardState();
+}
+
+class _SignOutCardState extends State<_SignOutCard> {
+  bool _loading = false;
+
+  Future<void> _signOut() async {
+    // Confirm
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
+      builder: (_) => _ConfirmDialog(
+        icon: Icons.logout_outlined,
+        iconColor: EkkleiciaColors.maroonMid,
+        title: 'تسجيل الخروج',
+        body: 'هل تريد تسجيل الخروج من التطبيق؟',
+        confirmLabel: 'خروج',
+        confirmColor: EkkleiciaColors.maroon,
       ),
-    ]);
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _loading = true);
+    await context.read<AuthCubit>().signOut();
+    if (mounted) context.go(Routes.login);
   }
 
-  String _fontScaleAbbrev(FontScale fs) {
-    switch (fs) {
-      case FontScale.small:      return 'أ';
-      case FontScale.medium:     return 'أ';
-      case FontScale.large:      return 'أ';
-      case FontScale.extraLarge: return 'أ';
-    }
-  }
-
-  double _fontScalePreviewSize(FontScale fs) {
-    switch (fs) {
-      case FontScale.small:      return 11;
-      case FontScale.medium:     return 14;
-      case FontScale.large:      return 18;
-      case FontScale.extraLarge: return 22;
-    }
-  }
-
-  // ── Language ───────────────────────────────────────────────────────────────
-  Widget _buildLanguageSection(SettingsState s) {
-    return _SettingsCard(children: [
-      ...AppLanguage.values.map((lang) {
-        final selected = s.language == lang;
-        return _LangTile(
-          lang: lang,
-          selected: selected,
-          onTap: () => sl<SettingsCubit>().setLanguage(lang),
-          showDivider: lang != AppLanguage.values.last,
-        );
-      }),
-    ]);
-  }
-
-  // ── Notifications ──────────────────────────────────────────────────────────
-  Widget _buildNotificationsSection(SettingsState s) {
-    return _SettingsCard(children: [
-      _ToggleRow(
-        icon:     Icons.library_books_outlined,
-        label:    'كتب جديدة',
-        labelEn:  'New Books',
-        sub:      'إشعار عند إضافة كتاب جديد',
-        value:    s.newBookNotifications,
-        onChange: (_) =>
-            sl<SettingsCubit>().toggleNewBookNotifications(),
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _loading ? null : _signOut,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: EkkleiciaColors.maroon.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: EkkleiciaColors.maroon.withValues(alpha: 0.4),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: _loading
+                      ? const Center(
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(
+                          EkkleiciaColors.maroonMid,
+                        ),
+                      ),
+                    ),
+                  )
+                      : const Icon(
+                    Icons.logout_outlined,
+                    size: 18,
+                    color: EkkleiciaColors.maroonMid,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'تسجيل الخروج',
+                        style: TextStyle(
+                          fontFamily: 'Scheherazade',
+                          color: EkkleiciaColors.maroonMid,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          color: EkkleiciaColors.textSecondary,
+                          fontSize: 10,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: EkkleiciaColors.maroonMid.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      const _Divider(),
-      _ToggleRow(
-        icon:     Icons.access_alarm_outlined,
-        label:    'تذكير الصلاة',
-        labelEn:  'Prayer Reminder',
-        sub:      'أجبية الساعات اليومية',
-        value:    s.prayerReminder,
-        onChange: (_) => sl<SettingsCubit>().togglePrayerReminder(),
-      ),
-    ]);
+    );
   }
+}
 
-  // ── Account ────────────────────────────────────────────────────────────────
-  Widget _buildAccountSection(BuildContext context) {
-    return _SettingsCard(children: [
-      _ActionRow(
-        icon:    Icons.logout_outlined,
-        label:   'تسجيل الخروج',
-        labelEn: 'Sign Out',
-        color:   EkkleiciaColors.maroonMid,
-        onTap: () async {
-          await context.read<AuthCubit>().signOut();
-          if (context.mounted) context.go(Routes.login);
-        },
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIRMATION DIALOG (reusable)
+// ═══════════════════════════════════════════════════════════════════════════
+class _ConfirmDialog extends StatelessWidget {
+  const _ConfirmDialog({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.body,
+    required this.confirmLabel,
+    required this.confirmColor,
+  });
+
+  final IconData icon;
+  final Color    iconColor;
+  final String   title;
+  final String   body;
+  final String   confirmLabel;
+  final Color    confirmColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: EkkleiciaColors.bgMid,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(
+            color: EkkleiciaColors.goldBorder, width: 0.5),
       ),
-      const _Divider(),
-      _ActionRow(
-        icon:    Icons.restore_outlined,
-        label:   'إعادة ضبط الإعدادات',
-        labelEn: 'Reset Settings',
-        color:   EkkleiciaColors.textSecondary,
-        onTap: () => setState(() => _showResetConfirm = true),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon circle
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: iconColor.withValues(alpha: 0.12),
+                border: Border.all(
+                    color: iconColor.withValues(alpha: 0.3), width: 1),
+              ),
+              child: Icon(icon, size: 24, color: iconColor),
+            ),
+            const SizedBox(height: 16),
+
+            // Title
+            Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Scheherazade',
+                color: EkkleiciaColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Body
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Scheherazade',
+                color: EkkleiciaColors.textSecondary,
+                fontSize: 14,
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Buttons
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: EkkleiciaColors.textSecondary,
+                    side: const BorderSide(
+                        color: EkkleiciaColors.goldBorder, width: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text(
+                    'إلغاء',
+                    style: TextStyle(
+                      fontFamily: 'Scheherazade',
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: confirmColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    confirmLabel,
+                    style: const TextStyle(
+                      fontFamily: 'Scheherazade',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ]),
+          ],
+        ),
       ),
-    ]);
+    );
   }
+}
 
-  // ── About ──────────────────────────────────────────────────────────────────
-  Widget _buildAboutSection() {
-    return _SettingsCard(children: [
-      _InfoRow(icon: Icons.app_shortcut_outlined,
-          label: 'الإصدار', value: _appVersion.isNotEmpty ? _appVersion : '…'),
-      const _Divider(),
-      _InfoRow(icon: Icons.church_outlined,
-          label: 'الكنيسة', value: 'الكنيسة القبطية الأرثوذكسية'),
-      const _Divider(),
-      _InfoRow(icon: Icons.language_outlined,
-          label: 'اللغات المدعومة',
-          value: 'العربية · القبطية · اليونانية'),
-    ]);
+// ═══════════════════════════════════════════════════════════════════════════
+// FOOTER
+// ═══════════════════════════════════════════════════════════════════════════
+class _Footer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        Text(
+          '✦  ✦  ✦',
+          style: TextStyle(
+            color: EkkleiciaColors.goldDim,
+            fontSize: 9,
+            letterSpacing: 8,
+          ),
+        ),
+        SizedBox(height: 6),
+        Text(
+          'الكنيسة القبطية الأرثوذكسية',
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            color: EkkleiciaColors.textSecondary,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
   }
+}
 
-  // ── Reset confirm ──────────────────────────────────────────────────────────
-  Widget _buildResetConfirm(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkkleiciaColors.maroon, width: 0.5),
-      ),
-      child: Column(children: [
-        const Icon(Icons.warning_amber_rounded,
-            color: EkkleiciaColors.maroonMid, size: 32),
-        const SizedBox(height: 10),
-        const Text('إعادة ضبط جميع الإعدادات؟', style: TextStyle(
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED PRIMITIVES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Gold-left-bar section label
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.ar, this.en);
+  final String ar, en;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 18,
+          decoration: BoxDecoration(
+            color: EkkleiciaColors.gold,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 9),
+        Text(
+          ar,
+          style: const TextStyle(
             fontFamily: 'Scheherazade',
             color: EkkleiciaColors.textPrimary,
-            fontSize: 15, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 6),
-        const Text('سيتم إعادة جميع الإعدادات إلى القيم الافتراضية',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary, fontSize: 12)),
-        const SizedBox(height: 16),
-        Row(children: [
-          Expanded(child: OutlinedButton(
-            onPressed: () => setState(() => _showResetConfirm = false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: EkkleiciaColors.textSecondary,
-              side: const BorderSide(
-                  color: EkkleiciaColors.goldBorder, width: 0.5),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('إلغاء', style: TextStyle(
-                fontFamily: 'Scheherazade')),
-          )),
-          const SizedBox(width: 12),
-          Expanded(child: ElevatedButton(
-            onPressed: () {
-              sl<SettingsCubit>().resetAll();
-              setState(() => _showResetConfirm = false);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('تمت إعادة الضبط',
-                    style: TextStyle(fontFamily: 'Scheherazade'),
-                    textAlign: TextAlign.center),
-                behavior: SnackBarBehavior.floating,
-              ));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: EkkleiciaColors.maroon,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('إعادة ضبط', style: TextStyle(
-                fontFamily: 'Scheherazade', fontWeight: FontWeight.w700)),
-          )),
-        ]),
-      ]),
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          en,
+          style: const TextStyle(
+            color: EkkleiciaColors.textSecondary,
+            fontSize: 10,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
     );
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SHARED WIDGETS
-// ════════════════════════════════════════════════════════════════════════════
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.ar, this.en);
-  final String ar;
-  final String en;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(right: 4),
-    child: Row(children: [
-      Container(width: 3, height: 14, decoration: BoxDecoration(
-          color: EkkleiciaColors.gold,
-          borderRadius: BorderRadius.circular(2))),
-      const SizedBox(width: 8),
-      Text(ar, style: const TextStyle(
-          fontFamily: 'Scheherazade', color: EkkleiciaColors.textPrimary,
-          fontSize: 14, fontWeight: FontWeight.w700)),
-      const SizedBox(width: 6),
-      Text(en, style: const TextStyle(
-          color: EkkleiciaColors.textSecondary,
-          fontSize: 10, letterSpacing: 0.8)),
-    ]),
-  );
-}
-
-class _SettingsCard extends StatelessWidget {
-  const _SettingsCard({required this.children});
-  final List<Widget> children;
-  @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: EkkleiciaColors.bgMid,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
-    ),
-    child: Column(children: children),
-  );
-}
-
-class _RowLabel extends StatelessWidget {
-  const _RowLabel(this.ar, this.en);
-  final String ar;
-  final String en;
-  @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-    Text(ar, style: const TextStyle(
-        fontFamily: 'Scheherazade', color: EkkleiciaColors.textPrimary,
-        fontSize: 14, fontWeight: FontWeight.w600)),
-    const SizedBox(width: 6),
-    Text(en, style: const TextStyle(
-        color: EkkleiciaColors.textSecondary, fontSize: 10)),
-  ]);
-}
-
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.icon,
-    required this.label,
-    required this.labelEn,
-    required this.sub,
-    required this.value,
-    required this.onChange,
-  });
-  final IconData icon;
-  final String   label;
-  final String   labelEn;
-  final String   sub;
-  final bool     value;
-  final ValueChanged<bool> onChange;
+/// Rounded card container with gold border
+class _Card extends StatelessWidget {
+  const _Card({required this.child});
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    child: Row(children: [
-      Icon(icon, size: 20, color: EkkleiciaColors.goldDim),
-      const SizedBox(width: 14),
-      Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Text(label, style: const TextStyle(
-              fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textPrimary,
-              fontSize: 14, fontWeight: FontWeight.w600)),
-          const SizedBox(width: 5),
-          Text(labelEn, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 10)),
-        ]),
-        Text(sub, style: const TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary, fontSize: 11)),
-      ])),
-      const SizedBox(width: 12),
-      _Toggle(value: value, onChange: onChange),
-    ]),
-  );
-}
-
-class _Toggle extends StatelessWidget {
-  const _Toggle({required this.value, required this.onChange});
-  final bool value;
-  final ValueChanged<bool> onChange;
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: () => onChange(!value),
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 46, height: 26,
+  Widget build(BuildContext context) {
+    return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(13),
-        color: value ? EkkleiciaColors.gold : EkkleiciaColors.bgElevated,
+        color: EkkleiciaColors.bgMid,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: value ? EkkleiciaColors.gold : EkkleiciaColors.goldBorder,
+          color: EkkleiciaColors.goldBorder,
           width: 0.5,
         ),
       ),
-      child: Stack(children: [
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 200),
-          left: value ? 22 : 2, top: 3,
-          child: Container(
-            width: 20, height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: value
-                  ? EkkleiciaColors.bgDeep
-                  : EkkleiciaColors.textSecondary,
-            ),
-          ),
-        ),
-      ]),
-    ),
-  );
-}
-
-class _LangTile extends StatelessWidget {
-  const _LangTile({
-    required this.lang, required this.selected,
-    required this.onTap, required this.showDivider,
-  });
-  final AppLanguage lang;
-  final bool        selected;
-  final VoidCallback onTap;
-  final bool        showDivider;
-
-  @override
-  Widget build(BuildContext context) => Column(children: [
-    Material(
-      color: selected ? EkkleiciaColors.goldSubtle : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(children: [
-            Text(lang.flagEmoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(width: 14),
-            Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(lang.label, style: TextStyle(
-                fontFamily: lang == AppLanguage.arabic
-                    ? 'Scheherazade'
-                    : lang == AppLanguage.coptic
-                    ? 'CopticFont'
-                    : lang == AppLanguage.greek
-                    ? 'GFSDidot'
-                    : null,
-                color: selected
-                    ? EkkleiciaColors.goldLight
-                    : EkkleiciaColors.textPrimary,
-                fontSize: 15, fontWeight: FontWeight.w600,
-              )),
-              Text(lang.code.toUpperCase(), style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
-                  fontSize: 10, letterSpacing: 1.5)),
-            ])),
-            if (selected)
-              const Icon(Icons.check_circle,
-                  size: 18, color: EkkleiciaColors.gold)
-            else
-              const Icon(Icons.radio_button_unchecked,
-                  size: 18, color: EkkleiciaColors.goldBorder),
-          ]),
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: child,
       ),
-    ),
-    if (showDivider) const _Divider(),
-  ]);
+    );
+  }
 }
 
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.icon, required this.label,
-    required this.labelEn, required this.color,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String   label;
-  final String   labelEn;
-  final Color    color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 14),
-          Text(label, style: TextStyle(
-              fontFamily: 'Scheherazade', color: color,
-              fontSize: 14, fontWeight: FontWeight.w600)),
-          const SizedBox(width: 5),
-          Text(labelEn, style: TextStyle(
-              color: color.withValues(alpha: 0.6), fontSize: 10)),
-          const Spacer(),
-          Icon(Icons.chevron_right, size: 16, color: color.withValues(alpha: 0.5)),
-        ]),
-      ),
-    ),
-  );
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
-  final IconData icon;
-  final String   label;
-  final String   value;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    child: Row(children: [
-      Icon(icon, size: 18, color: EkkleiciaColors.goldDim),
-      const SizedBox(width: 14),
-      Expanded(child: Text(label, style: const TextStyle(
-          fontFamily: 'Scheherazade',
-          color: EkkleiciaColors.textSecondary, fontSize: 13))),
-      Text(value, style: const TextStyle(
-          fontFamily: 'Scheherazade',
-          color: EkkleiciaColors.textPrimary, fontSize: 12,
-          fontWeight: FontWeight.w500),
-          textAlign: TextAlign.end),
-    ]),
-  );
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-  @override
-  Widget build(BuildContext context) => const Divider(
-    height: 1, thickness: 0.4,
-    color: EkkleiciaColors.goldBorder,
-    indent: 16, endIndent: 16,
-  );
-}
-
+/// Small pill badge
 class _Chip extends StatelessWidget {
   const _Chip(this.label, this.color);
   final String label;
   final Color  color;
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(4),
-      border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
-    ),
-    child: Text(label, style: TextStyle(
-        color: color, fontSize: 10, fontWeight: FontWeight.w700,
-        letterSpacing: 0.5)),
-  );
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 0.5),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
 }
 
-class _UserAvatar extends StatelessWidget {
-  const _UserAvatar({
+/// Sign-in method chip — colour-coded per provider
+class _MethodChip extends StatelessWidget {
+  const _MethodChip(this.method);
+  final SignInMethod method;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (method) {
+      case SignInMethod.google:
+        return _Chip('Google', const Color(0xFF4285F4));
+      case SignInMethod.email:
+        return _Chip('Email', EkkleiciaColors.ocean);
+      case SignInMethod.anonymous:
+      case SignInMethod.unknown:
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+/// Circular user avatar — Google photo or initials fallback
+class _Avatar extends StatelessWidget {
+  const _Avatar({
     required this.photoUrl,
     required this.initials,
     required this.isAdmin,
   });
-  final String photoUrl;
-  final String initials;
+  final String photoUrl, initials;
   final bool   isAdmin;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 52, height: 52,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: isAdmin ? EkkleiciaColors.gold : EkkleiciaColors.goldBorder,
-          width: isAdmin ? 2 : 0.8,
+          color: isAdmin
+              ? EkkleiciaColors.gold
+              : EkkleiciaColors.goldBorder,
+          width: isAdmin ? 2.0 : 0.8,
         ),
       ),
       child: ClipOval(
         child: photoUrl.isNotEmpty
-            ? Image.network(photoUrl, fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _initials())
-            : _initials(),
+            ? Image.network(
+          photoUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+        )
+            : _fallback(),
       ),
     );
   }
 
-  Widget _initials() => Container(
-    color: EkkleiciaColors.bgElevated,
-    child: Center(child: Text(initials, style: TextStyle(
-      color: isAdmin ? EkkleiciaColors.gold : EkkleiciaColors.textSecondary,
-      fontSize: 18, fontWeight: FontWeight.w700,
-    ))),
-  );
+  Widget _fallback() {
+    return Container(
+      color: EkkleiciaColors.bgElevated,
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            color: isAdmin
+                ? EkkleiciaColors.gold
+                : EkkleiciaColors.textSecondary,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
 }

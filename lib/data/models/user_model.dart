@@ -10,6 +10,7 @@ class UserModel extends Equatable {
     this.isAdmin = false,
     this.isAnonymous = false,
     this.fcmToken = '',
+    this.signInMethod = 'email',
     this.createdAt,
     this.lastSeenAt,
   });
@@ -21,6 +22,7 @@ class UserModel extends Equatable {
   final bool isAdmin;
   final bool isAnonymous;
   final String fcmToken;
+  final String signInMethod;
   final DateTime? createdAt;
   final DateTime? lastSeenAt;
 
@@ -44,6 +46,7 @@ class UserModel extends Equatable {
       isAdmin:     d['is_admin']     ?? false,
       isAnonymous: d['is_anonymous'] ?? false,
       fcmToken:    d['fcm_token']    ?? '',
+      signInMethod: d['sign_in_method'] ?? 'email',
       createdAt:   (d['created_at']   as Timestamp?)?.toDate(),
       lastSeenAt:  (d['last_seen_at'] as Timestamp?)?.toDate(),
     );
@@ -56,6 +59,7 @@ class UserModel extends Equatable {
     'is_admin':     isAdmin,
     'is_anonymous': isAnonymous,
     'fcm_token':    fcmToken,
+    'sign_in_method': signInMethod,
     'created_at':   createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     'last_seen_at': FieldValue.serverTimestamp(),
   };
@@ -63,7 +67,7 @@ class UserModel extends Equatable {
   UserModel copyWith({
     String? uid, String? email, String? displayName,
     String? photoUrl, bool? isAdmin, bool? isAnonymous,
-    String? fcmToken, DateTime? createdAt, DateTime? lastSeenAt,
+    String? fcmToken, String? signInMethod, DateTime? createdAt, DateTime? lastSeenAt,
   }) => UserModel(
     uid:         uid         ?? this.uid,
     email:       email       ?? this.email,
@@ -72,10 +76,11 @@ class UserModel extends Equatable {
     isAdmin:     isAdmin     ?? this.isAdmin,
     isAnonymous: isAnonymous ?? this.isAnonymous,
     fcmToken:    fcmToken    ?? this.fcmToken,
+    signInMethod: signInMethod ?? this.signInMethod,
     createdAt:   createdAt   ?? this.createdAt,
     lastSeenAt:  lastSeenAt  ?? this.lastSeenAt,
   );
 
   @override
-  List<Object?> get props => [uid, email, isAdmin, isAnonymous];
+  List<Object?> get props => [uid, email, isAdmin, isAnonymous, signInMethod];
 }
