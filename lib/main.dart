@@ -6,7 +6,7 @@
 //   3. Firebase.initializeApp()
 //   4. Supabase.initialize()
 //   5. ServiceLocator.init()   ← registers all singletons (get_it)
-//   6. runApp(EkkleiciaApp())
+//   6. runApp(EkklisiaApp())
 //
 // Background FCM is registered as a top-level function in notification_service.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,17 +36,14 @@ Future<void> main() async {
       // ── 1. Flutter binding ─────────────────────────────────────────────────
       WidgetsFlutterBinding.ensureInitialized();
 
-      // ── 2. Immersive dark system chrome ───────────────────────────────────
+      // ── 2. Set preferred orientation ──────────────────────────────────────
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]);
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor:                 Color(0xFF08111C), // bgDeep
-        statusBarIconBrightness:        Brightness.light,
-        systemNavigationBarColor:       Color(0xFF08111C),
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
+
+      // ── System UI will be updated dynamically based on theme in app.dart ────
+      // This default will be overridden by the app's theme mode
 
       // ── 3. Global Flutter error handler ───────────────────────────────────
       FlutterError.onError = (FlutterErrorDetails details) {
@@ -71,10 +68,10 @@ Future<void> main() async {
       await ServiceLocator.init();
 
       // ── 7. Launch ───────────────────────────────────────────────────────
-      runApp(const EkkleiciaApp());
+      runApp(const EkklisiaApp());
     },
         (error, stack) {
-      debugPrint('[Ekklicia] Uncaught error: $error');
+      debugPrint('[Ekklisia] Uncaught error: $error');
       debugPrintStack(stackTrace: stack);
       // TODO: FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     },

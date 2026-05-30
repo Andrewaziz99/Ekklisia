@@ -86,10 +86,10 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: const BoxDecoration(
-        color: EkkleiciaColors.bgDeep,
+        color: EkklisiaColors.bgDeep,
         border: Border(
           bottom: BorderSide(
-            color: EkkleiciaColors.goldBorder,
+            color: EkklisiaColors.goldBorder,
             width: 0.5,
           ),
         ),
@@ -102,7 +102,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
             children: [
               Text(
                 widget.title,
-                style: EkkleciaTheme.headingMedium,
+                style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
               ),
               const Spacer(),
               ElevatedButton.icon(
@@ -124,34 +124,34 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
             controller: _searchCtrl,
             onChanged: widget.onSearch,
             style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: widget.searchHint,
               hintStyle: const TextStyle(
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 12,
               ),
               prefixIcon: const Icon(
                 Icons.search,
                 size: 18,
-                color: EkkleiciaColors.goldDim,
+                color: EkklisiaColors.goldDim,
               ),
               filled: true,
-              fillColor: EkkleiciaColors.bgElevated,
+              fillColor: EkklisiaColors.bgElevated,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: EkkleiciaColors.gold,
+                  color: EkklisiaColors.gold,
                   width: 1.0,
                 ),
               ),
@@ -169,17 +169,17 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
         scrollDirection: Axis.horizontal,
         child: DataTable(
           headingRowColor: WidgetStateProperty.all(
-            EkkleiciaColors.bgElevated,
+            EkklisiaColors.bgElevated,
           ),
           dataRowColor: WidgetStateProperty.all(
-            EkkleiciaColors.bgMid,
+            EkklisiaColors.bgMid,
           ),
           columns: [
             // Index column
             DataColumn(
               label: Text(
                 '#',
-                style: EkkleciaTheme.headingSmall,
+                style: EkklisiaTheme.headingSmall(Theme.of(context).brightness),
               ),
               numeric: true,
             ),
@@ -188,7 +188,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
                   (col) => DataColumn(
                 label: Text(
                   col,
-                  style: EkkleciaTheme.headingSmall,
+                  style: EkklisiaTheme.headingSmall(Theme.of(context).brightness),
                 ),
               ),
             ),
@@ -196,7 +196,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
             DataColumn(
               label: Text(
                 'Actions',
-                style: EkkleciaTheme.headingSmall,
+                style: EkklisiaTheme.headingSmall(Theme.of(context).brightness),
               ),
             ),
           ],
@@ -212,7 +212,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
                   DataCell(
                     Text(
                       '${index + 1}',
-                      style: EkkleciaTheme.bodySmall,
+                      style: EkklisiaTheme.bodySmall(Theme.of(context).brightness),
                     ),
                   ),
                   // Row cells
@@ -226,14 +226,14 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
                           icon: Icons.edit_outlined,
                           tooltip: 'Edit',
                           onPressed: () => widget.onEdit(item),
-                          color: EkkleiciaColors.gold,
+                          color: EkklisiaColors.gold,
                         ),
                         const SizedBox(width: 8),
                         _ActionButton(
                           icon: Icons.delete_outline,
                           tooltip: 'Delete',
                           onPressed: () => _confirmDelete(item),
-                          color: EkkleiciaColors.maroon,
+                          color: EkklisiaColors.maroon,
                         ),
                       ],
                     ),
@@ -253,17 +253,17 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: EkkleiciaColors.bgPrimary,
+        backgroundColor: EkklisiaColors.bgPrimary,
         title: const Text(
           'Delete Item?',
           style: TextStyle(
-            color: EkkleiciaColors.textPrimary,
+            color: EkklisiaColors.textPrimary,
           ),
         ),
         content: const Text(
           'This action cannot be undone.',
           style: TextStyle(
-            color: EkkleiciaColors.textSecondary,
+            color: EkklisiaColors.textSecondary,
           ),
         ),
         actions: [
@@ -271,7 +271,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text(
               'Cancel',
-              style: TextStyle(color: EkkleiciaColors.textSecondary),
+              style: TextStyle(color: EkklisiaColors.textSecondary),
             ),
           ),
           TextButton(
@@ -281,7 +281,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
             },
             child: const Text(
               'Delete',
-              style: TextStyle(color: EkkleiciaColors.maroon),
+              style: TextStyle(color: EkklisiaColors.maroon),
             ),
           ),
         ],
@@ -300,7 +300,7 @@ class _LoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation(EkkleiciaColors.gold),
+        valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
       ),
     );
   }
@@ -327,13 +327,13 @@ class _EmptyState extends StatelessWidget {
           Icon(
             icon,
             size: 48,
-            color: EkkleiciaColors.goldDim,
+            color: EkklisiaColors.goldDim,
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 14,
             ),
           ),

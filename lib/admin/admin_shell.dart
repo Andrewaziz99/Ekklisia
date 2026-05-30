@@ -50,7 +50,7 @@ class _AdminShellState extends State<AdminShell> {
   Widget build(BuildContext context) {
     final wide = MediaQuery.of(context).size.width >= 720;
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgPrimary,
+      backgroundColor: EkklisiaColors.bgPrimary,
       drawer: wide ? null : _buildDrawer(context),
       body: wide ? _wideLayout(context) : _narrowLayout(context),
     );
@@ -81,7 +81,7 @@ class _AdminShellState extends State<AdminShell> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: EkkleiciaColors.bgDeep,
+      backgroundColor: EkklisiaColors.bgDeep,
       child: _Sidebar(items: _navItems, currentPath: widget.currentPath,
           isDrawer: true),
     );
@@ -106,9 +106,9 @@ class _Sidebar extends StatelessWidget {
     return Container(
       width: 220,
       decoration: const BoxDecoration(
-        color: EkkleiciaColors.bgDeep,
+        color: EkklisiaColors.bgDeep,
         border: Border(
-          right: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5),
+          right: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
         ),
       ),
       child: Column(children: [
@@ -117,17 +117,17 @@ class _Sidebar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 52, 16, 16),
           decoration: const BoxDecoration(
             border: Border(bottom: BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5)),
+                color: EkklisiaColors.goldBorder, width: 0.5)),
           ),
           child: Row(children: [
             _CrossCircle(size: 36),
             const SizedBox(width: 10),
             const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('EKKLICIA', style: TextStyle(
-                  color: EkkleiciaColors.goldLight, fontSize: 14,
+              Text('Ekklisia', style: TextStyle(
+                  color: EkklisiaColors.goldLight, fontSize: 14,
                   fontWeight: FontWeight.w700, letterSpacing: 2)),
               Text('ADMIN', style: TextStyle(
-                  color: EkkleiciaColors.goldDim, fontSize: 9, letterSpacing: 3)),
+                  color: EkklisiaColors.goldDim, fontSize: 9, letterSpacing: 3)),
             ]),
           ]),
         ),
@@ -167,7 +167,7 @@ class _SidebarTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: active ? EkkleiciaColors.goldSubtle : Colors.transparent,
+        color: active ? EkklisiaColors.goldSubtle : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -178,7 +178,7 @@ class _SidebarTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border(
                 left: BorderSide(
-                  color: active ? EkkleiciaColors.gold : Colors.transparent,
+                  color: active ? EkklisiaColors.gold : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -187,23 +187,23 @@ class _SidebarTile extends StatelessWidget {
               Icon(active ? item.activeIcon : item.icon,
                   size: 20,
                   color: active
-                      ? EkkleiciaColors.gold
-                      : EkkleiciaColors.textSecondary),
+                      ? EkklisiaColors.gold
+                      : EkklisiaColors.textSecondary),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(item.labelEn, style: TextStyle(
                     color: active
-                        ? EkkleiciaColors.goldLight
-                        : EkkleiciaColors.textSecondary,
+                        ? EkklisiaColors.goldLight
+                        : EkklisiaColors.textSecondary,
                     fontSize: 13,
                     fontWeight:
                     active ? FontWeight.w600 : FontWeight.w400,
                   )),
                   Text(item.labelAr, style: const TextStyle(
                     fontFamily: 'Scheherazade',
-                    color:      EkkleiciaColors.textSecondary,
+                    color:      EkklisiaColors.textSecondary,
                     fontSize:   11,
                   )),
                 ]),
@@ -212,7 +212,7 @@ class _SidebarTile extends StatelessWidget {
                 Container(
                   width: 6, height: 6,
                   decoration: const BoxDecoration(
-                      color: EkkleiciaColors.gold, shape: BoxShape.circle),
+                      color: EkklisiaColors.gold, shape: BoxShape.circle),
                 ),
             ]),
           ),
@@ -232,7 +232,7 @@ class _SidebarFooter extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: const BoxDecoration(
             border: Border(
-                top: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5)),
+                top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
           ),
           child: Column(children: [
             Row(children: [
@@ -244,12 +244,12 @@ class _SidebarFooter extends StatelessWidget {
                   Text(user?.displayName.isNotEmpty == true
                       ? user!.displayName : 'Admin',
                       style: const TextStyle(
-                          color: EkkleiciaColors.textPrimary,
+                          color: EkklisiaColors.textPrimary,
                           fontSize: 12, fontWeight: FontWeight.w600)),
                   Text(user?.email ?? '',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          color: EkkleiciaColors.textSecondary,
+                          color: EkklisiaColors.textSecondary,
                           fontSize: 10)),
                 ],
               )),
@@ -261,13 +261,13 @@ class _SidebarFooter extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: EkkleiciaColors.bgElevated,
+                    color: EkklisiaColors.bgElevated,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: EkkleiciaColors.goldBorder, width: 0.5),
+                        color: EkklisiaColors.goldBorder, width: 0.5),
                   ),
                   child: const Icon(Icons.logout_outlined,
-                      size: 14, color: EkkleiciaColors.textSecondary),
+                      size: 14, color: EkklisiaColors.textSecondary),
                 ),
               ),
             ]),
@@ -277,19 +277,19 @@ class _SidebarFooter extends StatelessWidget {
               padding:
               const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               decoration: BoxDecoration(
-                color: EkkleiciaColors.goldSubtle,
+                color: EkklisiaColors.goldSubtle,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: EkkleiciaColors.goldBorder, width: 0.5),
+                    color: EkklisiaColors.goldBorder, width: 0.5),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.admin_panel_settings_outlined,
-                      size: 12, color: EkkleiciaColors.gold),
+                      size: 12, color: EkklisiaColors.gold),
                   SizedBox(width: 5),
                   Text('Admin', style: TextStyle(
-                    color: EkkleiciaColors.gold,
+                    color: EkklisiaColors.gold,
                     fontSize: 11, fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   )),
@@ -326,13 +326,13 @@ class _MobileTopBar extends StatelessWidget {
       height: 56 + MediaQuery.of(context).padding.top,
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       decoration: const BoxDecoration(
-        color: EkkleiciaColors.bgDeep,
+        color: EkklisiaColors.bgDeep,
         border: Border(bottom: BorderSide(
-            color: EkkleiciaColors.goldBorder, width: 0.5)),
+            color: EkklisiaColors.goldBorder, width: 0.5)),
       ),
       child: Row(children: [
         IconButton(
-          icon: const Icon(Icons.menu, color: EkkleiciaColors.gold),
+          icon: const Icon(Icons.menu, color: EkklisiaColors.gold),
           onPressed: onMenuTap,
         ),
         _CrossCircle(size: 28),
@@ -340,11 +340,11 @@ class _MobileTopBar extends StatelessWidget {
         Column(mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(current.labelEn, style: const TextStyle(
-                  color: EkkleiciaColors.goldLight,
+                  color: EkklisiaColors.goldLight,
                   fontSize: 14, fontWeight: FontWeight.w700)),
               Text(current.labelAr, style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textSecondary, fontSize: 11)),
+                  color: EkklisiaColors.textSecondary, fontSize: 11)),
             ]),
         const Spacer(),
         Padding(
@@ -355,7 +355,7 @@ class _MobileTopBar extends StatelessWidget {
               context.go(Routes.login);
             },
             child: const Icon(Icons.logout_outlined,
-                size: 20, color: EkkleiciaColors.textSecondary),
+                size: 20, color: EkklisiaColors.textSecondary),
           ),
         ),
       ]),
@@ -376,9 +376,9 @@ class _BottomAdminNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: EkkleiciaColors.bgDeep,
+        color: EkklisiaColors.bgDeep,
         border: Border(
-            top: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5)),
+            top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
       ),
       child: SafeArea(
         top: false,
@@ -396,13 +396,13 @@ class _BottomAdminNav extends StatelessWidget {
                       Icon(active ? item.activeIcon : item.icon,
                           size: 20,
                           color: active
-                              ? EkkleiciaColors.gold
-                              : EkkleiciaColors.textSecondary),
+                              ? EkklisiaColors.gold
+                              : EkklisiaColors.textSecondary),
                       const SizedBox(height: 2),
                       Text(item.labelEn, style: TextStyle(
                         color: active
-                            ? EkkleiciaColors.gold
-                            : EkkleiciaColors.textSecondary,
+                            ? EkklisiaColors.gold
+                            : EkklisiaColors.textSecondary,
                         fontSize: 9,
                         fontWeight:
                         active ? FontWeight.w700 : FontWeight.w400,
@@ -433,11 +433,11 @@ class _CrossCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const RadialGradient(
-            colors: [EkkleiciaColors.bronze, EkkleiciaColors.maroon]),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 1),
+            colors: [EkklisiaColors.bronze, EkklisiaColors.maroon]),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 1),
       ),
       child: Center(child: Text('✦', style: TextStyle(
-          color: EkkleiciaColors.goldLight, fontSize: size * 0.42))),
+          color: EkklisiaColors.goldLight, fontSize: size * 0.42))),
     );
   }
 }
@@ -453,11 +453,11 @@ class _Avatar extends StatelessWidget {
       width: size, height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: EkkleiciaColors.bgElevated,
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 1),
+        color: EkklisiaColors.bgElevated,
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 1),
       ),
       child: Center(child: Text(initials, style: TextStyle(
-          color: EkkleiciaColors.gold,
+          color: EkklisiaColors.gold,
           fontSize: size * 0.36, fontWeight: FontWeight.w700))),
     );
   }

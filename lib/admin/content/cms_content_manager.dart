@@ -64,15 +64,15 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
           columns: ['Title', 'Version', 'Language', 'Status'],
           rowBuilder: (bible, idx) => [
             Text(bible.titleEn, style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 12,
             )),
             Text(bible.version, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11,
             )),
             Text(bible.language, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11,
             )),
             _StatusBadge(bible.isPublished),
@@ -207,7 +207,7 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkkleiciaColors.maroon : EkkleiciaColors.gold,
+      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -261,11 +261,11 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
           columns: ['Title (EN)', 'Title (AR)', 'Categories', 'Status'],
           rowBuilder: (hymn, idx) => [
             Text(hymn.titleEn, style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 12,
             )),
             Text(hymn.titleAr, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11,
               fontFamily: 'Scheherazade',
             )),
@@ -403,7 +403,7 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkkleiciaColors.maroon : EkkleiciaColors.gold,
+      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -420,12 +420,12 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: (isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim)
+      color: (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
           .withOpacity(0.12),
       borderRadius: BorderRadius.circular(4),
       border: Border.all(
         color:
-        (isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim)
+        (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
             .withOpacity(0.4),
         width: 0.5,
       ),
@@ -433,7 +433,7 @@ class _StatusBadge extends StatelessWidget {
     child: Text(
       isPublished ? 'Published' : 'Draft',
       style: TextStyle(
-        color: isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim,
+        color: isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim,
         fontSize: 9,
         fontWeight: FontWeight.w700,
       ),
@@ -449,17 +449,17 @@ class _CategoryTag extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-      color: EkkleiciaColors.goldSubtle,
+      color: EkklisiaColors.goldSubtle,
       borderRadius: BorderRadius.circular(3),
       border: Border.all(
-        color: EkkleiciaColors.goldBorder,
+        color: EkklisiaColors.goldBorder,
         width: 0.5,
       ),
     ),
     child: Text(
       label,
       style: const TextStyle(
-        color: EkkleiciaColors.gold,
+        color: EkklisiaColors.gold,
         fontSize: 8,
         fontWeight: FontWeight.w600,
       ),

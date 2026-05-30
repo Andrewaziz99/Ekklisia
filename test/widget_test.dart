@@ -29,7 +29,7 @@ class _FakeApp extends StatelessWidget {
   const _FakeApp();
   @override
   Widget build(BuildContext context) => const MaterialApp(
-    home: Scaffold(body: Center(child: Text('Ekklicia'))),
+    home: Scaffold(body: Center(child: Text('Ekklisia'))),
   );
 }
 
@@ -54,7 +54,7 @@ void main() {
   group('Smoke tests', () {
     testWidgets('Stub app renders without error', (tester) async {
       await tester.pumpWidget(const _FakeApp());
-      expect(find.text('Ekklicia'), findsOneWidget);
+      expect(find.text('Ekklisia'), findsOneWidget);
     });
 
     testWidgets('MaterialApp with dark theme renders', (tester) async {

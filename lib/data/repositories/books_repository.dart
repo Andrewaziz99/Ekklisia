@@ -70,12 +70,12 @@ class BooksRepository {
         ? await cloudinaryDataSource.uploadPdfBytes(
             bytes: pdfBytes,
             fileName: pdfName,
-            folder: 'ekklicia/books/$category',
+            folder: 'Ekklisia/books/$category',
             onProgress: (p) => onProgress?.call('Uploading PDF…', p * 0.6),
           )
         : await cloudinaryDataSource.uploadPdf(
             pdfFile: pdfFile!,
-            folder: 'ekklicia/books/$category',
+            folder: 'Ekklisia/books/$category',
             onProgress: (p) => onProgress?.call('Uploading PDF…', p * 0.6),
           );
 
@@ -86,12 +86,12 @@ class BooksRepository {
           ? await cloudinaryDataSource.uploadCoverImageBytes(
               bytes: coverImageBytes,
               fileName: coverImageName,
-              folder: 'ekklicia/books/$category',
+              folder: 'Ekklisia/books/$category',
               onProgress: (p) => onProgress?.call('Uploading cover…', 0.65 + p * 0.2),
             )
           : await cloudinaryDataSource.uploadCoverImage(
               imageFile: coverImageFile!,
-              folder: 'ekklicia/books/$category',
+              folder: 'Ekklisia/books/$category',
               onProgress: (p) => onProgress?.call('Uploading cover…', 0.65 + p * 0.2),
             );
       coverUrl = coverResult.secureUrl;

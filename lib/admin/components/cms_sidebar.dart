@@ -23,10 +23,10 @@ class CMSSidebar extends StatelessWidget {
     return Container(
       width: 240,
       decoration: const BoxDecoration(
-        color: EkkleiciaColors.bgDeep,
+        color: EkklisiaColors.bgDeep,
         border: Border(
           right: BorderSide(
-            color: EkkleiciaColors.goldBorder,
+            color: EkklisiaColors.goldBorder,
             width: 0.5,
           ),
         ),
@@ -39,7 +39,7 @@ class CMSSidebar extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -53,12 +53,12 @@ class CMSSidebar extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: const RadialGradient(
                       colors: [
-                        EkkleiciaColors.bronze,
-                        EkkleiciaColors.maroon,
+                        EkklisiaColors.bronze,
+                        EkklisiaColors.maroon,
                       ],
                     ),
                     border: Border.all(
-                      color: EkkleiciaColors.goldBorder,
+                      color: EkklisiaColors.goldBorder,
                       width: 0.8,
                     ),
                   ),
@@ -66,7 +66,7 @@ class CMSSidebar extends StatelessWidget {
                     child: Text(
                       '✦',
                       style: TextStyle(
-                        color: EkkleiciaColors.goldLight,
+                        color: EkklisiaColors.goldLight,
                         fontSize: 14,
                       ),
                     ),
@@ -78,9 +78,9 @@ class CMSSidebar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'EKKLICIA',
+                        'Ekklisia',
                         style: TextStyle(
-                          color: EkkleiciaColors.goldLight,
+                          color: EkklisiaColors.goldLight,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2,
@@ -89,7 +89,7 @@ class CMSSidebar extends StatelessWidget {
                       const Text(
                         'CMS',
                         style: TextStyle(
-                          color: EkkleiciaColors.goldDim,
+                          color: EkklisiaColors.goldDim,
                           fontSize: 8,
                           letterSpacing: 2,
                         ),
@@ -149,7 +149,7 @@ class CMSSidebar extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -162,10 +162,10 @@ class CMSSidebar extends StatelessWidget {
                     horizontal: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: EkkleiciaColors.goldSubtle,
+                    color: EkklisiaColors.goldSubtle,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: EkkleiciaColors.goldBorder,
+                      color: EkklisiaColors.goldBorder,
                       width: 0.5,
                     ),
                   ),
@@ -175,13 +175,13 @@ class CMSSidebar extends StatelessWidget {
                       Icon(
                         Icons.admin_panel_settings_outlined,
                         size: 12,
-                        color: EkkleiciaColors.gold,
+                        color: EkklisiaColors.gold,
                       ),
                       SizedBox(width: 6),
                       Text(
                         'Admin Access',
                         style: TextStyle(
-                          color: EkkleiciaColors.gold,
+                          color: EkklisiaColors.gold,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -202,7 +202,7 @@ class CMSSidebar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Divider(
-        color: EkkleiciaColors.goldBorder.withOpacity(0.3),
+        color: EkklisiaColors.goldBorder.withOpacity(0.3),
         height: 1,
         thickness: 0.5,
       ),
@@ -241,7 +241,7 @@ class _SidebarSection extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  color: EkkleiciaColors.goldLight,
+                  color: EkklisiaColors.goldLight,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
@@ -251,7 +251,7 @@ class _SidebarSection extends StatelessWidget {
                 titleAr,
                 style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.goldDim,
+                  color: EkklisiaColors.goldDim,
                   fontSize: 9,
                 ),
               ),
@@ -287,7 +287,7 @@ class _SidebarItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: isActive ? EkkleiciaColors.goldSubtle : Colors.transparent,
+        color: isActive ? EkklisiaColors.goldSubtle : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -298,7 +298,7 @@ class _SidebarItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border(
                 left: BorderSide(
-                  color: isActive ? EkkleiciaColors.gold : Colors.transparent,
+                  color: isActive ? EkklisiaColors.gold : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -309,8 +309,8 @@ class _SidebarItem extends StatelessWidget {
                   isActive ? item.activeIcon : item.icon,
                   size: 18,
                   color: isActive
-                      ? EkkleiciaColors.gold
-                      : EkkleiciaColors.textSecondary,
+                      ? EkklisiaColors.gold
+                      : EkklisiaColors.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -321,8 +321,8 @@ class _SidebarItem extends StatelessWidget {
                         item.labelEn,
                         style: TextStyle(
                           color: isActive
-                              ? EkkleiciaColors.goldLight
-                              : EkkleiciaColors.textSecondary,
+                              ? EkklisiaColors.goldLight
+                              : EkklisiaColors.textSecondary,
                           fontSize: 12,
                           fontWeight:
                           isActive ? FontWeight.w600 : FontWeight.w400,
@@ -332,7 +332,7 @@ class _SidebarItem extends StatelessWidget {
                         item.labelAr,
                         style: const TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.textSecondary,
+                          color: EkklisiaColors.textSecondary,
                           fontSize: 9,
                         ),
                       ),
@@ -371,7 +371,7 @@ class _SidebarAction extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: isActive ? EkkleiciaColors.goldSubtle : Colors.transparent,
+        color: isActive ? EkklisiaColors.goldSubtle : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -382,7 +382,7 @@ class _SidebarAction extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border(
                 left: BorderSide(
-                  color: isActive ? EkkleiciaColors.gold : Colors.transparent,
+                  color: isActive ? EkklisiaColors.gold : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -393,8 +393,8 @@ class _SidebarAction extends StatelessWidget {
                   icon,
                   size: 18,
                   color: isActive
-                      ? EkkleiciaColors.gold
-                      : EkkleiciaColors.textSecondary,
+                      ? EkklisiaColors.gold
+                      : EkklisiaColors.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -405,8 +405,8 @@ class _SidebarAction extends StatelessWidget {
                         labelEn,
                         style: TextStyle(
                           color: isActive
-                              ? EkkleiciaColors.goldLight
-                              : EkkleiciaColors.textSecondary,
+                              ? EkklisiaColors.goldLight
+                              : EkklisiaColors.textSecondary,
                           fontSize: 12,
                           fontWeight:
                           isActive ? FontWeight.w600 : FontWeight.w400,
@@ -416,7 +416,7 @@ class _SidebarAction extends StatelessWidget {
                         labelAr,
                         style: const TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.textSecondary,
+                          color: EkklisiaColors.textSecondary,
                           fontSize: 9,
                         ),
                       ),

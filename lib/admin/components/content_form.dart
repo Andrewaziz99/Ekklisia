@@ -87,17 +87,17 @@ class _ContentFormState extends State<ContentForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: EkkleiciaColors.bgPrimary,
+      color: EkklisiaColors.bgPrimary,
       child: Column(
         children: [
           // ── Header ───────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              color: EkkleiciaColors.bgDeep,
+              color: EkklisiaColors.bgDeep,
               border: Border(
                 bottom: BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -106,13 +106,13 @@ class _ContentFormState extends State<ContentForm> {
               children: [
                 Text(
                   widget.title,
-                  style: EkkleciaTheme.headingMedium,
+                  style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
                 ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(
                     Icons.close,
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                   ),
                   onPressed: widget.onCancel,
                 ),
@@ -150,10 +150,10 @@ class _ContentFormState extends State<ContentForm> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              color: EkkleiciaColors.bgDeep,
+              color: EkklisiaColors.bgDeep,
               border: Border(
                 top: BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -164,7 +164,7 @@ class _ContentFormState extends State<ContentForm> {
                 OutlinedButton(
                   onPressed: widget.isLoading ? null : widget.onCancel,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: EkkleiciaColors.textSecondary,
+                    foregroundColor: EkklisiaColors.textSecondary,
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -178,7 +178,7 @@ class _ContentFormState extends State<ContentForm> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation(
-                        EkkleiciaColors.bgDeep,
+                        EkklisiaColors.bgDeep,
                       ),
                     ),
                   )
@@ -205,7 +205,7 @@ class _ContentFormState extends State<ContentForm> {
                 TextSpan(
                   text: field.labelEn,
                   style: const TextStyle(
-                    color: EkkleiciaColors.textPrimary,
+                    color: EkklisiaColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -214,7 +214,7 @@ class _ContentFormState extends State<ContentForm> {
                   const TextSpan(
                     text: ' *',
                     style: TextStyle(
-                      color: EkkleiciaColors.maroon,
+                      color: EkklisiaColors.maroon,
                     ),
                   ),
               ],
@@ -224,7 +224,7 @@ class _ContentFormState extends State<ContentForm> {
             field.labelAr,
             style: const TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11,
             ),
           ),
@@ -244,17 +244,17 @@ class _ContentFormState extends State<ContentForm> {
             }
                 : null,
             style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: field.hintEn,
               hintStyle: const TextStyle(
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 12,
               ),
               filled: true,
-              fillColor: EkkleiciaColors.bgElevated,
+              fillColor: EkklisiaColors.bgElevated,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 12,
@@ -262,21 +262,21 @@ class _ContentFormState extends State<ContentForm> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: EkkleiciaColors.gold,
+                  color: EkklisiaColors.gold,
                   width: 1.0,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: EkkleiciaColors.maroon,
+                  color: EkklisiaColors.maroon,
                   width: 1.0,
                 ),
               ),
@@ -291,10 +291,10 @@ class _ContentFormState extends State<ContentForm> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgElevated,
+        color: EkklisiaColors.bgElevated,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: EkkleiciaColors.goldBorder,
+          color: EkklisiaColors.goldBorder,
           width: 0.5,
         ),
       ),
@@ -303,8 +303,8 @@ class _ContentFormState extends State<ContentForm> {
           Icon(
             _isPublished ? Icons.visibility : Icons.visibility_off,
             color: _isPublished
-                ? EkkleiciaColors.gold
-                : EkkleiciaColors.textSecondary,
+                ? EkklisiaColors.gold
+                : EkklisiaColors.textSecondary,
             size: 18,
           ),
           const SizedBox(width: 12),
@@ -315,7 +315,7 @@ class _ContentFormState extends State<ContentForm> {
                 const Text(
                   'Publish Status',
                   style: TextStyle(
-                    color: EkkleiciaColors.textPrimary,
+                    color: EkklisiaColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -323,7 +323,7 @@ class _ContentFormState extends State<ContentForm> {
                 Text(
                   _isPublished ? 'Published' : 'Draft',
                   style: const TextStyle(
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -333,8 +333,8 @@ class _ContentFormState extends State<ContentForm> {
           Switch(
             value: _isPublished,
             onChanged: (val) => setState(() => _isPublished = val),
-            activeColor: EkkleiciaColors.gold,
-            inactiveThumbColor: EkkleiciaColors.textSecondary,
+            activeColor: EkklisiaColors.gold,
+            inactiveThumbColor: EkklisiaColors.textSecondary,
           ),
         ],
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/colors.dart';
+import '../../../core/theme/brightness_colors.dart';
 import '../cubit/books_cubit.dart';
 import '../cubit/books_state.dart';
 import '../widgets/book_card.dart';
@@ -33,8 +33,13 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgPrimary,
+      backgroundColor: scaffoldBg,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [_buildSliverAppBar()],
         body: Column(
@@ -52,7 +57,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
             // ── Category Chips ───────────────────────────────────────────
             const _CategoryFilter(),
 
-            const Divider(height: 1, color: EkkleiciaColors.goldBorder),
+            Divider(height: 1, color: goldBorder),
 
             // ── Book Grid ────────────────────────────────────────────────
             Expanded(child: _BookGrid(lang: _lang)),
@@ -63,24 +68,30 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
   }
 
   SliverAppBar _buildSliverAppBar() {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     return SliverAppBar(
       pinned: true,
       expandedHeight: 140,
-      backgroundColor: EkkleiciaColors.bgDeep,
+      backgroundColor: bgDeep,
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,
           children: [
             // Background texture
             Image.asset(
-              'assets/images/ekklicia_background.png',
+              'assets/images/Ekklisia_background.png',
               fit: BoxFit.cover,
               opacity: const AlwaysStoppedAnimation(0.15),
             ),
             // Gradient overlay
             Container(
-              decoration: const BoxDecoration(
-                gradient: EkkleiciaColors.headerGradient,
+              decoration: BoxDecoration(
+                gradient: BrightnessColors.headerGradient(Theme.of(context).brightness),
               ),
             ),
             // Ornamental cross motif at top
@@ -91,7 +102,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
                 child: Text(
                   '✦',
                   style: TextStyle(
-                    color: EkkleiciaColors.goldDim,
+                    color: goldDim,
                     fontSize: 18,
                     height: 1,
                   ),
@@ -110,7 +121,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
                       'المكتبة',
                       style: TextStyle(
                         fontFamily: 'Scheherazade',
-                        color: EkkleiciaColors.goldLight,
+                        color: goldLight,
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
@@ -120,7 +131,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
                     Text(
                       'LIBRARY',
                       style: TextStyle(
-                        color: EkkleiciaColors.goldDim,
+                        color: goldDim,
                         fontSize: 10,
                         letterSpacing: 4,
                         fontWeight: FontWeight.w500,
@@ -135,7 +146,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen> {
       ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 0.5, color: EkkleiciaColors.goldBorder),
+        child: Container(height: 0.5, color: goldBorder),
       ),
     );
   }
@@ -156,48 +167,56 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final textPrimary = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final gold = Theme.of(context).primaryColor;
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Scheherazade',
-          color: EkkleiciaColors.textPrimary,
+          color: textPrimary,
           fontSize: 16,
         ),
         decoration: InputDecoration(
           hintText: 'ابحث عن كتاب…',
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary,
+            color: textSecondary,
           ),
-          prefixIcon: const Icon(Icons.search, color: EkkleiciaColors.goldDim),
+          prefixIcon: Icon(Icons.search, color: goldDim),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close,
                     size: 18,
-                    color: EkkleiciaColors.textSecondary,
+                    color: textSecondary,
                   ),
                   onPressed: onClear,
                 )
               : null,
           filled: true,
-          fillColor: EkkleiciaColors.bgElevated,
+          fillColor: bgElevated,
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-              color: EkkleiciaColors.goldBorder,
+            borderSide: BorderSide(
+              color: goldBorder,
               width: 0.5,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-              color: EkkleiciaColors.gold,
+            borderSide: BorderSide(
+              color: gold,
               width: 1.5,
             ),
           ),
@@ -263,6 +282,14 @@ class _CategoryFilter extends StatelessWidget {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final brightness = Theme.of(context).brightness;
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final gold = Theme.of(context).primaryColor;
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final goldSubtle = BrightnessColors.goldSubtle(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -271,13 +298,13 @@ class _CategoryFilter extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected
-              ? EkkleiciaColors.goldSubtle
-              : EkkleiciaColors.bgElevated,
+              ? goldSubtle
+              : bgElevated,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? EkkleiciaColors.gold
-                : EkkleiciaColors.goldBorder,
+                ? gold
+                : goldBorder,
             width: isSelected ? 1.0 : 0.5,
           ),
         ),
@@ -286,8 +313,8 @@ class _CategoryFilter extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'Scheherazade',
             color: isSelected
-                ? EkkleiciaColors.goldLight
-                : EkkleiciaColors.textSecondary,
+                ? goldLight
+                : textSecondary,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
           ),
@@ -316,8 +343,8 @@ class _BookGrid extends StatelessWidget {
         if (state.isEmpty) return const _EmptyView();
 
         return RefreshIndicator(
-          color: EkkleiciaColors.gold,
-          backgroundColor: EkkleiciaColors.bgMid,
+          color: Theme.of(context).primaryColor,
+          backgroundColor: BrightnessColors.bgMid(Theme.of(context).brightness),
           onRefresh: () async => context.read<BooksCubit>().watchBooks(
             category: state.selectedCategory,
           ),
@@ -370,11 +397,16 @@ class _LoadingGrid extends StatelessWidget {
 class _ShimmerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgMid = BrightnessColors.bgMid(brightness);
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     return Container(
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: goldBorder, width: 0.5),
       ),
       child: Column(
         children: [
@@ -384,7 +416,7 @@ class _ShimmerCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(11),
               ),
-              child: _shimmerBox(),
+              child: _shimmerBox(bgElevated),
             ),
           ),
           Expanded(
@@ -394,7 +426,7 @@ class _ShimmerCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [_shimmerLine(1.0), _shimmerLine(0.6)],
+                children: [_shimmerLine(bgElevated, 1.0), _shimmerLine(bgElevated, 0.6)],
               ),
             ),
           ),
@@ -403,14 +435,14 @@ class _ShimmerCard extends StatelessWidget {
     );
   }
 
-  Widget _shimmerBox() => Container(color: EkkleiciaColors.bgElevated);
+  Widget _shimmerBox(Color fill) => Container(color: fill);
 
-  Widget _shimmerLine(double fraction) => FractionallySizedBox(
+  Widget _shimmerLine(Color fill, double fraction) => FractionallySizedBox(
     widthFactor: fraction,
     child: Container(
       height: 10,
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgElevated,
+        color: fill,
         borderRadius: BorderRadius.circular(4),
       ),
     ),
@@ -422,25 +454,32 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.library_books_outlined,
-            size: 56,
-            color: EkkleiciaColors.goldDim,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'لا توجد كتب بعد',
-            style: TextStyle(
-              fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary,
-              fontSize: 18,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.library_books_outlined,
+              size: 56,
+              color: goldDim,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد كتب بعد',
+              style: TextStyle(
+                fontFamily: 'Scheherazade',
+                color: textSecondary,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -452,6 +491,8 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textSecondary = BrightnessColors.textSecondary(Theme.of(context).brightness);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -463,7 +504,7 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: EkkleiciaColors.textSecondary),
+              style: TextStyle(color: textSecondary),
             ),
             const SizedBox(height: 16),
             OutlinedButton(

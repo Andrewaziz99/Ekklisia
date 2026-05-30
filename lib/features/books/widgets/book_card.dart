@@ -27,12 +27,12 @@ class BookCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: EkkleiciaColors.bgMid,
+          color: EkklisiaColors.bgMid,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+          border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: EkkleiciaColors.bgDeep.withValues(alpha: 0.6),
+              color: EkklisiaColors.bgDeep.withValues(alpha: 0.6),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -90,7 +90,7 @@ class BookCard extends StatelessWidget {
                           : TextAlign.left,
                       style: TextStyle(
                         fontFamily: currentLang == 'ar' ? 'Scheherazade' : null,
-                        color: EkkleiciaColors.textPrimary,
+                        color: EkklisiaColors.textPrimary,
                         fontSize: currentLang == 'ar' ? 14 : 13,
                         fontWeight: FontWeight.w600,
                         height: 1.4,
@@ -106,7 +106,7 @@ class BookCard extends StatelessWidget {
                             '${book.pageCount} صفحة',
                             style: const TextStyle(
                               fontFamily: 'Scheherazade',
-                              color: EkkleiciaColors.textSecondary,
+                              color: EkklisiaColors.textSecondary,
                               fontSize: 11,
                             ),
                           ),
@@ -114,7 +114,7 @@ class BookCard extends StatelessWidget {
                           textDirection: TextDirection.ltr,
                           book.formattedSize,
                           style: const TextStyle(
-                            color: EkkleiciaColors.gold,
+                            color: EkklisiaColors.gold,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -134,20 +134,20 @@ class BookCard extends StatelessWidget {
   Widget _buildCoverImage() {
     if (book.coverUrl.isEmpty) {
       return Container(
-        color: EkkleiciaColors.bgElevated,
+        color: EkklisiaColors.bgElevated,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.menu_book_rounded,
               size: 40,
-              color: EkkleiciaColors.goldDim,
+              color: EkklisiaColors.goldDim,
             ),
             const SizedBox(height: 8),
             Text(
               book.category,
               style: const TextStyle(
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 11,
               ),
             ),
@@ -160,15 +160,15 @@ class BookCard extends StatelessWidget {
       imageUrl: book.coverUrl,
       fit: BoxFit.cover,
       placeholder: (_, __) => Shimmer.fromColors(
-        baseColor: EkkleiciaColors.bgElevated,
-        highlightColor: EkkleiciaColors.bgMid,
-        child: Container(color: EkkleiciaColors.bgElevated),
+        baseColor: EkklisiaColors.bgElevated,
+        highlightColor: EkklisiaColors.bgMid,
+        child: Container(color: EkklisiaColors.bgElevated),
       ),
       errorWidget: (_, __, ___) => Container(
-        color: EkkleiciaColors.bgElevated,
+        color: EkklisiaColors.bgElevated,
         child: const Icon(
           Icons.broken_image_outlined,
-          color: EkkleiciaColors.goldDim,
+          color: EkklisiaColors.goldDim,
           size: 32,
         ),
       ),
@@ -184,7 +184,7 @@ class _CoverGradientOverlay extends StatelessWidget {
     return Container(
       height: 60,
       decoration: const BoxDecoration(
-        gradient: EkkleiciaColors.cardOverlayGradient,
+        gradient: EkklisiaColors.cardOverlayGradient,
       ),
     );
   }
@@ -196,16 +196,16 @@ class _CategoryBadge extends StatelessWidget {
 
   Color get _color {
     const map = {
-      'bible': EkkleiciaColors.maroon,
-      'prayers': EkkleiciaColors.maroon,
-      'liturgy': EkkleiciaColors.bronze,
-      'hymns': EkkleiciaColors.tealDark,
-      'saints': EkkleiciaColors.plum,
-      'fathers': EkkleiciaColors.forest,
-      'commentaries': EkkleiciaColors.ocean,
-      'studies': EkkleiciaColors.ocean,
+      'bible': EkklisiaColors.maroon,
+      'prayers': EkklisiaColors.maroon,
+      'liturgy': EkklisiaColors.bronze,
+      'hymns': EkklisiaColors.tealDark,
+      'saints': EkklisiaColors.plum,
+      'fathers': EkklisiaColors.forest,
+      'commentaries': EkklisiaColors.ocean,
+      'studies': EkklisiaColors.ocean,
     };
-    return map[category] ?? EkkleiciaColors.bgElevated;
+    return map[category] ?? EkklisiaColors.bgElevated;
   }
 
   @override
@@ -215,12 +215,12 @@ class _CategoryBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: _color.withOpacity(0.9),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Text(
         category,
         style: const TextStyle(
-          color: EkkleiciaColors.textCream,
+          color: EkklisiaColors.textCream,
           fontSize: 9,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.8,

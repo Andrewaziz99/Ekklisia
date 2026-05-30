@@ -163,7 +163,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Upload failed: $e',
               style: const TextStyle(fontFamily: 'Scheherazade')),
-          backgroundColor: EkkleiciaColors.maroon,
+          backgroundColor: EkklisiaColors.maroon,
           behavior: SnackBarBehavior.floating,
         ));
       }
@@ -201,8 +201,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             ? '${_pdfSizeMb!.toStringAsFixed(2)} MB'
             : null,
         borderColor: (_pdfFile != null || _pdfBytes != null)
-            ? EkkleiciaColors.tealMid
-            : EkkleiciaColors.goldBorder,
+            ? EkklisiaColors.tealMid
+            : EkklisiaColors.goldBorder,
         onTap: _pickPdf,
       ),
       const SizedBox(height: 16),
@@ -218,8 +218,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             ? 'Cover selected'
             : null,
         borderColor: (_coverFile != null || _coverBytes != null)
-            ? EkkleiciaColors.tealMid
-            : EkkleiciaColors.goldBorder,
+            ? EkklisiaColors.tealMid
+            : EkklisiaColors.goldBorder,
         leadingWidget: (_coverFile != null || _coverBytes != null)
             ? ClipRRect(
             borderRadius: BorderRadius.circular(6),
@@ -288,15 +288,15 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
               value: _category.isEmpty ? null : _category,
-              dropdownColor: EkkleiciaColors.bgElevated,
+              dropdownColor: EkklisiaColors.bgElevated,
               style: const TextStyle(
-                  color: EkkleiciaColors.textPrimary, fontSize: 14),
+                  color: EkklisiaColors.textPrimary, fontSize: 14),
               decoration: _inputDec(hint: 'Select a category'),
               items: AppConstants.bookCategories
                   .map((c) => DropdownMenuItem(
                   value: c,
                   child: Text(c, style: const TextStyle(
-                      color: EkkleiciaColors.textPrimary))))
+                      color: EkklisiaColors.textPrimary))))
                   .toList(),
               onChanged: (v) => setState(() => _category = v ?? ''),
               validator: (v) =>
@@ -341,7 +341,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
               value:   _publishNow,
               onChange:(v) => setState(() => _publishNow = v),
             ),
-            const Divider(height: 20, color: EkkleiciaColors.goldBorder),
+            const Divider(height: 20, color: EkklisiaColors.goldBorder),
             _ToggleRow(
               label:   'Send Push Notification',
               labelAr: 'إرسال إشعار',
@@ -392,20 +392,20 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: EkkleiciaColors.goldSubtle,
+            color: EkklisiaColors.goldSubtle,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+                color: EkklisiaColors.goldBorder, width: 0.5),
           ),
           child: const Row(children: [
             Icon(Icons.notifications_active_outlined,
-                size: 18, color: EkkleiciaColors.gold),
+                size: 18, color: EkklisiaColors.gold),
             SizedBox(width: 10),
             Expanded(child: Text(
               'A push notification will be sent to all registered devices '
                   'via the Supabase send-notifications edge function.',
               style: TextStyle(
-                  color: EkkleiciaColors.textSecondary, fontSize: 12,
+                  color: EkklisiaColors.textSecondary, fontSize: 12,
                   height: 1.5),
             )),
           ]),
@@ -417,7 +417,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         onNext: _upload,
         nextLabel: 'Upload & Publish',
         nextIcon: Icons.upload,
-        nextColor: EkkleiciaColors.gold,
+        nextColor: EkklisiaColors.gold,
       ),
     ]);
   }
@@ -448,7 +448,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
           child: Text(_progressStep,
               key: ValueKey(_progressStep),
               style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 12, fontStyle: FontStyle.italic)),
         ),
         if (_done) ...[
@@ -458,8 +458,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             child: ElevatedButton(
               onPressed: () => context.go(Routes.adminBooks),
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkkleiciaColors.gold,
-                foregroundColor: EkkleiciaColors.bgDeep,
+                backgroundColor: EkklisiaColors.gold,
+                foregroundColor: EkklisiaColors.bgDeep,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -478,7 +478,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   Widget _label(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 0),
     child: Text(text, style: const TextStyle(
-      color: EkkleiciaColors.textSecondary,
+      color: EkklisiaColors.textSecondary,
       fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8,
     )),
   );
@@ -486,18 +486,18 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   InputDecoration _inputDec({String hint = ''}) => InputDecoration(
     hintText:       hint,
     hintStyle:      const TextStyle(
-        color: EkkleiciaColors.textSecondary, fontSize: 13),
+        color: EkklisiaColors.textSecondary, fontSize: 13),
     filled:         true,
-    fillColor:      EkkleiciaColors.bgElevated,
+    fillColor:      EkklisiaColors.bgElevated,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     enabledBorder:  OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: const BorderSide(
-          color: EkkleiciaColors.goldBorder, width: 0.5),
+          color: EkklisiaColors.goldBorder, width: 0.5),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: EkkleiciaColors.gold, width: 1.5),
+      borderSide: const BorderSide(color: EkklisiaColors.gold, width: 1.5),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
@@ -529,8 +529,8 @@ class _Stepper extends StatelessWidget {
         return Expanded(child: Container(
             height: 1,
             color: filled
-                ? EkkleiciaColors.gold
-                : EkkleiciaColors.goldBorder));
+                ? EkklisiaColors.gold
+                : EkklisiaColors.goldBorder));
       }
       final idx  = i ~/ 2;
       final done = idx < current;
@@ -542,31 +542,31 @@ class _Stepper extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: done
-                ? EkkleiciaColors.gold
+                ? EkklisiaColors.gold
                 : active
-                ? EkkleiciaColors.goldSubtle
+                ? EkklisiaColors.goldSubtle
                 : Colors.transparent,
             border: Border.all(
               color: (done || active)
-                  ? EkkleiciaColors.gold
-                  : EkkleiciaColors.goldBorder,
+                  ? EkklisiaColors.gold
+                  : EkklisiaColors.goldBorder,
               width: 1.5,
             ),
           ),
           child: Center(child: done
               ? const Icon(Icons.check,
-              size: 14, color: EkkleiciaColors.bgDeep)
+              size: 14, color: EkklisiaColors.bgDeep)
               : Text('${idx + 1}', style: TextStyle(
               color: active
-                  ? EkkleiciaColors.gold
-                  : EkkleiciaColors.textSecondary,
+                  ? EkklisiaColors.gold
+                  : EkklisiaColors.textSecondary,
               fontSize: 11, fontWeight: FontWeight.w700))),
         ),
         const SizedBox(height: 4),
         Text(_steps[idx], style: TextStyle(
           color: active
-              ? EkkleiciaColors.textPrimary
-              : EkkleiciaColors.textSecondary,
+              ? EkklisiaColors.textPrimary
+              : EkklisiaColors.textSecondary,
           fontSize: 9, fontWeight: FontWeight.w500,
         )),
       ]);
@@ -606,7 +606,7 @@ class _DropZone extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color:        EkkleiciaColors.bgMid,
+          color:        EkklisiaColors.bgMid,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: borderColor, width: hasFile ? 1.0 : 0.5,
@@ -620,8 +620,8 @@ class _DropZone extends StatelessWidget {
             Icon(hasFile ? Icons.check_circle_outline : icon,
                 size: 28,
                 color: hasFile
-                    ? EkkleiciaColors.tealMid
-                    : EkkleiciaColors.goldDim),
+                    ? EkklisiaColors.tealMid
+                    : EkklisiaColors.goldDim),
             const SizedBox(width: 14),
           ],
           Expanded(child: Column(
@@ -630,8 +630,8 @@ class _DropZone extends StatelessWidget {
               Text(hasFile ? (fileName ?? title) : title,
                   style: TextStyle(
                       color: hasFile
-                          ? EkkleiciaColors.textPrimary
-                          : EkkleiciaColors.textSecondary,
+                          ? EkklisiaColors.textPrimary
+                          : EkklisiaColors.textSecondary,
                       fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Text(
@@ -639,16 +639,16 @@ class _DropZone extends StatelessWidget {
                     ? (fileInfo ?? 'Tap to change')
                     : subtitle,
                 style: const TextStyle(
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 11),
               ),
               Text(titleAr, style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textSecondary, fontSize: 11)),
+                  color: EkklisiaColors.textSecondary, fontSize: 11)),
             ],
           )),
           Icon(Icons.chevron_right,
-              color: EkkleiciaColors.goldDim, size: 18),
+              color: EkklisiaColors.goldDim, size: 18),
         ]),
       ),
     );
@@ -667,24 +667,24 @@ class _AdminCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(width: 3, height: 16,
               decoration: BoxDecoration(
-                  color: EkkleiciaColors.gold,
+                  color: EkklisiaColors.gold,
                   borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 8),
           Text(title, style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(width: 6),
           Text(titleAr, style: const TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary, fontSize: 12)),
+              color: EkklisiaColors.textSecondary, fontSize: 12)),
         ]),
         const SizedBox(height: 16),
         child,
@@ -714,12 +714,12 @@ class _ArabicField extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Text(label, style: const TextStyle(
-            color: EkkleiciaColors.textSecondary,
+            color: EkklisiaColors.textSecondary,
             fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
         const SizedBox(width: 6),
         Text(labelAr, style: const TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary, fontSize: 11)),
+            color: EkklisiaColors.textSecondary, fontSize: 11)),
       ]),
       const SizedBox(height: 6),
       TextFormField(
@@ -728,25 +728,25 @@ class _ArabicField extends StatelessWidget {
         maxLines:      maxLines,
         style: const TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textPrimary, fontSize: 15),
+            color: EkklisiaColors.textPrimary, fontSize: 15),
         decoration: InputDecoration(
           hintText:  hint,
           hintStyle: const TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary, fontSize: 14),
+              color: EkklisiaColors.textSecondary, fontSize: 14),
           filled:    true,
-          fillColor: EkkleiciaColors.bgElevated,
+          fillColor: EkklisiaColors.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+                color: EkklisiaColors.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(
-                color: EkkleiciaColors.gold, width: 1.5),
+                color: EkklisiaColors.gold, width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -779,30 +779,30 @@ class _AdminField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label, style: const TextStyle(
-          color: EkkleiciaColors.textSecondary,
+          color: EkklisiaColors.textSecondary,
           fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
       const SizedBox(height: 6),
       TextField(
         controller: controller,
         style: const TextStyle(
-            color: EkkleiciaColors.textPrimary, fontSize: 13),
+            color: EkklisiaColors.textPrimary, fontSize: 13),
         decoration: InputDecoration(
           hintText:  hint,
           hintStyle: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 12),
+              color: EkklisiaColors.textSecondary, fontSize: 12),
           filled:    true,
-          fillColor: EkkleiciaColors.bgElevated,
+          fillColor: EkklisiaColors.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 11),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+                color: EkklisiaColors.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(
-                color: EkkleiciaColors.gold, width: 1.5),
+                color: EkklisiaColors.gold, width: 1.5),
           ),
         ),
       ),
@@ -830,16 +830,16 @@ class _ToggleRow extends StatelessWidget {
         children: [
           Row(children: [
             Text(label, style: const TextStyle(
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(width: 6),
             Text(labelAr, style: const TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary, fontSize: 12)),
+                color: EkklisiaColors.textSecondary, fontSize: 12)),
           ]),
           const SizedBox(height: 2),
           Text(sub, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 11)),
+              color: EkklisiaColors.textSecondary, fontSize: 11)),
         ],
       )),
       const SizedBox(width: 16),
@@ -849,8 +849,8 @@ class _ToggleRow extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           width: 44, height: 24,
           color: value
-              ? EkkleiciaColors.gold
-              : EkkleiciaColors.bgElevated,
+              ? EkklisiaColors.gold
+              : EkklisiaColors.bgElevated,
           child: Stack(children: [
             AnimatedPositioned(
               duration: const Duration(milliseconds: 200),
@@ -859,8 +859,8 @@ class _ToggleRow extends StatelessWidget {
                   width: 18, height: 18, decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: value
-                    ? EkkleiciaColors.bgDeep
-                    : EkkleiciaColors.textSecondary,
+                    ? EkklisiaColors.bgDeep
+                    : EkklisiaColors.textSecondary,
               )),
             ),
           ]),
@@ -884,14 +884,14 @@ class _SummaryRow extends StatelessWidget {
         SizedBox(
           width: 110,
           child: Text(label, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11, fontWeight: FontWeight.w500)),
         ),
         Expanded(child: Text(value,
             textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
             style: TextStyle(
               fontFamily: rtl ? 'Scheherazade' : null,
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: rtl ? 14 : 12,
             ))),
       ]),
@@ -913,13 +913,13 @@ class _ProgressBar extends StatelessWidget {
     return Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Text(label, style: const TextStyle(
-            color: EkkleiciaColors.textSecondary, fontSize: 12)),
+            color: EkklisiaColors.textSecondary, fontSize: 12)),
         Text(
           done ? 'Done ✓' : '${(progress * 100).round()}%',
           style: TextStyle(
             color: done
-                ? EkkleiciaColors.tealMid
-                : EkkleiciaColors.gold,
+                ? EkklisiaColors.tealMid
+                : EkklisiaColors.gold,
             fontSize: 11, fontWeight: FontWeight.w700,
           ),
         ),
@@ -930,9 +930,9 @@ class _ProgressBar extends StatelessWidget {
         child: LinearProgressIndicator(
           value: progress,
           minHeight: 6,
-          backgroundColor: EkkleiciaColors.bgElevated,
+          backgroundColor: EkklisiaColors.bgElevated,
           valueColor: AlwaysStoppedAnimation(
-              done ? EkkleiciaColors.tealMid : EkkleiciaColors.gold),
+              done ? EkklisiaColors.tealMid : EkklisiaColors.gold),
         ),
       ),
     ]);
@@ -945,7 +945,7 @@ class _StepNavRow extends StatelessWidget {
     this.onNext,
     this.nextLabel = 'Continue',
     this.nextIcon,
-    this.nextColor = EkkleiciaColors.gold,
+    this.nextColor = EkklisiaColors.gold,
   });
   final VoidCallback? onBack;
   final VoidCallback? onNext;
@@ -960,9 +960,9 @@ class _StepNavRow extends StatelessWidget {
         OutlinedButton(
           onPressed: onBack,
           style: OutlinedButton.styleFrom(
-            foregroundColor: EkkleiciaColors.textSecondary,
+            foregroundColor: EkklisiaColors.textSecondary,
             side: const BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+                color: EkklisiaColors.goldBorder, width: 0.5),
             padding: const EdgeInsets.symmetric(
                 horizontal: 20, vertical: 13),
             shape: RoundedRectangleBorder(
@@ -979,16 +979,16 @@ class _StepNavRow extends StatelessWidget {
           icon: Icon(nextIcon ?? Icons.arrow_forward,
               size: 18,
               color: onNext == null
-                  ? EkkleiciaColors.textSecondary
-                  : EkkleiciaColors.bgDeep),
+                  ? EkklisiaColors.textSecondary
+                  : EkklisiaColors.bgDeep),
           label: Text(nextLabel,
               style: const TextStyle(
                   fontSize: 14, fontWeight: FontWeight.w700)),
           style: ElevatedButton.styleFrom(
             backgroundColor: onNext == null
-                ? EkkleiciaColors.goldDim.withOpacity(0.4)
+                ? EkklisiaColors.goldDim.withOpacity(0.4)
                 : nextColor,
-            foregroundColor: EkkleiciaColors.bgDeep,
+            foregroundColor: EkklisiaColors.bgDeep,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),

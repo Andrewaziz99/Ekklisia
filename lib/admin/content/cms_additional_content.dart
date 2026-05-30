@@ -62,18 +62,18 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
           rowBuilder: (prayer, idx) => [
             Text(prayer.titleEn,
                 style: const TextStyle(
-                  color: EkkleiciaColors.textPrimary,
+                  color: EkklisiaColors.textPrimary,
                   fontSize: 12,
                 )),
             Text(prayer.titleAr,
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                   fontFamily: 'Scheherazade',
                 )),
             Text(prayer.occasion ?? 'General',
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                 )),
             _StatusBadge(prayer.isPublished),
@@ -199,7 +199,7 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkkleiciaColors.maroon : EkkleiciaColors.gold,
+      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -254,17 +254,17 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
           rowBuilder: (liturgy, idx) => [
             Text(liturgy.titleEn,
                 style: const TextStyle(
-                  color: EkkleiciaColors.textPrimary,
+                  color: EkklisiaColors.textPrimary,
                   fontSize: 12,
                 )),
             Text(liturgy.liturgyType ?? 'General',
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                 )),
             Text(liturgy.season ?? 'Regular',
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                 )),
             _StatusBadge(liturgy.isPublished),
@@ -398,7 +398,7 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkkleiciaColors.maroon : EkkleiciaColors.gold,
+      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -453,18 +453,18 @@ class _SaintsManagerScreenState extends State<SaintsManagerScreen> {
           rowBuilder: (saint, idx) => [
             Text(saint.nameEn,
                 style: const TextStyle(
-                  color: EkkleiciaColors.textPrimary,
+                  color: EkklisiaColors.textPrimary,
                   fontSize: 12,
                 )),
             Text(saint.nameAr,
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                   fontFamily: 'Scheherazade',
                 )),
             Text(saint.feastDate ?? '—',
                 style: const TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 11,
                 )),
             _StatusBadge(saint.isPublished),
@@ -592,7 +592,7 @@ class _SaintsManagerScreenState extends State<SaintsManagerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkkleiciaColors.maroon : EkkleiciaColors.gold,
+      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -609,12 +609,12 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: (isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim)
+      color: (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
           .withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(4),
       border: Border.all(
         color:
-        (isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim)
+        (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
             .withValues(alpha: 0.4),
         width: 0.5,
       ),
@@ -622,7 +622,7 @@ class _StatusBadge extends StatelessWidget {
     child: Text(
       isPublished ? 'Published' : 'Draft',
       style: TextStyle(
-        color: isPublished ? EkkleiciaColors.tealMid : EkkleiciaColors.goldDim,
+        color: isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim,
         fontSize: 9,
         fontWeight: FontWeight.w700,
       ),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/router/app_router.dart';
 import 'auth_cubit.dart';
@@ -65,20 +66,28 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _showSnack(String msg) {
+    final brightness = Theme.of(context).brightness;
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg,
           style: const TextStyle(fontFamily: 'Scheherazade', fontSize: 14),
           textAlign: TextAlign.center),
-      backgroundColor: EkkleiciaColors.bgElevated,
+      backgroundColor: bgElevated,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5)),
+          side: BorderSide(color: goldBorder, width: 0.5)),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state.isAdmin) {
@@ -90,29 +99,29 @@ class _LoginScreenState extends State<LoginScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: EkkleiciaColors.bgDeep,
+        backgroundColor: bgDeep,
         body: Stack(
           children: [
             // Background texture
             Positioned.fill(
               child: Image.asset(
-                'assets/images/ekklicia_background.png',
+                'assets/images/bg1.png',
                 fit: BoxFit.cover,
                 opacity: const AlwaysStoppedAnimation(0.18),
               ),
             ),
             Positioned.fill(
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      EkkleiciaColors.bgDeep,
-                      Color(0xFF0A1520),
-                      EkkleiciaColors.bgPrimary,
+                      bgDeep,
+                      bgDeep.withOpacity(0.75),
+                      BrightnessColors.bgPrimary(brightness),
                     ],
-                    stops: [0.0, 0.4, 1.0],
+                    stops: const [0.0, 0.4, 1.0],
                   ),
                 ),
               ),
@@ -162,6 +171,11 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Logo ──────────────────────────────────────────────────────────────
 
   Widget _buildLogo() {
+    final brightness = Theme.of(context).brightness;
+    final gold = Theme.of(context).primaryColor;
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+
     return Column(
       children: [
         Container(
@@ -169,33 +183,33 @@ class _LoginScreenState extends State<LoginScreen>
           height: 80,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const RadialGradient(colors: [
-              Color(0xFF2A1A10),
-              EkkleiciaColors.bgDeep,
+            gradient: RadialGradient(colors: [
+              bgDeep,
+              bgDeep,
             ]),
-            border: Border.all(color: EkkleiciaColors.goldBorder, width: 1),
+            border: Border.all(color: goldBorder, width: 1),
             boxShadow: [
               BoxShadow(
-                  color: EkkleiciaColors.gold.withOpacity(0.12),
+                  color: gold.withOpacity(0.12),
                   blurRadius: 24,
                   spreadRadius: 4),
             ],
           ),
-          child: CustomPaint(painter: _CrossPainter()),
+          child: CustomPaint(painter: _CrossPainter(gold: gold, goldBorder: goldBorder)),
         ),
         const SizedBox(height: 20),
-        const Text('إكليسيا',
+        Text('إكليسيا',
             style: TextStyle(
               fontFamily:  'Scheherazade',
-              color:       EkkleiciaColors.goldLight,
+              color:       BrightnessColors.goldLight(Theme.of(context).brightness),
               fontSize:    34,
               fontWeight:  FontWeight.w700,
               letterSpacing: 2,
             )),
         const SizedBox(height: 4),
-        const Text('EKKLICIA  ·  ADMIN',
+        Text('Ekklisia  ·  ADMIN',
             style: TextStyle(
-              color:       EkkleiciaColors.goldDim,
+              color:       BrightnessColors.goldDim(Theme.of(context).brightness),
               fontSize:    10,
               letterSpacing: 5,
             )),
@@ -208,14 +222,22 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildForm() {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
+        final brightness = Theme.of(context).brightness;
+        final gold = Theme.of(context).primaryColor;
+        final goldDim = BrightnessColors.goldDim(brightness);
+        final goldBorder = BrightnessColors.goldBorder(brightness);
+        final textPrimary = BrightnessColors.textPrimary(brightness);
+        final bgMid = BrightnessColors.bgMid(brightness);
+        final bgDeep = BrightnessColors.bgDeep(brightness);
+
         return Form(
           key: _formKey,
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color:  EkkleiciaColors.bgMid,
+              color:  bgMid,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+              border: Border.all(color: goldBorder, width: 0.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,13 +246,13 @@ class _LoginScreenState extends State<LoginScreen>
                 Row(children: [
                   Container(width: 3, height: 18,
                       decoration: BoxDecoration(
-                          color: EkkleiciaColors.gold,
+                          color: gold,
                           borderRadius: BorderRadius.circular(2))),
                   const SizedBox(width: 10),
-                  const Text('تسجيل الدخول',
+                  Text('تسجيل الدخول',
                       style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color:      EkkleiciaColors.textPrimary,
+                          color:      textPrimary,
                           fontSize:   18,
                           fontWeight: FontWeight.w700)),
                 ]),
@@ -244,12 +266,12 @@ class _LoginScreenState extends State<LoginScreen>
                   keyboardType: TextInputType.emailAddress,
                   textDirection: TextDirection.ltr,
                   textAlign:    TextAlign.left,
-                  style: const TextStyle(
-                      color: EkkleiciaColors.textPrimary, fontSize: 14),
+                  style: TextStyle(
+                      color: textPrimary, fontSize: 14),
                   decoration: _inputDec(
-                    hint:   'admin@ekklicia.app',
-                    prefix: const Icon(Icons.email_outlined,
-                        size: 18, color: EkkleiciaColors.goldDim),
+                    hint:   'admin@Ekklisia.app',
+                    prefix: Icon(Icons.email_outlined,
+                        size: 18, color: goldDim),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'مطلوب';
@@ -267,17 +289,17 @@ class _LoginScreenState extends State<LoginScreen>
                   obscureText: _obscure,
                   textDirection: TextDirection.ltr,
                   textAlign:   TextAlign.left,
-                  style: const TextStyle(
-                      color: EkkleiciaColors.textPrimary, fontSize: 14),
+                  style: TextStyle(
+                      color: textPrimary, fontSize: 14),
                   decoration: _inputDec(
                     hint:   '••••••••',
-                    prefix: const Icon(Icons.lock_outline,
-                        size: 18, color: EkkleiciaColors.goldDim),
+                    prefix: Icon(Icons.lock_outline,
+                        size: 18, color: goldDim),
                     suffix: GestureDetector(
                       onTap: () => setState(() => _obscure = !_obscure),
                       child: Icon(
                         _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        size: 18, color: EkkleiciaColors.goldDim,
+                        size: 18, color: goldDim,
                       ),
                     ),
                   ),
@@ -300,9 +322,7 @@ class _LoginScreenState extends State<LoginScreen>
                       _resetSent ? '✓ تم الإرسال' : 'نسيت كلمة المرور؟',
                       style: TextStyle(
                         fontFamily: 'Scheherazade',
-                        color:  _resetSent
-                            ? EkkleiciaColors.tealMid
-                            : EkkleiciaColors.goldDim,
+                        color:  _resetSent ? Colors.green : goldDim,
                         fontSize: 12,
                       ),
                     ),
@@ -316,21 +336,20 @@ class _LoginScreenState extends State<LoginScreen>
                   child: ElevatedButton(
                     onPressed: state.isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: EkkleiciaColors.gold,
-                      foregroundColor: EkkleiciaColors.bgDeep,
+                      backgroundColor: gold,
+                      foregroundColor: bgDeep,
                       padding:         const EdgeInsets.symmetric(vertical: 14),
                       shape:           RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                       disabledBackgroundColor:
-                      EkkleiciaColors.goldDim.withOpacity(0.5),
+                      goldDim.withOpacity(0.5),
                     ),
                     child: state.isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                         height: 20, width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(
-                              EkkleiciaColors.bgDeep),
+                          valueColor: AlwaysStoppedAnimation(bgDeep),
                         ))
                         : const Text('دخول',
                         style: TextStyle(
@@ -351,17 +370,21 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Divider ───────────────────────────────────────────────────────────
 
   Widget _buildDivider() {
+    final brightness = Theme.of(context).brightness;
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return Row(children: [
       Expanded(child: Container(height: 0.5,
-          color: EkkleiciaColors.goldBorder)),
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12),
+          color: goldBorder)),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Text('أو', style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary, fontSize: 12)),
+            color: textSecondary, fontSize: 12)),
       ),
       Expanded(child: Container(height: 0.5,
-          color: EkkleiciaColors.goldBorder)),
+          color: goldBorder)),
     ]);
   }
 
@@ -393,9 +416,9 @@ class _LoginScreenState extends State<LoginScreen>
                   }
                 },
           style: OutlinedButton.styleFrom(
-            foregroundColor: EkkleiciaColors.textSecondary,
-            side: const BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+            foregroundColor: BrightnessColors.textSecondary(Theme.of(context).brightness),
+            side: BorderSide(
+                color: BrightnessColors.goldBorder(Theme.of(context).brightness), width: 0.5),
             padding: const EdgeInsets.symmetric(vertical: 13),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
@@ -412,9 +435,8 @@ class _LoginScreenState extends State<LoginScreen>
                   )),
             ],
           ),
-        ),
-      ),
-    );
+        ),)
+      );
   }
 
   // ── Anonymous button ──────────────────────────────────────────────────
@@ -428,9 +450,9 @@ class _LoginScreenState extends State<LoginScreen>
               ? null
               : () => context.read<AuthCubit>().signInAnonymously(),
           style: OutlinedButton.styleFrom(
-            foregroundColor: EkkleiciaColors.textSecondary,
-            side: const BorderSide(
-                color: EkkleiciaColors.goldBorder, width: 0.5),
+            foregroundColor: BrightnessColors.textSecondary(Theme.of(context).brightness),
+            side: BorderSide(
+                color: BrightnessColors.goldBorder(Theme.of(context).brightness), width: 0.5),
             padding: const EdgeInsets.symmetric(vertical: 13),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
@@ -440,21 +462,24 @@ class _LoginScreenState extends State<LoginScreen>
                 fontFamily: 'Scheherazade',
                 fontSize: 14,
               )),
-        ),
-      ),
-    );
+        ),)
+      );
   }
 
   Widget _buildFooter() {
-    return const Column(children: [
+    final brightness = Theme.of(context).brightness;
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
+    return Column(children: [
       Text('✦  ✦  ✦',
           style: TextStyle(
-              color: EkkleiciaColors.goldDim, fontSize: 9, letterSpacing: 8)),
-      SizedBox(height: 8),
+              color: goldDim, fontSize: 9, letterSpacing: 8)),
+      const SizedBox(height: 8),
       Text('الكنيسة القبطية الأرثوذكسية',
           style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary,
+              color: textSecondary,
               fontSize: 11)),
     ]);
   }
@@ -465,46 +490,54 @@ class _LoginScreenState extends State<LoginScreen>
     required String hint,
     Widget? prefix,
     Widget? suffix,
-  }) =>
-      InputDecoration(
-        hintText:       hint,
-        hintStyle:      const TextStyle(
-            color: EkkleiciaColors.textSecondary, fontSize: 13),
-        prefixIcon:     prefix,
-        suffixIcon:     suffix,
-        filled:         true,
-        fillColor:      EkkleiciaColors.bgElevated,
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 12),
-        enabledBorder:  OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:   const BorderSide(
-              color: EkkleiciaColors.goldBorder, width: 0.5),
-        ),
-        focusedBorder:  OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:   const BorderSide(
-              color: EkkleiciaColors.gold, width: 1.5),
-        ),
-        errorBorder:    OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:   const BorderSide(color: Colors.redAccent, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:   const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-        errorStyle:     const TextStyle(
-            fontFamily: 'Scheherazade', fontSize: 12),
-      );
+  }) {
+    final brightness = Theme.of(context).brightness;
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final gold = Theme.of(context).primaryColor;
+
+    return InputDecoration(
+      hintText:       hint,
+      hintStyle:      TextStyle(
+          color: textSecondary, fontSize: 13),
+      prefixIcon:     prefix,
+      suffixIcon:     suffix,
+      filled:         true,
+      fillColor:      bgElevated,
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14, vertical: 12),
+      enabledBorder:  OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:   BorderSide(
+            color: goldBorder, width: 0.5),
+      ),
+      focusedBorder:  OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:   BorderSide(
+            color: gold, width: 1.5),
+      ),
+      errorBorder:    OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:   BorderSide(color: Colors.redAccent, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:   BorderSide(color: Colors.redAccent, width: 1.5),
+      ),
+      errorStyle:     const TextStyle(
+          fontFamily: 'Scheherazade', fontSize: 12),
+    );
+  }
 
   List<Widget> _corners() {
-    const s = TextStyle(color: EkkleiciaColors.goldDim, fontSize: 14);
+    final goldDim = BrightnessColors.goldDim(Theme.of(context).brightness);
+    final s = TextStyle(color: goldDim, fontSize: 14);
     return [
-      const Positioned(top: 20, left: 16, child: Text('❖', style: s)),
-      const Positioned(top: 20, right: 16, child: Text('❖', style: s)),
-      const Positioned(bottom: 20, left: 16, child: Text('❖', style: s)),
-      const Positioned(bottom: 20, right: 16, child: Text('❖', style: s)),
+      Positioned(top: 20, left: 16, child: Text('❖', style: s)),
+      Positioned(top: 20, right: 16, child: Text('❖', style: s)),
+      Positioned(bottom: 20, left: 16, child: Text('❖', style: s)),
+      Positioned(bottom: 20, right: 16, child: Text('❖', style: s)),
     ];
   }
 }
@@ -516,9 +549,9 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily:  'Scheherazade',
-        color:       EkkleiciaColors.textSecondary,
+        color:       BrightnessColors.textSecondary(Theme.of(context).brightness),
         fontSize:    12,
         fontWeight:  FontWeight.w600,
         letterSpacing: 0.5,
@@ -526,10 +559,15 @@ class _Label extends StatelessWidget {
 }
 
 class _CrossPainter extends CustomPainter {
+  _CrossPainter({required this.gold, required this.goldBorder});
+
+  final Color gold;
+  final Color goldBorder;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color       = EkkleiciaColors.gold
+      ..color       = gold
       ..style       = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap   = StrokeCap.round;
@@ -543,13 +581,13 @@ class _CrossPainter extends CustomPainter {
       Offset(cx - arm, cy), Offset(cx + arm, cy),
     ]) {
       canvas.drawCircle(p, 3,
-          Paint()..color = EkkleiciaColors.gold..style = PaintingStyle.fill);
+          Paint()..color = gold..style = PaintingStyle.fill);
     }
     canvas.drawCircle(Offset(cx, cy), 4,
-        Paint()..color = EkkleiciaColors.gold..style = PaintingStyle.fill);
+        Paint()..color = gold..style = PaintingStyle.fill);
     canvas.drawCircle(Offset(cx, cy), 9,
         Paint()
-          ..color       = EkkleiciaColors.goldBorder
+          ..color       = goldBorder
           ..style       = PaintingStyle.stroke
           ..strokeWidth = 0.8);
   }

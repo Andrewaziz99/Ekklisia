@@ -138,7 +138,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             controller:  _titleCtrl,
             maxLength:   65,
             style: const TextStyle(
-                color: EkkleiciaColors.textPrimary, fontSize: 14),
+                color: EkklisiaColors.textPrimary, fontSize: 14),
             onChanged: (_) => setState(() {}),
             decoration: _inputDec(hint: 'New book added…', counter: true),
             validator: (v) =>
@@ -154,7 +154,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             maxLines:   3,
             maxLength:  150,
             style: const TextStyle(
-                color: EkkleiciaColors.textPrimary, fontSize: 14),
+                color: EkklisiaColors.textPrimary, fontSize: 14),
             onChanged: (_) => setState(() {}),
             decoration: _inputDec(hint: 'A new book has been added…', counter: true),
             validator: (v) =>
@@ -171,15 +171,15 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                   state.books.where((b) => b.isPublished).toList();
               return DropdownButtonFormField<BookModel?>(
                 initialValue: _linkedBook,
-                dropdownColor: EkkleiciaColors.bgElevated,
+                dropdownColor: EkklisiaColors.bgElevated,
                 style: const TextStyle(
-                    color: EkkleiciaColors.textPrimary, fontSize: 13),
+                    color: EkklisiaColors.textPrimary, fontSize: 13),
                 decoration: _inputDec(hint: 'No deep-link'),
                 items: [
                   const DropdownMenuItem(value: null,
                       child: Text('No deep-link',
                           style: TextStyle(
-                              color: EkkleiciaColors.textSecondary))),
+                              color: EkklisiaColors.textSecondary))),
                   ...published.map((b) => DropdownMenuItem(
                       value: b,
                       child: Text(b.titleAr,
@@ -187,7 +187,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                           textDirection: TextDirection.rtl,
                           style: const TextStyle(
                               fontFamily: 'Scheherazade',
-                              color: EkkleiciaColors.textPrimary,
+                              color: EkklisiaColors.textPrimary,
                               fontSize: 14)))),
                 ],
                 onChanged: (v) => setState(() => _linkedBook = v),
@@ -201,18 +201,18 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: EkkleiciaColors.goldSubtle,
+                color: EkklisiaColors.goldSubtle,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: EkkleiciaColors.goldBorder, width: 0.5),
+                    color: EkklisiaColors.goldBorder, width: 0.5),
               ),
               child: Row(children: [
                 const Icon(Icons.link, size: 12,
-                    color: EkkleiciaColors.gold),
+                    color: EkklisiaColors.gold),
                 const SizedBox(width: 6),
-                Text('ekklicia://book/${_linkedBook!.id}',
+                Text('Ekklisia://book/${_linkedBook!.id}',
                     style: const TextStyle(
-                        color: EkkleiciaColors.gold, fontSize: 11)),
+                        color: EkklisiaColors.gold, fontSize: 11)),
               ]),
             ),
           ],
@@ -224,18 +224,18 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: EkkleiciaColors.maroon.withValues(alpha: 0.2),
+                color: EkklisiaColors.maroon.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: EkkleiciaColors.maroon, width: 0.5),
+                    color: EkklisiaColors.maroon, width: 0.5),
               ),
               child: Row(children: [
                 const Icon(Icons.error_outline,
-                    color: EkkleiciaColors.maroonMid, size: 16),
+                    color: EkklisiaColors.maroonMid, size: 16),
                 const SizedBox(width: 8),
                 Expanded(child: Text(_errorMsg!,
                     style: const TextStyle(
-                        color: EkkleiciaColors.textSecondary,
+                        color: EkklisiaColors.textSecondary,
                         fontSize: 12))),
               ]),
             ),
@@ -251,27 +251,27 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                   ? const SizedBox(width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation(
-                              EkkleiciaColors.bgDeep)))
+                              EkklisiaColors.bgDeep)))
                   : Icon(
                       _sent ? Icons.check_circle_outline
                             : Icons.send_outlined,
                       size: 18,
-                      color: EkkleiciaColors.bgDeep),
+                      color: EkklisiaColors.bgDeep),
               label: Text(
                 _sending ? 'Sending…'
                     : _sent    ? 'Sent!'
                     : 'Send Push Notification',
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w700,
-                    color: EkkleiciaColors.bgDeep),
+                    color: EkklisiaColors.bgDeep),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _sent
-                    ? EkkleiciaColors.tealMid
-                    : EkkleiciaColors.gold,
+                    ? EkklisiaColors.tealMid
+                    : EkklisiaColors.gold,
                 disabledBackgroundColor: _sent
-                    ? EkkleiciaColors.tealMid
-                    : EkkleiciaColors.goldDim.withValues(alpha: 0.5),
+                    ? EkklisiaColors.tealMid
+                    : EkklisiaColors.goldDim.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -325,7 +325,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Center(child: Text('No notifications sent yet',
                   style: TextStyle(
-                      color: EkkleiciaColors.textSecondary,
+                      color: EkklisiaColors.textSecondary,
                       fontSize: 12))),
             )
           else
@@ -333,7 +333,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
               _HistoryRow(notif: e.value),
               if (e.key < _history.length - 1)
                 const Divider(height: 16,
-                    color: EkkleiciaColors.goldBorder,
+                    color: EkklisiaColors.goldBorder,
                     indent: 4, endIndent: 4),
             ])),
         ],
@@ -346,20 +346,20 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
         hintText:  hint,
         counterText: counter ? null : '',
         hintStyle: const TextStyle(
-            color: EkkleiciaColors.textSecondary, fontSize: 13),
+            color: EkklisiaColors.textSecondary, fontSize: 13),
         filled:    true,
-        fillColor: EkkleiciaColors.bgElevated,
+        fillColor: EkklisiaColors.bgElevated,
         contentPadding: const EdgeInsets.symmetric(
             horizontal: 14, vertical: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-              color: EkkleiciaColors.goldBorder, width: 0.5),
+              color: EkklisiaColors.goldBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-              color: EkkleiciaColors.gold, width: 1.5),
+              color: EkklisiaColors.gold, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -398,10 +398,10 @@ class _AdminCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: EkkleiciaColors.goldBorder, width: 0.5),
+            color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,16 +409,16 @@ class _AdminCard extends StatelessWidget {
           Row(children: [
             Container(width: 3, height: 16,
                 decoration: BoxDecoration(
-                    color: EkkleiciaColors.gold,
+                    color: EkklisiaColors.gold,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(width: 8),
             Text(title, style: const TextStyle(
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: 13, fontWeight: FontWeight.w700)),
             const SizedBox(width: 6),
             Text(titleAr, style: const TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary, fontSize: 12)),
+                color: EkklisiaColors.textSecondary, fontSize: 12)),
           ]),
           const SizedBox(height: 16),
           ...children,
@@ -435,12 +435,12 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
     Text(label, style: const TextStyle(
-        color: EkkleiciaColors.textSecondary,
+        color: EkklisiaColors.textSecondary,
         fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
     const SizedBox(width: 6),
     Text(labelAr, style: const TextStyle(
         fontFamily: 'Scheherazade',
-        color: EkkleiciaColors.textSecondary, fontSize: 11)),
+        color: EkklisiaColors.textSecondary, fontSize: 11)),
   ]);
 }
 
@@ -449,7 +449,7 @@ class _PreviewLabel extends StatelessWidget {
   final String label;
   @override
   Widget build(BuildContext context) => Text(label, style: const TextStyle(
-      color: EkkleiciaColors.textSecondary,
+      color: EkklisiaColors.textSecondary,
       fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.w600));
 }
 
@@ -462,20 +462,20 @@ class _AndroidPreview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgElevated,
+        color: EkklisiaColors.bgElevated,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: EkkleiciaColors.goldBorder, width: 0.3),
+            color: EkklisiaColors.goldBorder, width: 0.3),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           width: 32, height: 32,
           decoration: const BoxDecoration(
             gradient: RadialGradient(colors: [
-              EkkleiciaColors.bronze, EkkleiciaColors.maroon]),
+              EkklisiaColors.bronze, EkklisiaColors.maroon]),
           ),
           child: const Center(child: Text('✦', style: TextStyle(
-              color: EkkleiciaColors.goldLight, fontSize: 14))),
+              color: EkklisiaColors.goldLight, fontSize: 14))),
         ),
         const SizedBox(width: 10),
         Expanded(child: Column(
@@ -483,19 +483,19 @@ class _AndroidPreview extends StatelessWidget {
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-              const Text('Ekklicia', style: TextStyle(
-                  color: EkkleiciaColors.textSecondary,
+              const Text('Ekklisia', style: TextStyle(
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 10, fontWeight: FontWeight.w600)),
               const Text('now', style: TextStyle(
-                  color: EkkleiciaColors.textSecondary, fontSize: 10)),
+                  color: EkklisiaColors.textSecondary, fontSize: 10)),
             ]),
             const SizedBox(height: 2),
             Text(title, style: const TextStyle(
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: 12, fontWeight: FontWeight.w700)),
             Text(body, maxLines: 2, overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                    color: EkkleiciaColors.textSecondary, fontSize: 11)),
+                    color: EkklisiaColors.textSecondary, fontSize: 11)),
           ],
         )),
       ]),
@@ -515,7 +515,7 @@ class _IosPreview extends StatelessWidget {
         color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: EkkleiciaColors.goldBorder, width: 0.3),
+            color: EkklisiaColors.goldBorder, width: 0.3),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -524,13 +524,13 @@ class _IosPreview extends StatelessWidget {
               width: 18, height: 18,
               decoration: const BoxDecoration(
                 gradient: RadialGradient(colors: [
-                  EkkleiciaColors.bronze, EkkleiciaColors.maroon]),
+                  EkklisiaColors.bronze, EkklisiaColors.maroon]),
               ),
               child: const Center(child: Text('✦', style: TextStyle(
-                  color: EkkleiciaColors.goldLight, fontSize: 8))),
+                  color: EkklisiaColors.goldLight, fontSize: 8))),
             ),
             const SizedBox(width: 5),
-            const Text('EKKLICIA', style: TextStyle(
+            const Text('Ekklisia', style: TextStyle(
                 color: Color(0xAAFFFFFF), fontSize: 10,
                 fontWeight: FontWeight.w600)),
           ]),
@@ -559,34 +559,34 @@ class _HistoryRow extends StatelessWidget {
       Container(
         width: 32, height: 32,
         decoration: BoxDecoration(
-          color: EkkleiciaColors.bgElevated,
+          color: EkklisiaColors.bgElevated,
           shape: BoxShape.circle,
           border: Border.all(
-              color: EkkleiciaColors.goldBorder, width: 0.5),
+              color: EkklisiaColors.goldBorder, width: 0.5),
         ),
         child: const Icon(Icons.notifications_none,
-            size: 14, color: EkkleiciaColors.gold),
+            size: 14, color: EkklisiaColors.gold),
       ),
       const SizedBox(width: 10),
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(notif.title, style: const TextStyle(
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 12, fontWeight: FontWeight.w600),
               maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
           Text(notif.body, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 11),
+              color: EkklisiaColors.textSecondary, fontSize: 11),
               maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 3),
           Text(notif.time, style: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 10)),
+              color: EkklisiaColors.textSecondary, fontSize: 10)),
         ],
       )),
       Text('${notif.count}',
           style: const TextStyle(
-              color: EkkleiciaColors.gold, fontSize: 11,
+              color: EkklisiaColors.gold, fontSize: 11,
               fontWeight: FontWeight.w700)),
     ],
   );

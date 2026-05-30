@@ -65,6 +65,39 @@ extension FontScaleX on FontScale {
   }
 }
 
+/// Available app theme modes.
+enum AppThemeMode { light, dark }
+
+extension AppThemeModeX on AppThemeMode {
+  String get label {
+    switch (this) {
+      case AppThemeMode.light:
+        return 'فاتح';
+      case AppThemeMode.dark:
+        return 'داكن';
+    }
+  }
+
+  String get code {
+    switch (this) {
+      case AppThemeMode.light:
+        return 'light';
+      case AppThemeMode.dark:
+        return 'dark';
+    }
+  }
+
+  static AppThemeMode fromCode(String code) {
+    switch (code) {
+      case 'light':
+        return AppThemeMode.light;
+      case 'dark':
+      default:
+        return AppThemeMode.dark;
+    }
+  }
+}
+
 class SettingsService {
   SettingsService(this._prefs);
   final SharedPreferences _prefs;
@@ -76,6 +109,7 @@ class SettingsService {
   static const _kNotifReminders = 'pref_notif_reminders';
   static const _kPrayerReminder = 'pref_prayer_reminder';
   static const _kKeepScreen     = 'pref_keep_screen';
+  static const _kThemeMode      = 'pref_theme_mode';
 
   // ── Language ─────────────────────────────────────────────────────────────
   AppLanguage get language =>
@@ -107,6 +141,13 @@ class SettingsService {
 
   Future<void> setKeepScreenOn(bool v) => _prefs.setBool(_kKeepScreen, v);
 
+  // ── Theme mode ────────────────────────────────────────────────────────────
+  AppThemeMode get themeMode =>
+      AppThemeModeX.fromCode(_prefs.getString(_kThemeMode) ?? 'dark');
+
+  Future<void> setThemeMode(AppThemeMode mode) =>
+      _prefs.setString(_kThemeMode, mode.code);
+
   // ── Reset ─────────────────────────────────────────────────────────────────
   Future<void> resetAll() async {
     await _prefs.remove(_kLanguage);
@@ -114,5 +155,6 @@ class SettingsService {
     await _prefs.remove(_kNotifBooks);
     await _prefs.remove(_kNotifReminders);
     await _prefs.remove(_kKeepScreen);
+    await _prefs.remove(_kThemeMode);
   }
 }

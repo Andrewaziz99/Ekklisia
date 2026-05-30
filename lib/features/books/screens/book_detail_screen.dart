@@ -11,8 +11,10 @@ class BookDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgPrimary,
+      backgroundColor: scaffoldBg,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context),
@@ -26,19 +28,19 @@ class BookDetailScreen extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 320,
       pinned: true,
-      backgroundColor: EkkleiciaColors.bgDeep,
+      backgroundColor: EkklisiaColors.bgDeep,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: EkkleiciaColors.bgDeep.withValues(alpha: 0.8),
+            color: EkklisiaColors.bgDeep.withValues(alpha: 0.8),
             shape: BoxShape.circle,
-            border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+            border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
           ),
           child: const Icon(
             Icons.arrow_back_ios_new,
             size: 16,
-            color: EkkleiciaColors.gold,
+            color: EkklisiaColors.gold,
           ),
         ),
         onPressed: () => Navigator.pop(context),
@@ -56,7 +58,7 @@ class BookDetailScreen extends StatelessWidget {
                 colorBlendMode: BlendMode.darken,
               )
             else
-              Container(color: EkkleiciaColors.bgDeep),
+              Container(color: EkklisiaColors.bgDeep),
             // Bottom gradient
             const Align(
               alignment: Alignment.bottomCenter,
@@ -88,7 +90,7 @@ class BookDetailScreen extends StatelessWidget {
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.w700,
               height: 1.5,
@@ -100,7 +102,7 @@ class BookDetailScreen extends StatelessWidget {
               book.titleCop,
               style: const TextStyle(
                 fontFamily: 'CopticFont',
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -138,7 +140,7 @@ class BookDetailScreen extends StatelessWidget {
               textAlign: TextAlign.right,
               style: const TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 16,
                 height: 1.8,
               ),
@@ -160,17 +162,17 @@ class BookDetailScreen extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: EkkleiciaColors.goldSubtle,
+                        color: EkklisiaColors.goldSubtle,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: EkkleiciaColors.goldBorder,
+                          color: EkklisiaColors.goldBorder,
                           width: 0.5,
                         ),
                       ),
                       child: Text(
                         '#$t',
                         style: const TextStyle(
-                          color: EkkleiciaColors.gold,
+                          color: EkklisiaColors.gold,
                           fontSize: 11,
                         ),
                       ),
@@ -199,8 +201,8 @@ class BookDetailScreen extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkkleiciaColors.gold,
-                foregroundColor: EkkleiciaColors.bgDeep,
+                backgroundColor: EkklisiaColors.gold,
+                foregroundColor: EkklisiaColors.bgDeep,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -226,7 +228,7 @@ class _FadeGradient extends StatelessWidget {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Colors.transparent, EkkleiciaColors.bgPrimary],
+        colors: [Colors.transparent, EkklisiaColors.bgPrimary],
       ),
     ),
   );
@@ -243,7 +245,7 @@ class _BookCoverPortrait extends StatelessWidget {
       height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 1),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.5),
@@ -257,11 +259,11 @@ class _BookCoverPortrait extends StatelessWidget {
         child: book.coverUrl.isNotEmpty
             ? CachedNetworkImage(imageUrl: book.coverUrl, fit: BoxFit.cover)
             : Container(
-                color: EkkleiciaColors.bgElevated,
+                color: EkklisiaColors.bgElevated,
                 child: const Icon(
                   Icons.menu_book_rounded,
                   size: 40,
-                  color: EkkleiciaColors.goldDim,
+                  color: EkklisiaColors.goldDim,
                 ),
               ),
       ),
@@ -280,20 +282,20 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgElevated,
+        color: EkklisiaColors.bgElevated,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: EkkleiciaColors.gold),
+          Icon(icon, size: 12, color: EkklisiaColors.gold),
           const SizedBox(width: 5),
           Text(
             label,
             textDirection: direction,
             style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 11,
             ),
           ),
@@ -311,17 +313,17 @@ class _GoldDivider extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Container(height: 0.5, color: EkkleiciaColors.goldBorder),
+          child: Container(height: 0.5, color: EkklisiaColors.goldBorder),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             '✦',
-            style: TextStyle(color: EkkleiciaColors.goldDim, fontSize: 12),
+            style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 12),
           ),
         ),
         Expanded(
-          child: Container(height: 0.5, color: EkkleiciaColors.goldBorder),
+          child: Container(height: 0.5, color: EkklisiaColors.goldBorder),
         ),
       ],
     );

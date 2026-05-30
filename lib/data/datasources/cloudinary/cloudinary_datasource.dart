@@ -38,7 +38,7 @@ class CloudinaryDataSource {
   /// Returns [CloudinaryUploadResult] on success, throws on failure.
   Future<CloudinaryUploadResult> uploadPdf({
     required File pdfFile,
-    required String folder,          // e.g. 'ekklicia/books'
+    required String folder,          // e.g. 'Ekklisia/books'
     void Function(double progress)? onProgress,
   }) async {
     final fileName = pdfFile.path.split('/').last;
@@ -51,7 +51,7 @@ class CloudinaryDataSource {
       'folder': folder,
       'resource_type': 'raw',
       // Auto-tag for organisation
-      'tags': 'ekklicia,book,pdf',
+      'tags': 'Ekklisia,book,pdf',
     });
 
     final response = await _dio.post(
@@ -100,7 +100,7 @@ class CloudinaryDataSource {
       'upload_preset': AppConstants.cloudinaryUploadPreset,
       'folder': folder,
       'resource_type': 'raw',
-      'tags': 'ekklicia,book,pdf',
+      'tags': 'Ekklisia,book,pdf',
     });
 
     final response = await _dio.post(
@@ -149,7 +149,7 @@ class CloudinaryDataSource {
       'upload_preset': AppConstants.cloudinaryUploadPreset,
       'folder': '$folder/covers',
       'resource_type': 'image',
-      'tags': 'ekklicia,book,cover',
+      'tags': 'Ekklisia,book,cover',
     });
 
     try {
@@ -200,7 +200,7 @@ class CloudinaryDataSource {
       'upload_preset': AppConstants.cloudinaryUploadPreset,
       'folder': '$folder/covers',
       'resource_type': 'image',
-      'tags': 'ekklicia,book,cover',
+      'tags': 'Ekklisia,book,cover',
     });
 
     try {

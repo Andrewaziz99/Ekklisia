@@ -27,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   late FontScale   _fontScale;
   late AppLanguage _language;
+  late AppThemeMode _themeMode;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Seed from the persisted service so we always start from saved values
     _fontScale = _svc.fontScale;
     _language  = _svc.language;
+    _themeMode = _svc.themeMode;
   }
 
   // ── Setters — update local state immediately, then persist ───────────────
@@ -55,6 +57,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       debugPrint('✓ Language changed to: ${lang.label}');
     } catch (e) {
       debugPrint('✗ Language error: $e');
+    }
+  }
+
+  void _setThemeMode(AppThemeMode mode) async {
+    setState(() => _themeMode = mode);
+    try {
+      await _cubit.setThemeMode(mode);  // persists + emits cubit state
+      debugPrint('✓ Theme mode changed to: ${mode.code}');
+    } catch (e) {
+      debugPrint('✗ Theme mode error: $e');
     }
   }
 
@@ -90,6 +102,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(height: 28),
 
+              // ── Theme ────────────────────────────────────────────────
+              _SectionLabel('المظهر', 'Appearance'),
+              const SizedBox(height: 10),
+              _ThemeModeCard(
+                current: _themeMode,
+                onChanged: _setThemeMode,
+              ),
+              const SizedBox(height: 28),
+
               // ── Sign Out ─────────────────────────────────────────────
               _SectionLabel('الحساب', 'Account'),
               const SizedBox(height: 10),
@@ -115,15 +136,15 @@ class _SettingsAppBar extends StatelessWidget {
     return SliverAppBar(
       pinned: true,
       expandedHeight: 110,
-      backgroundColor: EkkleiciaColors.bgDeep,
+      backgroundColor: EkklisiaColors.bgDeep,
       automaticallyImplyLeading: false,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
-            gradient: EkkleiciaColors.headerGradient,
+            gradient: EkklisiaColors.headerGradient,
             border: Border(
-              bottom: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5),
+              bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
             ),
           ),
           child: SafeArea(
@@ -137,13 +158,13 @@ class _SettingsAppBar extends StatelessWidget {
                     children: [
                       Text('✦',
                           style: TextStyle(
-                              color: EkkleiciaColors.goldDim, fontSize: 11)),
+                              color: EkklisiaColors.goldDim, fontSize: 11)),
                       SizedBox(height: 4),
                       Text(
                         'الإعدادات',
                         style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.goldLight,
+                          color: EkklisiaColors.goldLight,
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
                         ),
@@ -151,7 +172,7 @@ class _SettingsAppBar extends StatelessWidget {
                       Text(
                         'SETTINGS',
                         style: TextStyle(
-                          color: EkkleiciaColors.goldDim,
+                          color: EkklisiaColors.goldDim,
                           fontSize: 9,
                           letterSpacing: 4,
                         ),
@@ -184,10 +205,10 @@ class _ProfileCard extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [EkkleiciaColors.bgMid, EkkleiciaColors.bgElevated],
+              colors: [EkklisiaColors.bgMid, EkklisiaColors.bgElevated],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.6),
+            border: Border.all(color: EkklisiaColors.goldBorder, width: 0.6),
           ),
           child: Row(
             children: [
@@ -206,7 +227,7 @@ class _ProfileCard extends StatelessWidget {
                         user!.displayName,
                         style: const TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.textPrimary,
+                          color: EkklisiaColors.textPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
@@ -220,7 +241,7 @@ class _ProfileCard extends StatelessWidget {
                           ? 'ضيف — قراءة فقط'
                           : (user?.email ?? ''),
                       style: const TextStyle(
-                          color: EkkleiciaColors.textSecondary, fontSize: 12),
+                          color: EkklisiaColors.textSecondary, fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -230,11 +251,11 @@ class _ProfileCard extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         if (auth.isAdmin)
-                          _Chip('Admin', EkkleiciaColors.gold),
+                          _Chip('Admin', EkklisiaColors.gold),
                         if (auth.isAnonymous)
-                          _Chip('Guest', EkkleiciaColors.textSecondary)
+                          _Chip('Guest', EkklisiaColors.textSecondary)
                         else
-                          _Chip('Reader', EkkleiciaColors.tealMid),
+                          _Chip('Reader', EkklisiaColors.tealMid),
                         _MethodChip(method),
                       ],
                     ),
@@ -248,14 +269,14 @@ class _ProfileCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
-                      color: EkkleiciaColors.goldSubtle,
+                      color: EkklisiaColors.goldSubtle,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: EkkleiciaColors.goldBorder),
+                      border: Border.all(color: EkklisiaColors.goldBorder),
                     ),
                     child: const Icon(
                       Icons.admin_panel_settings_outlined,
                       size: 20,
-                      color: EkkleiciaColors.gold,
+                      color: EkklisiaColors.gold,
                     ),
                   ),
                 ),
@@ -301,7 +322,7 @@ class _FontSizeCard extends StatelessWidget {
                   'اختر الحجم المناسب',
                   style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -314,16 +335,16 @@ class _FontSizeCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: EkkleiciaColors.goldSubtle,
+                      color: EkklisiaColors.goldSubtle,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: EkkleiciaColors.goldBorder, width: 0.5),
+                          color: EkklisiaColors.goldBorder, width: 0.5),
                     ),
                     child: Text(
                       current.label,
                       style: const TextStyle(
                         fontFamily: 'Scheherazade',
-                        color: EkkleiciaColors.gold,
+                        color: EkklisiaColors.gold,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -350,13 +371,13 @@ class _FontSizeCard extends StatelessWidget {
                         height: 64,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? EkkleiciaColors.goldSubtle
-                              : EkkleiciaColors.bgPrimary,
+                              ? EkklisiaColors.goldSubtle
+                              : EkklisiaColors.bgPrimary,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isActive
-                                ? EkkleiciaColors.gold
-                                : EkkleiciaColors.goldBorder,
+                                ? EkklisiaColors.gold
+                                : EkklisiaColors.goldBorder,
                             width: isActive ? 1.5 : 0.5,
                           ),
                         ),
@@ -369,8 +390,8 @@ class _FontSizeCard extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'Scheherazade',
                                 color: isActive
-                                    ? EkkleiciaColors.goldLight
-                                    : EkkleiciaColors.textSecondary,
+                                    ? EkklisiaColors.goldLight
+                                    : EkklisiaColors.textSecondary,
                                 fontSize: _tileSizes[fs],
                                 fontWeight: isActive
                                     ? FontWeight.w700
@@ -383,7 +404,7 @@ class _FontSizeCard extends StatelessWidget {
                                 width: 4,
                                 height: 4,
                                 decoration: const BoxDecoration(
-                                  color: EkkleiciaColors.gold,
+                                  color: EkklisiaColors.gold,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -403,7 +424,7 @@ class _FontSizeCard extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: previewSize,
                 height: 1.7,
               ),
@@ -413,10 +434,10 @@ class _FontSizeCard extends StatelessWidget {
                     horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color:
-                  EkkleiciaColors.bgParchment.withValues(alpha: 0.08),
+                  EkklisiaColors.bgParchment.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: EkkleiciaColors.goldBorder.withValues(alpha: 0.4),
+                    color: EkklisiaColors.goldBorder.withValues(alpha: 0.4),
                     width: 0.5,
                   ),
                 ),
@@ -428,7 +449,7 @@ class _FontSizeCard extends StatelessWidget {
                       textScaleFactor: 1,
                       style: TextStyle(
                         fontFamily: 'Scheherazade',
-                        color: EkkleiciaColors.textPrimary,
+                        color: EkklisiaColors.textPrimary,
                         fontSize: previewSize,
                         height: 1.7,
                       ),
@@ -439,7 +460,7 @@ class _FontSizeCard extends StatelessWidget {
                       textAlign: TextAlign.center,
                       textScaleFactor: 1,
                       style: TextStyle(
-                        color: EkkleiciaColors.textSecondary,
+                        color: EkklisiaColors.textSecondary,
                         fontSize: previewSize * 0.72,
                         height: 1.5,
                       ),
@@ -456,14 +477,14 @@ class _FontSizeCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
                 Icon(Icons.info_outline,
-                    size: 11, color: EkkleiciaColors.textSecondary),
+                    size: 11, color: EkklisiaColors.textSecondary),
                 SizedBox(width: 5),
                 Text(
                   'يُطبَّق الحجم على كامل النصوص في التطبيق',
                   textScaleFactor: 1,
                   style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 10,
                   ),
                 ),
@@ -529,7 +550,7 @@ class _LanguageCard extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
                 color: isActive
-                    ? EkkleiciaColors.goldSubtle
+                    ? EkklisiaColors.goldSubtle
                     : Colors.transparent,
                 child: Material(
                   color: Colors.transparent,
@@ -546,11 +567,11 @@ class _LanguageCard extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               color: isActive
-                                  ? EkkleiciaColors.gold.withValues(alpha: 0.15)
-                                  : EkkleiciaColors.bgPrimary,
+                                  ? EkklisiaColors.gold.withValues(alpha: 0.15)
+                                  : EkklisiaColors.bgPrimary,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: EkkleiciaColors.goldBorder
+                                color: EkklisiaColors.goldBorder
                                     .withValues(alpha: isActive ? 1.0 : 0.5),
                                 width: 0.5,
                               ),
@@ -573,8 +594,8 @@ class _LanguageCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontFamily: _fontFamilies[lang],
                                     color: isActive
-                                        ? EkkleiciaColors.goldLight
-                                        : EkkleiciaColors.textPrimary,
+                                        ? EkklisiaColors.goldLight
+                                        : EkklisiaColors.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -586,7 +607,7 @@ class _LanguageCard extends StatelessWidget {
                                       _subtitles[lang] ?? '',
                                       textScaleFactor: 1,
                                       style: const TextStyle(
-                                        color: EkkleiciaColors.textSecondary,
+                                        color: EkklisiaColors.textSecondary,
                                         fontSize: 10,
                                         letterSpacing: 1.2,
                                       ),
@@ -598,9 +619,9 @@ class _LanguageCard extends StatelessWidget {
                                       style: TextStyle(
                                         fontFamily: _fontFamilies[lang],
                                         color: isActive
-                                            ? EkkleiciaColors.gold
+                                            ? EkklisiaColors.gold
                                             .withValues(alpha: 0.7)
-                                            : EkkleiciaColors.textSecondary
+                                            : EkklisiaColors.textSecondary
                                             .withValues(alpha: 0.55),
                                         fontSize: 10,
                                       ),
@@ -617,11 +638,11 @@ class _LanguageCard extends StatelessWidget {
                             child: isActive
                                 ? const Icon(Icons.check_circle,
                                 size: 22,
-                                color: EkkleiciaColors.gold,
+                                color: EkklisiaColors.gold,
                                 key: ValueKey('on'))
                                 : const Icon(Icons.radio_button_unchecked,
                                 size: 22,
-                                color: EkkleiciaColors.goldBorder,
+                                color: EkklisiaColors.goldBorder,
                                 key: ValueKey('off')),
                           ),
                         ],
@@ -634,7 +655,7 @@ class _LanguageCard extends StatelessWidget {
                 const Divider(
                   height: 1,
                   thickness: 0.4,
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   indent: 70,
                   endIndent: 16,
                 ),
@@ -663,11 +684,11 @@ class _SignOutCardState extends State<_SignOutCard> {
       barrierColor: Colors.black.withValues(alpha: 0.75),
       builder: (_) => _ConfirmDialog(
         icon: Icons.logout_outlined,
-        iconColor: EkkleiciaColors.maroonMid,
+        iconColor: EkklisiaColors.maroonMid,
         title: 'تسجيل الخروج',
         body: 'هل تريد تسجيل الخروج من التطبيق؟',
         confirmLabel: 'خروج',
-        confirmColor: EkkleiciaColors.maroon,
+        confirmColor: EkklisiaColors.maroon,
       ),
     );
 
@@ -695,10 +716,10 @@ class _SignOutCardState extends State<_SignOutCard> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: EkkleiciaColors.maroon.withValues(alpha: 0.15),
+                    color: EkklisiaColors.maroon.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: EkkleiciaColors.maroon.withValues(alpha: 0.4),
+                      color: EkklisiaColors.maroon.withValues(alpha: 0.4),
                       width: 0.5,
                     ),
                   ),
@@ -710,12 +731,12 @@ class _SignOutCardState extends State<_SignOutCard> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation(
-                            EkkleiciaColors.maroonMid),
+                            EkklisiaColors.maroonMid),
                       ),
                     ),
                   )
                       : const Icon(Icons.logout_outlined,
-                      size: 18, color: EkkleiciaColors.maroonMid),
+                      size: 18, color: EkklisiaColors.maroonMid),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -726,7 +747,7 @@ class _SignOutCardState extends State<_SignOutCard> {
                         'تسجيل الخروج',
                         style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.maroonMid,
+                          color: EkklisiaColors.maroonMid,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -735,7 +756,7 @@ class _SignOutCardState extends State<_SignOutCard> {
                       Text(
                         'Sign Out',
                         style: TextStyle(
-                          color: EkkleiciaColors.textSecondary,
+                          color: EkklisiaColors.textSecondary,
                           fontSize: 10,
                           letterSpacing: 0.5,
                         ),
@@ -746,7 +767,7 @@ class _SignOutCardState extends State<_SignOutCard> {
                 Icon(
                   Icons.chevron_right,
                   size: 18,
-                  color: EkkleiciaColors.maroonMid.withValues(alpha: 0.5),
+                  color: EkklisiaColors.maroonMid.withValues(alpha: 0.5),
                 ),
               ],
             ),
@@ -778,11 +799,11 @@ class _ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: EkkleiciaColors.bgMid,
+      backgroundColor: EkklisiaColors.bgMid,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: const BorderSide(
-            color: EkkleiciaColors.goldBorder, width: 0.5),
+            color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -804,7 +825,7 @@ class _ConfirmDialog extends StatelessWidget {
             Text(title,
                 style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textPrimary,
+                  color: EkklisiaColors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 )),
@@ -813,7 +834,7 @@ class _ConfirmDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textSecondary,
+                  color: EkklisiaColors.textSecondary,
                   fontSize: 14,
                   height: 1.6,
                 )),
@@ -823,9 +844,9 @@ class _ConfirmDialog extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context, false),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: EkkleiciaColors.textSecondary,
+                    foregroundColor: EkklisiaColors.textSecondary,
                     side: const BorderSide(
-                        color: EkkleiciaColors.goldBorder, width: 0.5),
+                        color: EkklisiaColors.goldBorder, width: 0.5),
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -873,14 +894,14 @@ class _Footer extends StatelessWidget {
       children: [
         Text('✦  ✦  ✦',
             style: TextStyle(
-                color: EkkleiciaColors.goldDim,
+                color: EkklisiaColors.goldDim,
                 fontSize: 9,
                 letterSpacing: 8)),
         SizedBox(height: 6),
         Text('الكنيسة القبطية الأرثوذكسية',
             style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 11)),
       ],
     );
@@ -903,7 +924,7 @@ class _SectionLabel extends StatelessWidget {
           width: 3,
           height: 18,
           decoration: BoxDecoration(
-            color: EkkleiciaColors.gold,
+            color: EkklisiaColors.gold,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -911,14 +932,14 @@ class _SectionLabel extends StatelessWidget {
         Text(ar,
             style: const TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textPrimary,
+              color: EkklisiaColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             )),
         const SizedBox(width: 8),
         Text(en,
             style: const TextStyle(
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 10,
               letterSpacing: 0.8,
             )),
@@ -935,9 +956,9 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
@@ -982,7 +1003,7 @@ class _MethodChip extends StatelessWidget {
       case SignInMethod.google:
         return _Chip('Google', const Color(0xFF4285F4));
       case SignInMethod.email:
-        return _Chip('Email', EkkleiciaColors.ocean);
+        return _Chip('Email', EkklisiaColors.ocean);
       case SignInMethod.anonymous:
       case SignInMethod.unknown:
         return const SizedBox.shrink();
@@ -1007,7 +1028,7 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: isAdmin ? EkkleiciaColors.gold : EkkleiciaColors.goldBorder,
+          color: isAdmin ? EkklisiaColors.gold : EkklisiaColors.goldBorder,
           width: isAdmin ? 2.0 : 0.8,
         ),
       ),
@@ -1022,17 +1043,126 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget _fallback() => Container(
-    color: EkkleiciaColors.bgElevated,
+    color: EkklisiaColors.bgElevated,
     child: Center(
       child: Text(initials,
           style: TextStyle(
             fontFamily: 'Scheherazade',
             color: isAdmin
-                ? EkkleiciaColors.gold
-                : EkkleiciaColors.textSecondary,
+                ? EkklisiaColors.gold
+                : EkklisiaColors.textSecondary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           )),
     ),
   );
 }
+
+class _ThemeModeCard extends StatelessWidget {
+  const _ThemeModeCard({required this.current, required this.onChanged});
+  final AppThemeMode current;
+  final ValueChanged<AppThemeMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          children: [
+            _ThemeModeTile(
+              labelAr: 'فاتح',
+              labelEn: 'Light',
+              icon: Icons.wb_sunny_outlined,
+              isActive: current == AppThemeMode.light,
+              onTap: () => onChanged(AppThemeMode.light),
+            ),
+            const SizedBox(width: 10),
+            _ThemeModeTile(
+              labelAr: 'داكن',
+              labelEn: 'Dark',
+              icon: Icons.nights_stay_outlined,
+              isActive: current == AppThemeMode.dark,
+              onTap: () => onChanged(AppThemeMode.dark),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeModeTile extends StatelessWidget {
+  const _ThemeModeTile({
+    required this.labelAr,
+    required this.labelEn,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String labelAr;
+  final String labelEn;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive
+                ? EkklisiaColors.goldSubtle
+                : EkklisiaColors.bgPrimary,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive
+                  ? EkklisiaColors.gold
+                  : EkklisiaColors.goldBorder,
+              width: isActive ? 1.2 : 0.6,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isActive
+                    ? EkklisiaColors.gold
+                    : EkklisiaColors.textSecondary,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                labelAr,
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: isActive
+                      ? EkklisiaColors.goldLight
+                      : EkklisiaColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                labelEn,
+                style: const TextStyle(
+                  color: EkklisiaColors.textSecondary,
+                  fontSize: 10,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

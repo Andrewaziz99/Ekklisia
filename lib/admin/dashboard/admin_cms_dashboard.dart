@@ -40,12 +40,12 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
             // ── Welcome header ──────────────────────────────────────────────
             Text(
               'CMS Dashboard',
-              style: EkkleciaTheme.bodyMedium,
+              style: EkklisiaTheme.bodyMedium(Theme.of(context).brightness),
             ),
             const SizedBox(height: 8),
             Text(
               'Manage content across all modules',
-              style: EkkleciaTheme.bodySmall,
+              style: EkklisiaTheme.bodySmall(Theme.of(context).brightness),
             ),
             const SizedBox(height: 32),
 
@@ -124,7 +124,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
       children: [
         Text(
           'Quick Actions',
-          style: EkkleciaTheme.headingMedium,
+          style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -134,25 +134,25 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
             _QuickActionButton(
               label: 'Add Bible',
               icon: Icons.menu_book_outlined,
-              color: EkkleiciaColors.tealMid,
+              color: EkklisiaColors.tealMid,
               onPressed: () => context.go(CMSRouter.bibles),
             ),
             _QuickActionButton(
               label: 'Add Hymn',
               icon: Icons.add_box_outlined,
-              color: EkkleiciaColors.plum,
+              color: EkklisiaColors.plum,
               onPressed: () => context.go(CMSRouter.hymns),
             ),
             _QuickActionButton(
               label: 'Add Prayer',
               icon: Icons.add_location_outlined,
-              color: EkkleiciaColors.maroon,
+              color: EkklisiaColors.maroon,
               onPressed: () => context.go(CMSRouter.prayers),
             ),
             _QuickActionButton(
               label: 'Add Saint',
               icon: Icons.person_add_outlined,
-              color: EkkleiciaColors.bronze,
+              color: EkklisiaColors.bronze,
               onPressed: () => context.go(CMSRouter.saints),
             ),
           ],
@@ -167,16 +167,16 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
       children: [
         Text(
           'System Status',
-          style: EkkleciaTheme.headingMedium,
+          style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: EkkleiciaColors.bgMid,
+            color: EkklisiaColors.bgMid,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: EkkleiciaColors.goldBorder,
+              color: EkklisiaColors.goldBorder,
               width: 0.5,
             ),
           ),
@@ -186,7 +186,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                 width: 12,
                 height: 12,
                 decoration: const BoxDecoration(
-                  color: EkkleiciaColors.tealMid,
+                  color: EkklisiaColors.tealMid,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -198,7 +198,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                     const Text(
                       'Database Connection',
                       style: TextStyle(
-                        color: EkkleiciaColors.textPrimary,
+                        color: EkklisiaColors.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -207,7 +207,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                     const Text(
                       'Firestore is online and synced',
                       style: TextStyle(
-                        color: EkkleiciaColors.textSecondary,
+                        color: EkklisiaColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -218,17 +218,17 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                 padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: EkkleiciaColors.tealMid.withOpacity(0.12),
+                  color: EkklisiaColors.tealMid.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: EkkleiciaColors.tealMid.withOpacity(0.4),
+                    color: EkklisiaColors.tealMid.withOpacity(0.4),
                     width: 0.5,
                   ),
                 ),
                 child: const Text(
                   'Healthy',
                   style: TextStyle(
-                    color: EkkleiciaColors.tealMid,
+                    color: EkklisiaColors.tealMid,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -265,10 +265,10 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: EkkleiciaColors.bgMid,
+          color: EkklisiaColors.bgMid,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: EkkleiciaColors.goldBorder,
+            color: EkklisiaColors.goldBorder,
             width: 0.5,
           ),
         ),
@@ -279,16 +279,16 @@ class _StatCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: EkkleiciaColors.goldSubtle,
+                color: EkklisiaColors.goldSubtle,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: EkkleiciaColors.goldBorder,
+                  color: EkklisiaColors.goldBorder,
                   width: 0.5,
                 ),
               ),
               child: Icon(
                 icon,
-                color: EkkleiciaColors.gold,
+                color: EkklisiaColors.gold,
                 size: 20,
               ),
             ),
@@ -296,7 +296,7 @@ class _StatCard extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -309,7 +309,7 @@ class _StatCard extends StatelessWidget {
                   return Text(
                     '${snap.data} items',
                     style: const TextStyle(
-                      color: EkkleiciaColors.gold,
+                      color: EkklisiaColors.gold,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -321,7 +321,7 @@ class _StatCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
                     valueColor: AlwaysStoppedAnimation(
-                      EkkleiciaColors.gold,
+                      EkklisiaColors.gold,
                     ),
                   ),
                 );
@@ -334,14 +334,14 @@ class _StatCard extends StatelessWidget {
                 const Text(
                   'Manage',
                   style: TextStyle(
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 11,
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_outlined,
                   size: 14,
-                  color: EkkleiciaColors.goldDim,
+                  color: EkklisiaColors.goldDim,
                 ),
               ],
             ),

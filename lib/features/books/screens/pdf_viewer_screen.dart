@@ -50,9 +50,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   Color get _bgColor {
     switch (_readingMode) {
       case _ReadingMode.dark:
-        return EkkleiciaColors.bgPrimary;
+        return EkklisiaColors.bgPrimary;
       case _ReadingMode.parchment:
-        return EkkleiciaColors.bgParchment;
+        return EkklisiaColors.bgParchment;
       case _ReadingMode.night:
         return const Color(0xFF060C14);
     }
@@ -140,8 +140,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            EkkleiciaColors.bgDeep,
-            EkkleiciaColors.bgDeep.withOpacity(0),
+            EkklisiaColors.bgDeep,
+            EkklisiaColors.bgDeep.withOpacity(0),
           ],
         ),
       ),
@@ -153,13 +153,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           icon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: EkkleiciaColors.bgDeep.withOpacity(0.8),
+              color: EkklisiaColors.bgDeep.withOpacity(0.8),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.arrow_back_ios_new,
               size: 16,
-              color: EkkleiciaColors.gold,
+              color: EkklisiaColors.gold,
             ),
           ),
           onPressed: () => Navigator.pop(context),
@@ -168,7 +168,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           widget.book.titleAr,
           style: const TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.goldLight,
+            color: EkklisiaColors.goldLight,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -179,13 +179,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           // Reading mode toggle
           IconButton(
             tooltip: 'وضع القراءة',
-            icon: Icon(_readingModeIcon, color: EkkleiciaColors.gold),
+            icon: Icon(_readingModeIcon, color: EkklisiaColors.gold),
             onPressed: _cycleReadingMode,
           ),
           // Bookmark (search)
           IconButton(
             tooltip: 'بحث',
-            icon: const Icon(Icons.search, color: EkkleiciaColors.gold),
+            icon: const Icon(Icons.search, color: EkklisiaColors.gold),
             onPressed: () => _pdfKey.currentState?.openBookmarkView(),
           ),
         ],
@@ -202,8 +202,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            EkkleiciaColors.bgDeep,
-            EkkleiciaColors.bgDeep.withOpacity(0),
+            EkklisiaColors.bgDeep,
+            EkklisiaColors.bgDeep.withOpacity(0),
           ],
         ),
       ),
@@ -212,7 +212,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         children: [
           // Previous page
           IconButton(
-            icon: const Icon(Icons.chevron_left, color: EkkleiciaColors.gold),
+            icon: const Icon(Icons.chevron_left, color: EkklisiaColors.gold),
             onPressed: _currentPage > 1
                 ? () => _pdfController.previousPage()
                 : null,
@@ -226,17 +226,17 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                 Text(
                   '$_currentPage / $_totalPages',
                   style: const TextStyle(
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
                 SliderTheme(
                   data: SliderThemeData(
-                    activeTrackColor: EkkleiciaColors.gold,
-                    inactiveTrackColor: EkkleiciaColors.goldBorder,
-                    thumbColor: EkkleiciaColors.gold,
-                    overlayColor: EkkleiciaColors.goldSubtle,
+                    activeTrackColor: EkklisiaColors.gold,
+                    inactiveTrackColor: EkklisiaColors.goldBorder,
+                    thumbColor: EkklisiaColors.gold,
+                    overlayColor: EkklisiaColors.goldSubtle,
                     trackHeight: 2,
                     thumbShape: const RoundSliderThumbShape(
                       enabledThumbRadius: 6,
@@ -257,7 +257,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
           // Next page
           IconButton(
-            icon: const Icon(Icons.chevron_right, color: EkkleiciaColors.gold),
+            icon: const Icon(Icons.chevron_right, color: EkklisiaColors.gold),
             onPressed: _currentPage < _totalPages
                 ? () => _pdfController.nextPage()
                 : null,
@@ -271,18 +271,18 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   Widget _buildLoadingOverlay() {
     return Container(
-      color: EkkleiciaColors.bgPrimary,
+      color: EkklisiaColors.bgPrimary,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Byzantine cross ornament
           const Text(
             '✦',
-            style: TextStyle(color: EkkleiciaColors.goldDim, fontSize: 32),
+            style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 32),
           ),
           const SizedBox(height: 24),
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation(EkkleiciaColors.gold),
+            valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
             strokeWidth: 2,
           ),
           const SizedBox(height: 16),
@@ -290,7 +290,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             'جاري تحميل الكتاب…',
             style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary,
+              color: EkklisiaColors.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -301,7 +301,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   Widget _buildErrorOverlay() {
     return Container(
-      color: EkkleiciaColors.bgPrimary,
+      color: EkklisiaColors.bgPrimary,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -312,7 +312,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               'تعذّر تحميل الكتاب',
               style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textPrimary,
+                color: EkklisiaColors.textPrimary,
                 fontSize: 18,
               ),
             ),
@@ -321,7 +321,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               'تأكد من اتصالك بالإنترنت وأعد المحاولة',
               style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -363,7 +363,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: EkkleiciaColors.maroon,
+        backgroundColor: EkklisiaColors.maroon,
         behavior: SnackBarBehavior.floating,
       ),
     );

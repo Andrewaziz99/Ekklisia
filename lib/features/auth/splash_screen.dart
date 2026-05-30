@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/colors.dart';
+import '../../../core/theme/brightness_colors.dart';
 import '../../../core/router/app_router.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -89,14 +89,23 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brightness = theme.brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final gold = theme.primaryColor;
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgDeep,
+      backgroundColor: bgDeep,
       body: Stack(
         children: [
           // ── Background image (very subtle) ───────────────────────────
           Positioned.fill(
             child: Image.asset(
-              'assets/images/ekklicia_background.png',
+              'assets/images/Ekklisia_background.png',
               fit: BoxFit.cover,
               opacity: const AlwaysStoppedAnimation(0.35),
             ),
@@ -106,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                gradient: EkkleiciaColors.splashGradient,
+                gradient: BrightnessColors.splashGradient(brightness),
               ),
             ),
           ),
@@ -125,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: EkkleiciaColors.gold
+                      color: gold
                           .withOpacity(_glowOpacity.value * 0.15),
                       blurRadius: 80,
                       spreadRadius: 30,
@@ -180,12 +189,16 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   List<Widget> _buildCornerOrnaments() {
-    const style = TextStyle(
-      color: EkkleiciaColors.goldDim,
+    final brightness = Theme.of(context).brightness;
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
+    final style = TextStyle(
+      color: goldDim,
       fontSize: 18,
       height: 1,
     );
-    const ornament = Text('❖', style: style);
+    final ornament = Text('❖', style: style);
 
     return [
       Positioned(top: 24, left: 24, child: ornament),
@@ -197,13 +210,13 @@ class _SplashScreenState extends State<SplashScreen>
         top: 36,
         left: 52,
         right: 52,
-        child: Container(height: 0.5, color: EkkleiciaColors.goldBorder),
+        child: Container(height: 0.5, color: goldBorder),
       ),
       Positioned(
         bottom: 72,
         left: 52,
         right: 52,
-        child: Container(height: 0.5, color: EkkleiciaColors.goldBorder),
+        child: Container(height: 0.5, color: goldBorder),
       ),
     ];
   }
@@ -216,33 +229,43 @@ class _CopticCross extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final gold = Theme.of(context).primaryColor;
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     return Container(
       width: 120,
       height: 120,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 1),
-        color: EkkleiciaColors.bgDeep.withOpacity(0.6),
+        border: Border.all(color: goldBorder, width: 1),
+        color: bgDeep.withOpacity(0.6),
         boxShadow: [
           BoxShadow(
-            color: EkkleiciaColors.gold.withOpacity(0.15),
+            color: gold.withOpacity(0.15),
             blurRadius: 24,
             spreadRadius: 4,
           ),
         ],
       ),
       child: CustomPaint(
-        painter: _CopticCrossPainter(),
+        painter: _CopticCrossPainter(gold: gold, goldBorder: goldBorder),
       ),
     );
   }
 }
 
 class _CopticCrossPainter extends CustomPainter {
+  _CopticCrossPainter({required this.gold, required this.goldBorder});
+
+  final Color gold;
+  final Color goldBorder;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = EkkleiciaColors.gold
+      ..color = gold
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
@@ -259,7 +282,7 @@ class _CopticCrossPainter extends CustomPainter {
 
     // Small dots at the 4 ends (Coptic cross style)
     final dotPaint = Paint()
-      ..color = EkkleiciaColors.gold
+      ..color = gold
       ..style = PaintingStyle.fill;
 
     for (final p in [
@@ -277,7 +300,7 @@ class _CopticCrossPainter extends CustomPainter {
       Offset(cx, cy),
       10,
       Paint()
-        ..color = EkkleiciaColors.goldBorder
+        ..color = goldBorder
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
@@ -294,30 +317,35 @@ class _AppTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return Column(
       children: [
         // Coptic ornament line
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 0.5, color: EkkleiciaColors.goldDim),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
+            Container(width: 40, height: 0.5, color: goldDim),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text('✦',
                   style: TextStyle(
-                      color: EkkleiciaColors.goldDim, fontSize: 10)),
+                      color: goldDim, fontSize: 10)),
             ),
-            Container(width: 40, height: 0.5, color: EkkleiciaColors.goldDim),
+            Container(width: 40, height: 0.5, color: goldDim),
           ],
         ),
         const SizedBox(height: 14),
 
         // App name in Arabic
-        const Text(
+        Text(
           'إكليسيا',
           style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.goldLight,
+            color: goldLight,
             fontSize: 42,
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
@@ -328,10 +356,10 @@ class _AppTitle extends StatelessWidget {
         const SizedBox(height: 4),
 
         // Latin subtitle
-        const Text(
+        Text(
           'E K K L I C I A',
           style: TextStyle(
-            color: EkkleiciaColors.goldDim,
+            color: goldDim,
             fontSize: 11,
             letterSpacing: 6,
             fontWeight: FontWeight.w400,
@@ -341,11 +369,11 @@ class _AppTitle extends StatelessWidget {
         const SizedBox(height: 8),
 
         // Tagline
-        const Text(
+        Text(
           'المكتبة القبطية الأرثوذكسية',
           style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkkleiciaColors.textSecondary,
+            color: textSecondary,
             fontSize: 14,
             letterSpacing: 0.5,
           ),
@@ -362,31 +390,36 @@ class _BottomBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [EkkleiciaColors.bgDeep, Colors.transparent],
+          colors: [bgDeep, Colors.transparent],
         ),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Text(
             '✦  ✦  ✦',
             style: TextStyle(
-              color: EkkleiciaColors.goldDim,
+              color: goldDim,
               fontSize: 10,
               letterSpacing: 8,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'الكنيسة القبطية الأرثوذكسية',
             style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkkleiciaColors.textSecondary,
+              color: textSecondary,
               fontSize: 11,
             ),
           ),

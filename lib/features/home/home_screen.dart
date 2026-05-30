@@ -38,19 +38,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Set system UI overlay style to match the deep header
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor:          EkkleiciaColors.bgDeep,
+      statusBarColor:          EkklisiaColors.bgDeep,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: EkkleiciaColors.bgDeep,
+      systemNavigationBarColor: EkklisiaColors.bgDeep,
     ));
 
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgPrimary,
+      backgroundColor: scaffoldBg,
       // Admin entry FAB — only visible to admin users
       floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, auth) => auth.isAdmin
             ? FloatingActionButton.small(
                 onPressed: () => context.go(Routes.adminDashboard),
-                backgroundColor: EkkleiciaColors.bgElevated,
+                backgroundColor: EkklisiaColors.bgElevated,
                 shape: const CircleBorder(),
                 elevation: 4,
                 child: Container(
@@ -58,18 +60,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: EkkleiciaColors.goldBorder, width: 1),
+                        color: EkklisiaColors.goldBorder, width: 1),
                   ),
                   child: const Icon(
                     Icons.admin_panel_settings_outlined,
                     size: 18,
-                    color: EkkleiciaColors.gold,
+                    color: EkklisiaColors.gold,
                   ),
                 ),
               )
             : FloatingActionButton.small(
           onPressed: () => context.go(Routes.login),
-          backgroundColor: EkkleiciaColors.bgElevated,
+          backgroundColor: EkklisiaColors.bgElevated,
           shape: const CircleBorder(),
           elevation: 4,
           child: Container(
@@ -77,12 +79,12 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: EkkleiciaColors.goldBorder, width: 1),
+                  color: EkklisiaColors.goldBorder, width: 1),
             ),
             child: const Icon(
               Icons.admin_panel_settings_outlined,
               size: 18,
-              color: EkkleiciaColors.gold,
+              color: EkklisiaColors.gold,
             ),
           ),
         ),
@@ -91,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: _tabs,
       ),
-      bottomNavigationBar: _EkkleiciaBottomNav(
+      bottomNavigationBar: _EkklisiaBottomNav(
         selectedIndex: _selectedIndex,
         onTap: (i) => setState(() => _selectedIndex = i),
       ),
@@ -101,8 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ── Bottom Navigation Bar ─────────────────────────────────────────────────────
 
-class _EkkleiciaBottomNav extends StatelessWidget {
-  const _EkkleiciaBottomNav({
+class _EkklisiaBottomNav extends StatelessWidget {
+  const _EkklisiaBottomNav({
     required this.selectedIndex,
     required this.onTap,
   });
@@ -114,9 +116,9 @@ class _EkkleiciaBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: EkkleiciaColors.bottomNavGradient,
+        gradient: EkklisiaColors.bottomNavGradient,
         border: Border(
-          top: BorderSide(color: EkkleiciaColors.goldBorder, width: 0.5),
+          top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
         ),
       ),
       child: SafeArea(
@@ -191,16 +193,16 @@ class _NavItem extends StatelessWidget {
                 SnackBar(
                   content: Text(
                     '$label — قريباً',
-                    style: const TextStyle(fontFamily: 'Scheherazade', color: EkkleiciaColors.textPrimary),
+                    style: const TextStyle(fontFamily: 'Scheherazade', color: EkklisiaColors.textPrimary),
                     textAlign: TextAlign.center,
                   ),
-                  backgroundColor: EkkleiciaColors.bgElevated,
+                  backgroundColor: EkklisiaColors.bgElevated,
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                     side: const BorderSide(
-                        color: EkkleiciaColors.goldBorder, width: 0.5),
+                        color: EkklisiaColors.goldBorder, width: 0.5),
                   ),
                 ),
               )
@@ -215,8 +217,8 @@ class _NavItem extends StatelessWidget {
               isActive ? activeIcon : icon,
               size: 22,
               color: isActive
-                  ? EkkleiciaColors.gold
-                  : EkkleiciaColors.textSecondary
+                  ? EkklisiaColors.gold
+                  : EkklisiaColors.textSecondary
                       .withValues(alpha: isComingSoon ? 0.4 : 1.0),
             ),
             const SizedBox(height: 3),
@@ -226,8 +228,8 @@ class _NavItem extends StatelessWidget {
                 fontFamily: 'Scheherazade',
                 fontSize: 10,
                 color: isActive
-                    ? EkkleiciaColors.gold
-                    : EkkleiciaColors.textSecondary
+                    ? EkklisiaColors.gold
+                    : EkklisiaColors.textSecondary
                         .withValues(alpha: isComingSoon ? 0.4 : 1.0),
                 fontWeight:
                     isActive ? FontWeight.w700 : FontWeight.w400,
@@ -255,13 +257,13 @@ class _CentreButton extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const RadialGradient(
-            colors: [EkkleiciaColors.bronze, EkkleiciaColors.maroon],
+            colors: [EkklisiaColors.bronze, EkklisiaColors.maroon],
           ),
           border: Border.all(
-              color: EkkleiciaColors.goldBorder, width: 1.5),
+              color: EkklisiaColors.goldBorder, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: EkkleiciaColors.gold.withValues(alpha: 0.2),
+              color: EkklisiaColors.gold.withValues(alpha: 0.2),
               blurRadius: 12,
               spreadRadius: 1,
             ),
@@ -271,7 +273,7 @@ class _CentreButton extends StatelessWidget {
           child: Text(
             '✦',
             style: TextStyle(
-              color: EkkleiciaColors.goldLight,
+              color: EkklisiaColors.goldLight,
               fontSize: 20,
             ),
           ),
@@ -290,8 +292,10 @@ class _PlaceholderTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: EkkleiciaColors.bgPrimary,
+      backgroundColor: scaffoldBg,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -301,18 +305,18 @@ class _PlaceholderTab extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: EkkleiciaColors.goldBorder, width: 0.5),
-                color: EkkleiciaColors.bgMid,
+                    color: EkklisiaColors.goldBorder, width: 0.5),
+                color: EkklisiaColors.bgMid,
               ),
               child:
-                  Icon(icon, size: 40, color: EkkleiciaColors.goldDim),
+                  Icon(icon, size: 40, color: EkklisiaColors.goldDim),
             ),
             const SizedBox(height: 16),
             Text(
               label,
               style: const TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.textSecondary,
+                color: EkklisiaColors.textSecondary,
                 fontSize: 20,
               ),
             ),
@@ -321,7 +325,7 @@ class _PlaceholderTab extends StatelessWidget {
               'قريباً',
               style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkkleiciaColors.gold,
+                color: EkklisiaColors.gold,
                 fontSize: 14,
                 letterSpacing: 2,
               ),

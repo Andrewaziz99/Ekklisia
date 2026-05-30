@@ -4,6 +4,7 @@ import 'package:ekklisia/services/session_service.dart';
 import 'package:ekklisia/services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -20,14 +21,14 @@ import 'features/settings/cubit/settings_state.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 
-class EkkleiciaApp extends StatefulWidget {
-  const EkkleiciaApp({super.key});
+class EkklisiaApp extends StatefulWidget {
+  const EkklisiaApp({super.key});
 
   @override
-  State<EkkleiciaApp> createState() => _EkkleiciaAppState();
+  State<EkklisiaApp> createState() => _EkklisiaAppState();
 }
 
-class _EkkleiciaAppState extends State<EkkleiciaApp> {
+class _EkklisiaAppState extends State<EkklisiaApp> {
   final _notificationService = sl<NotificationService>();
   final _booksRepository     = sl<BooksRepository>();
 
@@ -91,12 +92,21 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
       child: BlocBuilder<SettingsCubit, SettingsState>(
         bloc: sl<SettingsCubit>(),
         builder: (context, settings) {
+          // Determine theme mode from settings
+          final themeMode = settings.themeMode == AppThemeMode.light
+              ? ThemeMode.light
+              : ThemeMode.dark;
+
           return MaterialApp.router(
             title:                    'إكليسيا',
             debugShowCheckedModeBanner: false,
             routerConfig: AppRouter.router,
-            theme:     EkkleciaTheme.darkTheme,
-            themeMode: ThemeMode.dark,
+
+            // Use dynamic theme builders
+            theme:     EkklisiaTheme.buildTheme(Brightness.light),
+            darkTheme: EkklisiaTheme.buildTheme(Brightness.dark),
+            themeMode: themeMode,
+
             locale: const Locale('ar'),
             supportedLocales: const [
               Locale('ar'),
@@ -109,18 +119,46 @@ class _EkkleiciaAppState extends State<EkkleiciaApp> {
               GlobalCupertinoLocalizations.delegate,
             ],
             builder: (context, child) {
+              final brightness = Theme.of(context).brightness;
+              final isLight = brightness == Brightness.light;
+
+              // Update system UI colors based on current theme
+              _updateSystemUIOverlay(brightness);
+
               return Directionality(
                 textDirection: TextDirection.rtl,
-                child: MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(settings.fontScale.scale),
+                child: Container(
+                  decoration:
+                      isLight ? EkklisiaTheme.lightBackgroundDecoration : null,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(settings.fontScale.scale),
+                    ),
+                    child: child ?? const SizedBox.shrink(),
                   ),
-                  child: child ?? const SizedBox.shrink(),
                 ),
               );
             },
           );
         },
+      ),
+    );
+  }
+
+  /// Update system UI overlay (status bar, nav bar) based on brightness
+  void _updateSystemUIOverlay(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: isDark
+            ? const Color(0xFF08111C)  // Dark: bgDeep
+            : const Color(0xFFFAF8F4), // Light: lightBgDeep
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: isDark
+            ? const Color(0xFF08111C)  // Dark: bgDeep
+            : const Color(0xFFFAF8F4), // Light: lightBgDeep
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
     );
   }

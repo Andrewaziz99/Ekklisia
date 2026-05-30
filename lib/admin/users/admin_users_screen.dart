@@ -27,36 +27,36 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         decoration: const BoxDecoration(
-          color: EkkleiciaColors.bgDeep,
+          color: EkklisiaColors.bgDeep,
           border: Border(
               bottom: BorderSide(
-                  color: EkkleiciaColors.goldBorder, width: 0.5)),
+                  color: EkklisiaColors.goldBorder, width: 0.5)),
         ),
         child: Column(children: [
           TextField(
             controller: _search,
             onChanged: (_) => setState(() {}),
             style: const TextStyle(
-                color: EkkleiciaColors.textPrimary, fontSize: 13),
+                color: EkklisiaColors.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Search by email or UID…',
               hintStyle: const TextStyle(
-                  color: EkkleiciaColors.textSecondary, fontSize: 12),
+                  color: EkklisiaColors.textSecondary, fontSize: 12),
               prefixIcon: const Icon(Icons.search,
-                  size: 18, color: EkkleiciaColors.goldDim),
+                  size: 18, color: EkklisiaColors.goldDim),
               filled:    true,
-              fillColor: EkkleiciaColors.bgElevated,
+              fillColor: EkklisiaColors.bgElevated,
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 10),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                    color: EkkleiciaColors.goldBorder, width: 0.5),
+                    color: EkklisiaColors.goldBorder, width: 0.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                    color: EkkleiciaColors.gold, width: 1.0),
+                    color: EkklisiaColors.gold, width: 1.0),
               ),
             ),
           ),
@@ -78,20 +78,20 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: _filter == c.key
-                        ? EkkleiciaColors.goldSubtle
-                        : EkkleiciaColors.bgElevated,
+                        ? EkklisiaColors.goldSubtle
+                        : EkklisiaColors.bgElevated,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _filter == c.key
-                          ? EkkleiciaColors.gold
-                          : EkkleiciaColors.goldBorder,
+                          ? EkklisiaColors.gold
+                          : EkklisiaColors.goldBorder,
                       width: _filter == c.key ? 1.0 : 0.5,
                     ),
                   ),
                   child: Text(c.label, style: TextStyle(
                     color: _filter == c.key
-                        ? EkkleiciaColors.goldLight
-                        : EkkleiciaColors.textSecondary,
+                        ? EkklisiaColors.goldLight
+                        : EkklisiaColors.textSecondary,
                     fontSize: 12,
                     fontWeight: _filter == c.key
                         ? FontWeight.w600 : FontWeight.w400,
@@ -116,13 +116,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             if (snap.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation(
-                      EkkleiciaColors.gold)));
+                      EkklisiaColors.gold)));
             }
             if (snap.hasError) {
               return Center(child: Text(
                   'Error: ${snap.error}',
                   style: const TextStyle(
-                      color: EkkleiciaColors.textSecondary)));
+                      color: EkklisiaColors.textSecondary)));
             }
 
             final q = _search.text.toLowerCase();
@@ -147,14 +147,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.people_outline,
-                      size: 48, color: EkkleiciaColors.goldDim),
+                      size: 48, color: EkklisiaColors.goldDim),
                   const SizedBox(height: 12),
                   Text(
                     _search.text.isNotEmpty
                         ? 'No users match "${_search.text}"'
                         : 'No users yet',
                     style: const TextStyle(
-                        color: EkkleiciaColors.textSecondary,
+                        color: EkklisiaColors.textSecondary,
                         fontSize: 14),
                   ),
                 ],
@@ -189,14 +189,14 @@ class _SummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    color: EkkleiciaColors.bgPrimary,
+    color: EkklisiaColors.bgPrimary,
     child: Row(children: [
       const Icon(Icons.people, size: 14,
-          color: EkkleiciaColors.goldDim),
+          color: EkklisiaColors.goldDim),
       const SizedBox(width: 6),
       Text('$total user${total != 1 ? 's' : ''} found',
           style: const TextStyle(
-              color: EkkleiciaColors.textSecondary, fontSize: 12)),
+              color: EkklisiaColors.textSecondary, fontSize: 12)),
     ]),
   );
 }
@@ -211,12 +211,12 @@ class _UserCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: user.isAdmin
-              ? EkkleiciaColors.goldBorder
-              : EkkleiciaColors.goldBorder.withOpacity(0.5),
+              ? EkklisiaColors.goldBorder
+              : EkklisiaColors.goldBorder.withOpacity(0.5),
           width: user.isAdmin ? 0.8 : 0.4,
         ),
       ),
@@ -232,7 +232,7 @@ class _UserCard extends StatelessWidget {
             // Name / email
             if (user.displayName.isNotEmpty)
               Text(user.displayName, style: const TextStyle(
-                  color: EkkleiciaColors.textPrimary,
+                  color: EkklisiaColors.textPrimary,
                   fontSize: 13, fontWeight: FontWeight.w700)),
             Row(children: [
               Expanded(child: Text(
@@ -244,8 +244,8 @@ class _UserCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: user.isAnonymous
-                      ? EkkleiciaColors.textSecondary
-                      : EkkleiciaColors.textPrimary,
+                      ? EkklisiaColors.textSecondary
+                      : EkklisiaColors.textPrimary,
                   fontSize: user.displayName.isNotEmpty ? 11 : 13,
                   fontStyle: user.isAnonymous
                       ? FontStyle.italic
@@ -268,12 +268,12 @@ class _UserCard extends StatelessWidget {
                 Text(
                   '${user.uid.substring(0, 8)}…',
                   style: const TextStyle(
-                      color: EkkleiciaColors.textSecondary,
+                      color: EkklisiaColors.textSecondary,
                       fontSize: 10, fontFamily: 'monospace'),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.copy, size: 10,
-                    color: EkkleiciaColors.goldDim),
+                    color: EkklisiaColors.goldDim),
               ]),
             ),
           ],
@@ -283,18 +283,18 @@ class _UserCard extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (user.isAdmin) _Badge('ADMIN', EkkleiciaColors.gold),
+            if (user.isAdmin) _Badge('ADMIN', EkklisiaColors.gold),
             if (user.isAnonymous)
-              _Badge('ANON', EkkleiciaColors.textSecondary),
+              _Badge('ANON', EkklisiaColors.textSecondary),
             if (user.fcmToken.isNotEmpty) ...[
               const SizedBox(height: 4),
-              _Badge('FCM ✓', EkkleiciaColors.tealMid),
+              _Badge('FCM ✓', EkklisiaColors.tealMid),
             ],
             if (user.lastSeenAt != null) ...[
               const SizedBox(height: 6),
               Text(_relativeTime(user.lastSeenAt!),
                   style: const TextStyle(
-                      color: EkkleiciaColors.textSecondary,
+                      color: EkklisiaColors.textSecondary,
                       fontSize: 9)),
             ],
           ],
@@ -323,12 +323,12 @@ class _Avatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: user.isAdmin
-            ? EkkleiciaColors.goldSubtle
-            : EkkleiciaColors.bgElevated,
+            ? EkklisiaColors.goldSubtle
+            : EkklisiaColors.bgElevated,
         border: Border.all(
           color: user.isAdmin
-              ? EkkleiciaColors.gold
-              : EkkleiciaColors.goldBorder,
+              ? EkklisiaColors.gold
+              : EkklisiaColors.goldBorder,
           width: user.isAdmin ? 1.5 : 0.5,
         ),
       ),
@@ -336,8 +336,8 @@ class _Avatar extends StatelessWidget {
         user.isAnonymous ? '?' : user.initials,
         style: TextStyle(
           color: user.isAdmin
-              ? EkkleiciaColors.gold
-              : EkkleiciaColors.textSecondary,
+              ? EkklisiaColors.gold
+              : EkklisiaColors.textSecondary,
           fontSize: 14, fontWeight: FontWeight.w700,
         ),
       )),

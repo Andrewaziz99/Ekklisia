@@ -44,21 +44,21 @@ class AdminDashboardScreen extends StatelessWidget {
                     labelAr: 'إجمالي الكتب',
                     value: books.length.toString(),
                     icon: Icons.library_books,
-                    color: EkkleiciaColors.gold,
+                    color: EkklisiaColors.gold,
                   ),
                   _StatCard(
                     label: 'Published',
                     labelAr: 'منشور',
                     value: published.toString(),
                     icon: Icons.check_circle_outline,
-                    color: EkkleiciaColors.tealMid,
+                    color: EkklisiaColors.tealMid,
                   ),
                   _StatCard(
                     label: 'Drafts',
                     labelAr: 'مسودات',
                     value: drafts.toString(),
                     icon: Icons.edit_note_outlined,
-                    color: EkkleiciaColors.textSecondary,
+                    color: EkklisiaColors.textSecondary,
                   ),
                   _StatCard(
                     label: 'Categories',
@@ -69,7 +69,7 @@ class AdminDashboardScreen extends StatelessWidget {
                         .length
                         .toString(),
                     icon: Icons.category_outlined,
-                    color: EkkleiciaColors.goldLight,
+                    color: EkklisiaColors.goldLight,
                   ),
                 ],
               ),
@@ -96,7 +96,7 @@ class AdminDashboardScreen extends StatelessWidget {
 
   Widget _sectionLabel(String label) => Text(label,
       style: const TextStyle(
-        color:       EkkleiciaColors.textSecondary,
+        color:       EkklisiaColors.textSecondary,
         fontSize:    11,
         fontWeight:  FontWeight.w600,
         letterSpacing: 1.5,
@@ -117,12 +117,12 @@ class _WelcomeBanner extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [EkkleiciaColors.bgMid, EkkleiciaColors.bgElevated],
+              colors: [EkklisiaColors.bgMid, EkklisiaColors.bgElevated],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+            border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
           ),
           child: Row(children: [
             Expanded(child: Column(
@@ -131,7 +131,7 @@ class _WelcomeBanner extends StatelessWidget {
                 Text('مرحباً، $name',
                     style: const TextStyle(
                       fontFamily: 'Scheherazade',
-                      color:      EkkleiciaColors.goldLight,
+                      color:      EkklisiaColors.goldLight,
                       fontSize:   20,
                       fontWeight: FontWeight.w700,
                     )),
@@ -139,7 +139,7 @@ class _WelcomeBanner extends StatelessWidget {
                 const Text('إكليسيا — لوحة التحكم',
                     style: TextStyle(
                       fontFamily: 'Scheherazade',
-                      color:      EkkleiciaColors.textSecondary,
+                      color:      EkklisiaColors.textSecondary,
                       fontSize:   13,
                     )),
                 const SizedBox(height: 10),
@@ -147,17 +147,17 @@ class _WelcomeBanner extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: EkkleiciaColors.goldSubtle,
+                    color: EkklisiaColors.goldSubtle,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: EkkleiciaColors.goldBorder, width: 0.5),
+                        color: EkklisiaColors.goldBorder, width: 0.5),
                   ),
                   child: const Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.admin_panel_settings_outlined,
-                        size: 12, color: EkkleiciaColors.gold),
+                        size: 12, color: EkklisiaColors.gold),
                     SizedBox(width: 5),
                     Text('Admin', style: TextStyle(
-                      color:      EkkleiciaColors.gold,
+                      color:      EkklisiaColors.gold,
                       fontSize:   10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -171,12 +171,12 @@ class _WelcomeBanner extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const RadialGradient(
-                    colors: [EkkleiciaColors.bronze, EkkleiciaColors.maroon]),
+                    colors: [EkklisiaColors.bronze, EkklisiaColors.maroon]),
                 border: Border.all(
-                    color: EkkleiciaColors.goldBorder, width: 1.5),
+                    color: EkklisiaColors.goldBorder, width: 1.5),
               ),
               child: const Center(child: Text('✦', style: TextStyle(
-                  color: EkkleiciaColors.goldLight, fontSize: 24))),
+                  color: EkklisiaColors.goldLight, fontSize: 24))),
             ),
           ]),
         );
@@ -206,9 +206,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +216,7 @@ class _StatCard extends StatelessWidget {
         children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(label, style: const TextStyle(
-                color:    EkkleiciaColors.textSecondary,
+                color:    EkklisiaColors.textSecondary,
                 fontSize: 11, fontWeight: FontWeight.w500)),
             Icon(icon, size: 18, color: color),
           ]),
@@ -227,7 +227,7 @@ class _StatCard extends StatelessWidget {
               letterSpacing: -0.5)),
           Text(labelAr, style: const TextStyle(
               fontFamily: 'Scheherazade',
-              color:      EkkleiciaColors.textSecondary,
+              color:      EkklisiaColors.textSecondary,
               fontSize:   11)),
         ],
       ),
@@ -246,7 +246,7 @@ class _QuickActions extends StatelessWidget {
           label: 'Upload Book',
           labelAr: 'رفع كتاب',
           icon: Icons.upload_file,
-          color: EkkleiciaColors.gold,
+          color: EkklisiaColors.gold,
           onTap: () => context.go(Routes.adminUpload),
         ),
       ),
@@ -256,7 +256,7 @@ class _QuickActions extends StatelessWidget {
           label: 'Send Notification',
           labelAr: 'إرسال إشعار',
           icon: Icons.notifications_active_outlined,
-          color: EkkleiciaColors.maroonMid,
+          color: EkklisiaColors.maroonMid,
           onTap: () => context.go(Routes.adminNotify),
         ),
       ),
@@ -302,7 +302,7 @@ class _ActionButton extends StatelessWidget {
                   color: color, fontSize: 12, fontWeight: FontWeight.w700)),
               Text(labelAr, style: const TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkkleiciaColors.textSecondary, fontSize: 11)),
+                  color: EkklisiaColors.textSecondary, fontSize: 11)),
             ],
           ),
         ),
@@ -318,19 +318,19 @@ class _RecentBooks extends StatelessWidget {
   final List books;
 
   static const _catColors = {
-    'bible': EkkleiciaColors.maroon, 'prayers': EkkleiciaColors.maroonMid,
-    'liturgy': EkkleiciaColors.bronze, 'hymns': EkkleiciaColors.tealDark,
-    'saints': EkkleiciaColors.plum, 'fathers': EkkleiciaColors.forest,
-    'commentaries': EkkleiciaColors.ocean, 'studies': EkkleiciaColors.ocean,
+    'bible': EkklisiaColors.maroon, 'prayers': EkklisiaColors.maroonMid,
+    'liturgy': EkklisiaColors.bronze, 'hymns': EkklisiaColors.tealDark,
+    'saints': EkklisiaColors.plum, 'fathers': EkklisiaColors.forest,
+    'commentaries': EkklisiaColors.ocean, 'studies': EkklisiaColors.ocean,
   };
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: EkkleiciaColors.bgMid,
+        color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkkleiciaColors.goldBorder, width: 0.5),
+        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Column(children: [
         for (int i = 0; i < books.length; i++) ...[
@@ -342,11 +342,11 @@ class _RecentBooks extends StatelessWidget {
                 width: 36, height: 50,
                 decoration: BoxDecoration(
                   color: (_catColors[books[i].category] ??
-                      EkkleiciaColors.bgElevated)
+                      EkklisiaColors.bgElevated)
                       .withOpacity(0.7),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                      color: EkkleiciaColors.goldBorder, width: 0.5),
+                      color: EkklisiaColors.goldBorder, width: 0.5),
                 ),
                 child: Center(child: Text(
                     books[i].titleAr.isNotEmpty
@@ -355,7 +355,7 @@ class _RecentBooks extends StatelessWidget {
                         : '؟',
                     style: const TextStyle(
                         fontFamily: 'Scheherazade',
-                        color: EkkleiciaColors.textCream,
+                        color: EkklisiaColors.textCream,
                         fontSize: 11))),
               ),
               const SizedBox(width: 12),
@@ -369,7 +369,7 @@ class _RecentBooks extends StatelessWidget {
                       textDirection: TextDirection.rtl,
                       style: const TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkkleiciaColors.textPrimary,
+                          color: EkklisiaColors.textPrimary,
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 3),
                   Row(children: [
@@ -378,17 +378,17 @@ class _RecentBooks extends StatelessWidget {
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: (_catColors[books[i].category] ??
-                            EkkleiciaColors.bgElevated)
+                            EkklisiaColors.bgElevated)
                             .withOpacity(0.2),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(books[i].category, style: const TextStyle(
-                          color: EkkleiciaColors.textSecondary,
+                          color: EkklisiaColors.textSecondary,
                           fontSize: 10)),
                     ),
                     const SizedBox(width: 8),
                     Text(books[i].formattedSize, style: const TextStyle(
-                        color: EkkleiciaColors.textSecondary, fontSize: 10)),
+                        color: EkklisiaColors.textSecondary, fontSize: 10)),
                   ]),
                 ],
               )),
@@ -398,13 +398,13 @@ class _RecentBooks extends StatelessWidget {
                     horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: books[i].isPublished
-                      ? EkkleiciaColors.tealMid.withOpacity(0.15)
-                      : EkkleiciaColors.bgElevated,
+                      ? EkklisiaColors.tealMid.withOpacity(0.15)
+                      : EkklisiaColors.bgElevated,
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
                     color: books[i].isPublished
-                        ? EkkleiciaColors.tealMid.withOpacity(0.4)
-                        : EkkleiciaColors.goldBorder,
+                        ? EkklisiaColors.tealMid.withOpacity(0.4)
+                        : EkklisiaColors.goldBorder,
                     width: 0.5,
                   ),
                 ),
@@ -412,8 +412,8 @@ class _RecentBooks extends StatelessWidget {
                   books[i].isPublished ? 'LIVE' : 'DRAFT',
                   style: TextStyle(
                     color: books[i].isPublished
-                        ? EkkleiciaColors.tealMid
-                        : EkkleiciaColors.textSecondary,
+                        ? EkklisiaColors.tealMid
+                        : EkklisiaColors.textSecondary,
                     fontSize: 9, fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
@@ -422,7 +422,7 @@ class _RecentBooks extends StatelessWidget {
             ]),
           ),
           if (i < books.length - 1)
-            const Divider(height: 1, color: EkkleiciaColors.goldBorder,
+            const Divider(height: 1, color: EkklisiaColors.goldBorder,
                 indent: 14, endIndent: 14),
         ],
       ]),
