@@ -4,30 +4,34 @@ import '../../../services/settings_service.dart';
 
 class SettingsState extends Equatable {
   const SettingsState({
-    this.language            = AppLanguage.arabic,
-    this.fontScale           = FontScale.medium,
+    this.language             = AppLanguage.arabic,
+    this.isLanguageSelected   = false,
+    this.fontScale            = FontScale.medium,
     this.newBookNotifications = true,
-    this.prayerReminder      = false,
-    this.keepScreenOn        = true,
-    this.themeMode           = AppThemeMode.dark,
+    this.prayerReminder       = false,
+    this.keepScreenOn         = true,
+    this.themeMode            = AppThemeMode.dark,
   });
 
-  final AppLanguage language;
-  final FontScale   fontScale;
-  final bool        newBookNotifications;
-  final bool        prayerReminder;
-  final bool        keepScreenOn;
+  final AppLanguage  language;
+  final bool         isLanguageSelected;
+  final FontScale    fontScale;
+  final bool         newBookNotifications;
+  final bool         prayerReminder;
+  final bool         keepScreenOn;
   final AppThemeMode themeMode;
 
   SettingsState copyWith({
-    AppLanguage? language,
-    FontScale?   fontScale,
-    bool?        newBookNotifications,
-    bool?        prayerReminder,
-    bool?        keepScreenOn,
+    AppLanguage?  language,
+    bool?         isLanguageSelected,
+    FontScale?    fontScale,
+    bool?         newBookNotifications,
+    bool?         prayerReminder,
+    bool?         keepScreenOn,
     AppThemeMode? themeMode,
   }) => SettingsState(
     language:             language             ?? this.language,
+    isLanguageSelected:   isLanguageSelected   ?? this.isLanguageSelected,
     fontScale:            fontScale            ?? this.fontScale,
     newBookNotifications: newBookNotifications ?? this.newBookNotifications,
     prayerReminder:       prayerReminder       ?? this.prayerReminder,
@@ -37,7 +41,7 @@ class SettingsState extends Equatable {
 
   @override
   List<Object?> get props => [
-    language, fontScale,
+    language, isLanguageSelected, fontScale,
     newBookNotifications, prayerReminder, keepScreenOn, themeMode,
   ];
 }

@@ -16,6 +16,7 @@ import '../../features/auth/auth_cubit.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/datasources/firebase/firestore_datasource.dart';
 import '../../data/repositories/books_repository.dart';
+import '../../data/repositories/daily_verse_repository.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/settings_service.dart';
@@ -88,6 +89,9 @@ class ServiceLocator {
         firestoreDataSource: sl<FirestoreDataSource>(),
         cloudinaryDataSource: sl<CloudinaryDataSource>(),
       ),
+    );
+    sl.registerLazySingleton<DailyVerseRepository>(
+      () => DailyVerseRepository(sl<FirebaseFirestore>()),
     );
 
     // ── Services ──────────────────────────────────────────────────────────

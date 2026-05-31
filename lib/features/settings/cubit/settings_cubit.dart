@@ -7,6 +7,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   SettingsCubit(this._service)
       : super(SettingsState(
     language:             _service.language,
+    isLanguageSelected:   _service.isLanguageSelected,
     fontScale:            _service.fontScale,
     newBookNotifications: _service.newBookNotifications,
     prayerReminder:       _service.prayerReminderEnabled,
@@ -19,6 +20,13 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setLanguage(AppLanguage lang) async {
     await _service.setLanguage(lang);
     emit(state.copyWith(language: lang));
+  }
+
+  /// Called after the user picks a language on first launch.
+  Future<void> completeLanguageSelection(AppLanguage lang) async {
+    await _service.setLanguage(lang);
+    await _service.markLanguageSelected();
+    emit(state.copyWith(language: lang, isLanguageSelected: true));
   }
 
   Future<void> setFontScale(FontScale fs) async {

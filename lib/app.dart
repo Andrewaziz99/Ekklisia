@@ -16,6 +16,8 @@ import 'data/repositories/books_repository.dart';
 import 'features/auth/auth_cubit.dart';
 import 'features/auth/auth_state.dart';
 import 'features/books/cubit/books_cubit.dart';
+import 'features/daily_verse/daily_verse_cubit.dart';
+import 'data/repositories/daily_verse_repository.dart';
 import 'features/settings/cubit/settings_cubit.dart';
 import 'features/settings/cubit/settings_state.dart';
 import 'services/auth_service.dart';
@@ -71,6 +73,7 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
     );
 
     await _notificationService.subscribeToTopic('new_books');
+    await _notificationService.subscribeToTopic('daily_verse');
   }
 
   @override
@@ -88,6 +91,10 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
           create: (_) => sl<SettingsCubit>(),
           lazy: false,
         ),
+        BlocProvider<DailyVerseCubit>(
+          create: (_) => DailyVerseCubit(sl<DailyVerseRepository>())..loadTodayVerse(),
+          lazy: false,
+        ),
       ],
       child: BlocBuilder<SettingsCubit, SettingsState>(
         bloc: sl<SettingsCubit>(),
@@ -96,6 +103,10 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
           final themeMode = settings.themeMode == AppThemeMode.light
               ? ThemeMode.light
               : ThemeMode.dark;
+
+          // Determine locale and text direction from selected language
+          final locale = _localeFromLanguage(settings.language);
+          final textDir = _textDirFromLanguage(settings.language);
 
           return MaterialApp.router(
             title:                    'إكليسيا',
@@ -107,7 +118,7 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
             darkTheme: EkklisiaTheme.buildTheme(Brightness.dark),
             themeMode: themeMode,
 
-            locale: const Locale('ar'),
+            locale: locale,
             supportedLocales: const [
               Locale('ar'),
               Locale('el'),
@@ -126,7 +137,7 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
               _updateSystemUIOverlay(brightness);
 
               return Directionality(
-                textDirection: TextDirection.rtl,
+                textDirection: textDir,
                 child: Container(
                   decoration:
                       isLight ? EkklisiaTheme.lightBackgroundDecoration : null,
@@ -143,6 +154,28 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
         },
       ),
     );
+  }
+
+  /// Returns the [Locale] for the given [AppLanguage].
+  static Locale _localeFromLanguage(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.greek:   return const Locale('el');
+      case AppLanguage.english: return const Locale('en');
+      case AppLanguage.coptic:  return const Locale('ar'); // fallback
+      case AppLanguage.arabic:  return const Locale('ar');
+    }
+  }
+
+  /// Returns LTR for Greek/English, RTL for Arabic/Coptic.
+  static TextDirection _textDirFromLanguage(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.greek:
+      case AppLanguage.english:
+        return TextDirection.ltr;
+      case AppLanguage.arabic:
+      case AppLanguage.coptic:
+        return TextDirection.rtl;
+    }
   }
 
   /// Update system UI overlay (status bar, nav bar) based on brightness

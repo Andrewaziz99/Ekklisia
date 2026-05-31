@@ -103,13 +103,21 @@ class SettingsService {
   final SharedPreferences _prefs;
 
   // ── Keys ─────────────────────────────────────────────────────────────────
-  static const _kLanguage       = 'pref_language';
-  static const _kFontScale      = 'pref_font_scale';
-  static const _kNotifBooks     = 'pref_notif_books';
-  static const _kNotifReminders = 'pref_notif_reminders';
-  static const _kPrayerReminder = 'pref_prayer_reminder';
-  static const _kKeepScreen     = 'pref_keep_screen';
-  static const _kThemeMode      = 'pref_theme_mode';
+  static const _kLanguage         = 'pref_language';
+  static const _kLanguageSelected = 'pref_language_selected';
+  static const _kFontScale        = 'pref_font_scale';
+  static const _kNotifBooks       = 'pref_notif_books';
+  static const _kNotifReminders   = 'pref_notif_reminders';
+  static const _kPrayerReminder   = 'pref_prayer_reminder';
+  static const _kKeepScreen       = 'pref_keep_screen';
+  static const _kThemeMode        = 'pref_theme_mode';
+
+  // ── First-launch language selection ─────────────────────────────────────
+  /// True once the user has explicitly chosen a language on first launch.
+  bool get isLanguageSelected => _prefs.getBool(_kLanguageSelected) ?? false;
+
+  Future<void> markLanguageSelected() =>
+      _prefs.setBool(_kLanguageSelected, true);
 
   // ── Language ─────────────────────────────────────────────────────────────
   AppLanguage get language =>
@@ -151,6 +159,7 @@ class SettingsService {
   // ── Reset ─────────────────────────────────────────────────────────────────
   Future<void> resetAll() async {
     await _prefs.remove(_kLanguage);
+    await _prefs.remove(_kLanguageSelected);
     await _prefs.remove(_kFontScale);
     await _prefs.remove(_kNotifBooks);
     await _prefs.remove(_kNotifReminders);

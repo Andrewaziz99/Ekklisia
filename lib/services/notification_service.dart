@@ -44,7 +44,7 @@ class NotificationService {
 
   Future<void> init() async {
     // 1. Local notifications channel setup
-    const androidChannel = AndroidNotificationChannel(
+    const androidNewBook = AndroidNotificationChannel(
       AppConstants.newBookChannelId,
       AppConstants.newBookChannelName,
       description: AppConstants.newBookChannelDesc,
@@ -52,11 +52,21 @@ class NotificationService {
       playSound: true,
     );
 
-    await _localPlugin
+    const androidDailyVerse = AndroidNotificationChannel(
+      AppConstants.dailyVerseChannelId,
+      AppConstants.dailyVerseChannelName,
+      description: AppConstants.dailyVerseChannelDesc,
+      importance: Importance.high,
+      playSound: true,
+    );
+
+    final androidImpl = _localPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(androidChannel);
+        >();
+
+    await androidImpl?.createNotificationChannel(androidNewBook);
+    await androidImpl?.createNotificationChannel(androidDailyVerse);
 
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -85,10 +95,14 @@ class NotificationService {
       // Caller should save this to Firestore
     });
 
-    // 4. Register background handler (top-level)
+    // 4. Subscribe to the daily verse topic so this device receives 9AM pushes
+    await _messaging.subscribeToTopic(AppConstants.dailyVerseTopic);
+    debugPrint('[FCM] Subscribed to: ${AppConstants.dailyVerseTopic}');
+
+    // 5. Register background handler (top-level)
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // 5. Foreground message handler
+    // 6. Foreground message handler
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
     // 6. Notification open handler (app in background, user taps)
@@ -126,20 +140,34 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final isDailyVerse = message.data['type'] == 'daily_verse';
+
+    final channelId   = isDailyVerse
+        ? AppConstants.dailyVerseChannelId
+        : AppConstants.newBookChannelId;
+    final channelName = isDailyVerse
+        ? AppConstants.dailyVerseChannelName
+        : AppConstants.newBookChannelName;
+    final channelDesc = isDailyVerse
+        ? AppConstants.dailyVerseChannelDesc
+        : AppConstants.newBookChannelDesc;
+
     _localPlugin.show(
       notification.hashCode,
       notification.title,
       notification.body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          AppConstants.newBookChannelId,
-          AppConstants.newBookChannelName,
-          channelDescription: AppConstants.newBookChannelDesc,
+          channelId,
+          channelName,
+          channelDescription: channelDesc,
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',
           largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
           styleInformation: BigTextStyleInformation(notification.body ?? ''),
+          // Replace any earlier verse notification with the latest one
+          tag: isDailyVerse ? 'daily_verse' : null,
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

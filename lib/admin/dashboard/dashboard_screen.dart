@@ -81,6 +81,12 @@ class AdminDashboardScreen extends StatelessWidget {
               _QuickActions(),
               const SizedBox(height: 24),
 
+              // ── CMS shortcuts ──────────────────────────────────────
+              _sectionLabel('Content Management'),
+              const SizedBox(height: 12),
+              _CmsShortcuts(),
+              const SizedBox(height: 24),
+
               // ── Recent books ───────────────────────────────────────
               if (books.isNotEmpty) ...[
                 _sectionLabel('Recent Books'),
@@ -204,7 +210,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: EkklisiaColors.bgMid,
         borderRadius: BorderRadius.circular(12),
@@ -212,23 +218,34 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(label, style: const TextStyle(
-                color:    EkklisiaColors.textSecondary,
-                fontSize: 11, fontWeight: FontWeight.w500)),
-            Icon(icon, size: 18, color: color),
+            Expanded(
+              child: Text(label,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: EkklisiaColors.textSecondary,
+                      fontSize: 11, fontWeight: FontWeight.w500)),
+            ),
+            Icon(icon, size: 16, color: color),
           ]),
-          Text(value, style: TextStyle(
-              color:      color,
-              fontSize:   28,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5)),
-          Text(labelAr, style: const TextStyle(
-              fontFamily: 'Scheherazade',
-              color:      EkklisiaColors.textSecondary,
-              fontSize:   11)),
+          const Spacer(),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: TextStyle(
+                color:      color,
+                fontSize:   26,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5)),
+          ),
+          const SizedBox(height: 2),
+          Text(labelAr,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color:      EkklisiaColors.textSecondary,
+                  fontSize:   11)),
         ],
       ),
     );
@@ -260,7 +277,90 @@ class _QuickActions extends StatelessWidget {
           onTap: () => context.go(Routes.adminNotify),
         ),
       ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: _ActionButton(
+          label: 'Users',
+          labelAr: 'المستخدمون',
+          icon: Icons.people_outline,
+          color: EkklisiaColors.tealMid,
+          onTap: () => context.go(Routes.adminUsers),
+        ),
+      ),
     ]);
+  }
+}
+
+// ── CMS Shortcuts ─────────────────────────────────────────────────────────────
+
+class _CmsShortcuts extends StatelessWidget {
+  static final _items = [
+    (label: 'Bible', labelAr: 'الكتاب المقدس', icon: Icons.book_outlined,
+      color: EkklisiaColors.gold, path: Routes.adminCmsBibles),
+    (label: 'Hymns', labelAr: 'التسابيح', icon: Icons.music_note_outlined,
+      color: EkklisiaColors.tealDark, path: Routes.adminCmsHymns),
+    (label: 'Prayers', labelAr: 'الصلوات', icon: Icons.favorite_outline,
+      color: EkklisiaColors.maroonMid, path: Routes.adminCmsPrayers),
+    (label: 'Liturgies', labelAr: 'القداسات', icon: Icons.church_outlined,
+      color: EkklisiaColors.bronze, path: Routes.adminCmsLiturgies),
+    (label: 'Saints', labelAr: 'القديسون', icon: Icons.person_outline,
+      color: EkklisiaColors.plum, path: Routes.adminCmsSaints),
+    (label: 'Daily Verse', labelAr: 'آية اليوم', icon: Icons.menu_book_outlined,
+      color: EkklisiaColors.tealMid, path: Routes.adminCmsDailyVerse),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.1,
+      children: _items.map((item) {
+        return Material(
+          color: item.color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => context.go(item.path),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: item.color.withOpacity(0.25), width: 0.5),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Icon(item.icon, color: item.color, size: 20),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                        color: item.color,
+                        fontSize: 11, fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    item.labelAr,
+                    style: const TextStyle(
+                        fontFamily: 'Scheherazade',
+                        color: EkklisiaColors.textSecondary,
+                        fontSize: 10),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
@@ -287,7 +387,7 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -295,14 +395,19 @@ class _ActionButton extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 10),
-              Text(label, style: TextStyle(
-                  color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-              Text(labelAr, style: const TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary, fontSize: 11)),
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 8),
+              Text(label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.w700)),
+              Text(labelAr,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontFamily: 'Scheherazade',
+                      color: EkklisiaColors.textSecondary, fontSize: 11)),
             ],
           ),
         ),

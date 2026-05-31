@@ -1,20 +1,26 @@
-// lib/features/home/screens/home_screen.dart
+// lib/features/home/home_screen.dart
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase 1 home shell.
-// Provides a bottom navigation bar ready for future tabs.
-// Currently only the Library tab is active.
+// App shell with a clean 4-tab bottom navigation:
+//   0 → Home dashboard  (HomeTabScreen)
+//   1 → Library         (BooksHomeScreen)
+//   2 → Bookmarks       (BookmarksScreen)
+//   3 → Settings        (SettingsScreen)
 // ─────────────────────────────────────────────────────────────────────────────
-import 'package:ekklisia/features/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/router/app_router.dart';
-import '../../../core/theme/colors.dart';
-import '../auth/auth_cubit.dart';
-import '../auth/auth_state.dart';
-import '../books/screens/books_home.dart';
 
+import '../../core/router/app_router.dart';
+import '../../core/theme/brightness_colors.dart';
+import '../../features/auth/auth_cubit.dart';
+import '../../features/auth/auth_state.dart';
+import '../../features/bookmarks/bookmarks_screen.dart';
+import '../../features/books/screens/books_home.dart';
+import '../../features/settings/settings_screen.dart';
+import '../../features/settings/cubit/settings_cubit.dart';
+import '../../services/settings_service.dart';
+import 'home_tab_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,72 +32,63 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // Future tabs (Phase 2+) are placeholder widgets for now
-  static const _tabs = <Widget>[
-    BooksHomeScreen(),
-    _PlaceholderTab(icon: Icons.calendar_month_outlined, label: 'التقويم'),
-    _PlaceholderTab(icon: Icons.music_note_outlined,     label: 'التسابيح'),
-    SettingsScreen(),
-  ];
+  void _goToLibrary() => setState(() => _selectedIndex = 1);
 
   @override
   Widget build(BuildContext context) {
-    // Set system UI overlay style to match the deep header
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor:          EkklisiaColors.bgDeep,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: EkklisiaColors.bgDeep,
+    final brightness = Theme.of(context).brightness;
+
+    // Keep system UI in sync with theme
+    final isDark = brightness == Brightness.dark;
+    final navBgColor = BrightnessColors.bgDeep(brightness);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: navBgColor,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: navBgColor,
+      systemNavigationBarIconBrightness:
+          isDark ? Brightness.light : Brightness.dark,
     ));
 
-    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final tabs = <Widget>[
+      HomeTabScreen(onGoToLibrary: _goToLibrary),
+      const BooksHomeScreen(),
+      const BookmarksScreen(),
+      const SettingsScreen(),
+    ];
 
     return Scaffold(
-      backgroundColor: scaffoldBg,
-      // Admin entry FAB — only visible to admin users
+      backgroundColor: BrightnessColors.bgDeep(brightness),
+      // Admin FAB — only for admin users
       floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, auth) => auth.isAdmin
             ? FloatingActionButton.small(
+                heroTag: 'adminFab',
                 onPressed: () => context.go(Routes.adminDashboard),
-                backgroundColor: EkklisiaColors.bgElevated,
+                backgroundColor: BrightnessColors.bgMid(brightness),
+                elevation: 3,
                 shape: const CircleBorder(),
-                elevation: 4,
                 child: Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: EkklisiaColors.goldBorder, width: 1),
+                      color: BrightnessColors.goldBorder(brightness),
+                      width: 1,
+                    ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.admin_panel_settings_outlined,
                     size: 18,
-                    color: EkklisiaColors.gold,
+                    color: BrightnessColors.goldDim(brightness),
                   ),
                 ),
               )
-            : FloatingActionButton.small(
-          onPressed: () => context.go(Routes.login),
-          backgroundColor: EkklisiaColors.bgElevated,
-          shape: const CircleBorder(),
-          elevation: 4,
-          child: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: EkklisiaColors.goldBorder, width: 1),
-            ),
-            child: const Icon(
-              Icons.admin_panel_settings_outlined,
-              size: 18,
-              color: EkklisiaColors.gold,
-            ),
-          ),
-        ),
+            : const SizedBox.shrink(),
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _tabs,
+        children: tabs,
       ),
       bottomNavigationBar: _EkklisiaBottomNav(
         selectedIndex: _selectedIndex,
@@ -114,53 +111,106 @@ class _EkklisiaBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final gold = Theme.of(context).primaryColor;
+    final goldDim = BrightnessColors.goldDim(brightness);
+
+    final lang = context.select<SettingsCubit, AppLanguage>(
+      (c) => c.state.language,
+    );
+    final isGreek = lang == AppLanguage.greek;
+
+    final items = [
+      _NavItem(
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home,
+        arLabel: 'الرئيسية',
+        elLabel: 'Αρχική',
+        isActive: selectedIndex == 0,
+        onTap: () => onTap(0),
+      ),
+      _NavItem(
+        icon: Icons.library_books_outlined,
+        activeIcon: Icons.library_books,
+        arLabel: 'المكتبة',
+        elLabel: 'Βιβλιοθήκη',
+        isActive: selectedIndex == 1,
+        onTap: () => onTap(1),
+      ),
+      _NavItem(
+        icon: Icons.bookmarks_outlined,
+        activeIcon: Icons.bookmarks,
+        arLabel: 'الإشارات',
+        elLabel: 'Σελιδοδ.',
+        isActive: selectedIndex == 2,
+        onTap: () => onTap(2),
+      ),
+      _NavItem(
+        icon: Icons.settings_outlined,
+        activeIcon: Icons.settings,
+        arLabel: 'الإعدادات',
+        elLabel: 'Ρυθμίσεις',
+        isActive: selectedIndex == 3,
+        onTap: () => onTap(3),
+      ),
+    ];
+
     return Container(
-      decoration: const BoxDecoration(
-        gradient: EkklisiaColors.bottomNavGradient,
+      decoration: BoxDecoration(
+        color: bgDeep,
         border: Border(
-          top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+          top: BorderSide(color: goldBorder, width: 0.5),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 58,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon:     Icons.library_books_outlined,
-                activeIcon: Icons.library_books,
-                label:    'المكتبة',
-                isActive: selectedIndex == 0,
-                onTap:    () => onTap(0),
-              ),
-              _NavItem(
-                icon:     Icons.calendar_month_outlined,
-                activeIcon: Icons.calendar_month,
-                label:    'التقويم',
-                isActive: selectedIndex == 1,
-                onTap:    () => onTap(1),
-                isComingSoon: true,
-              ),
-              // Centre ornamental button
-              _CentreButton(onTap: () => onTap(0)),
-              _NavItem(
-                icon:     Icons.music_note_outlined,
-                activeIcon: Icons.music_note,
-                label:    'التسابيح',
-                isActive: selectedIndex == 2,
-                onTap:    () => onTap(2),
-                isComingSoon: true,
-              ),
-              _NavItem(
-                icon:     Icons.settings_outlined,
-                activeIcon: Icons.settings,
-                label:    'الإعدادات',
-                isActive: selectedIndex == 3,
-                onTap:    () => onTap(3),
-              ),
-            ],
+            children: items.map((item) {
+              final isActive = item.isActive;
+              return Expanded(
+                child: InkWell(
+                  onTap: item.onTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          key: ValueKey(isActive),
+                          size: 22,
+                          color: isActive ? gold : goldDim,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        isGreek ? item.elLabel : item.arLabel,
+                        style: TextStyle(
+                          fontFamily: isGreek ? null : 'Scheherazade',
+                          fontSize: isGreek ? 9 : 10,
+                          color: isActive ? gold : goldDim,
+                          fontWeight: isActive
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -168,171 +218,19 @@ class _EkklisiaBottomNav extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem {
   const _NavItem({
     required this.icon,
     required this.activeIcon,
-    required this.label,
+    required this.arLabel,
+    required this.elLabel,
     required this.isActive,
     required this.onTap,
-    this.isComingSoon = false,
   });
-
   final IconData icon;
   final IconData activeIcon;
-  final String label;
+  final String arLabel;
+  final String elLabel;
   final bool isActive;
   final VoidCallback onTap;
-  final bool isComingSoon;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: isComingSoon
-          ? () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '$label — قريباً',
-                    style: const TextStyle(fontFamily: 'Scheherazade', color: EkklisiaColors.textPrimary),
-                    textAlign: TextAlign.center,
-                  ),
-                  backgroundColor: EkklisiaColors.bgElevated,
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: const BorderSide(
-                        color: EkklisiaColors.goldBorder, width: 0.5),
-                  ),
-                ),
-              )
-          : onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 22,
-              color: isActive
-                  ? EkklisiaColors.gold
-                  : EkklisiaColors.textSecondary
-                      .withValues(alpha: isComingSoon ? 0.4 : 1.0),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                fontSize: 10,
-                color: isActive
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.textSecondary
-                        .withValues(alpha: isComingSoon ? 0.4 : 1.0),
-                fontWeight:
-                    isActive ? FontWeight.w700 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Circular gold centre button — navigates to library
-class _CentreButton extends StatelessWidget {
-  const _CentreButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            colors: [EkklisiaColors.bronze, EkklisiaColors.maroon],
-          ),
-          border: Border.all(
-              color: EkklisiaColors.goldBorder, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: EkklisiaColors.gold.withValues(alpha: 0.2),
-              blurRadius: 12,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            '✦',
-            style: TextStyle(
-              color: EkklisiaColors.goldLight,
-              fontSize: 20,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Placeholder tab (Phase 2+ features) ──────────────────────────────────────
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
-
-    return Scaffold(
-      backgroundColor: scaffoldBg,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: EkklisiaColors.goldBorder, width: 0.5),
-                color: EkklisiaColors.bgMid,
-              ),
-              child:
-                  Icon(icon, size: 40, color: EkklisiaColors.goldDim),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkklisiaColors.textSecondary,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'قريباً',
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: EkklisiaColors.gold,
-                fontSize: 14,
-                letterSpacing: 2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

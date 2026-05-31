@@ -25,6 +25,7 @@ import '../../admin/admin_shell.dart';
 import '../../admin/books/books_manager_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
 import '../../admin/content/cms_additional_content.dart';
+import '../../admin/content/daily_verse_manager.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
 import '../../admin/notifications/admin_notification_screen.dart';
 import '../../admin/users/admin_users_screen.dart';
@@ -35,10 +36,12 @@ import '../../features/auth/splash_screen.dart';
 import '../../features/books/screens/book_detail_screen.dart';
 import '../../features/books/screens/pdf_viewer_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/onboarding/language_selection_screen.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../services/settings_service.dart';
 
 
 // ── Route constants ───────────────────────────────────────────────────────────
@@ -47,6 +50,9 @@ abstract class Routes {
   static const String splash          = '/';
   static const String login           = '/login';
   static const String home            = '/home';
+
+  // Onboarding
+  static const String languageSelection = '/onboarding/language';
 
   // Admin
   static const String admin           = '/admin';
@@ -57,11 +63,12 @@ abstract class Routes {
   static const String adminUsers      = '/admin/users';
 
   // CMS
-  static const String adminCmsBibles     = '/admin/cms/bibles';
-  static const String adminCmsHymns      = '/admin/cms/hymns';
-  static const String adminCmsPrayers    = '/admin/cms/prayers';
-  static const String adminCmsLiturgies  = '/admin/cms/liturgies';
-  static const String adminCmsSaints     = '/admin/cms/saints';
+  static const String adminCmsBibles      = '/admin/cms/bibles';
+  static const String adminCmsHymns       = '/admin/cms/hymns';
+  static const String adminCmsPrayers     = '/admin/cms/prayers';
+  static const String adminCmsLiturgies   = '/admin/cms/liturgies';
+  static const String adminCmsSaints      = '/admin/cms/saints';
+  static const String adminCmsDailyVerse  = '/admin/cms/daily-verse';
 
   // Helpers
   static String bookDetailPath(String id) => '/home/book/$id';
@@ -98,8 +105,21 @@ class AppRouter {
         return loc == Routes.splash ? null : Routes.splash;
       }
 
-      // ── Splash: move on once ready ──────────────────────────────────
-      if (loc == Routes.splash) return Routes.home;
+      // ── Splash: check first-launch language selection ──────────────
+      if (loc == Routes.splash) {
+        final settingsService = sl<SettingsService>();
+        if (!settingsService.isLanguageSelected) {
+          return Routes.languageSelection;
+        }
+        return Routes.home;
+      }
+
+      // ── Language selection: skip if already done ───────────────────
+      if (loc == Routes.languageSelection) {
+        final settingsService = sl<SettingsService>();
+        if (settingsService.isLanguageSelected) return Routes.home;
+        return null;
+      }
 
       // ── Admin routes: must be a real admin ─────────────────────────
       if (loc.startsWith('/admin')) {
@@ -126,6 +146,13 @@ class AppRouter {
         path:    Routes.splash,
         name:    'splash',
         builder: (_, __) => const SplashScreen(),
+      ),
+
+      // ── Language selection (first launch) ─────────────────────────────
+      GoRoute(
+        path:    Routes.languageSelection,
+        name:    'languageSelection',
+        builder: (_, __) => const LanguageSelectionScreen(),
       ),
 
       // ── Login ─────────────────────────────────────────────────────────
@@ -223,6 +250,11 @@ class AppRouter {
             name:    'adminCmsSaints',
             builder: (_, __) => const SaintsManagerScreen(),
           ),
+          GoRoute(
+            path:    Routes.adminCmsDailyVerse,
+            name:    'adminCmsDailyVerse',
+            builder: (_, __) => const DailyVerseManagerScreen(),
+          ),
         ],
       ),
 
@@ -305,7 +337,10 @@ class _AuthNotifier extends ChangeNotifier {
       }
       _isReady = true;
     }
-    notifyListeners();
+    // Defer to next frame — Firebase can emit the cached auth state during
+    // widget-tree finalisation, and calling notifyListeners() then triggers
+    // the go_router redirect while the navigator is locked (!_debugLocked).
+    WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
   }
 
   /// Called from AuthCubit after a successful sign-in to force-refresh
@@ -323,7 +358,7 @@ class _AuthNotifier extends ChangeNotifier {
             .get();
         _isAdmin = doc.data()?['is_admin'] == true;
       }
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
     } catch (_) {}
   }
 }
