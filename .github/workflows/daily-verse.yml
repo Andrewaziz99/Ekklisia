@@ -1,0 +1,19 @@
+name: Daily Verse Notification
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-daily-verse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Supabase Edge Function
+        run: |
+          curl -X POST \
+            "https://uzvfcctsiodotejvovxa.supabase.co/functions/v1/send-daily-verse" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -d '{}'
