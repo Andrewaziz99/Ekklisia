@@ -9,6 +9,7 @@ class UserModel extends Equatable {
     this.photoUrl = '',
     this.isAdmin = false,
     this.isAnonymous = false,
+    this.isActive = true,
     this.fcmToken = '',
     this.signInMethod = 'email',
     this.createdAt,
@@ -21,6 +22,8 @@ class UserModel extends Equatable {
   final String photoUrl;
   final bool isAdmin;
   final bool isAnonymous;
+  /// False = account deactivated by admin (soft-disabled).
+  final bool isActive;
   final String fcmToken;
   final String signInMethod;
   final DateTime? createdAt;
@@ -45,6 +48,7 @@ class UserModel extends Equatable {
       photoUrl:    d['photo_url']    ?? '',
       isAdmin:     d['is_admin']     ?? false,
       isAnonymous: d['is_anonymous'] ?? false,
+      isActive:    d['is_active']    ?? true,
       fcmToken:    d['fcm_token']    ?? '',
       signInMethod: d['sign_in_method'] ?? 'email',
       createdAt:   (d['created_at']   as Timestamp?)?.toDate(),
@@ -58,6 +62,7 @@ class UserModel extends Equatable {
     'photo_url':    photoUrl,
     'is_admin':     isAdmin,
     'is_anonymous': isAnonymous,
+    'is_active':    isActive,
     'fcm_token':    fcmToken,
     'sign_in_method': signInMethod,
     'created_at':   createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
@@ -66,7 +71,7 @@ class UserModel extends Equatable {
 
   UserModel copyWith({
     String? uid, String? email, String? displayName,
-    String? photoUrl, bool? isAdmin, bool? isAnonymous,
+    String? photoUrl, bool? isAdmin, bool? isAnonymous, bool? isActive,
     String? fcmToken, String? signInMethod, DateTime? createdAt, DateTime? lastSeenAt,
   }) => UserModel(
     uid:         uid         ?? this.uid,
@@ -75,6 +80,7 @@ class UserModel extends Equatable {
     photoUrl:    photoUrl    ?? this.photoUrl,
     isAdmin:     isAdmin     ?? this.isAdmin,
     isAnonymous: isAnonymous ?? this.isAnonymous,
+    isActive:    isActive    ?? this.isActive,
     fcmToken:    fcmToken    ?? this.fcmToken,
     signInMethod: signInMethod ?? this.signInMethod,
     createdAt:   createdAt   ?? this.createdAt,

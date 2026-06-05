@@ -136,6 +136,16 @@ class AuthService {
     });
   }
 
+  Future<void> setActiveStatus(String uid, {required bool isActive}) async {
+    await _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(uid)
+        .update({
+      'is_active':  isActive,
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> deleteUserRecord(String uid) async {
     await _firestore
         .collection(AppConstants.usersCollection)

@@ -351,9 +351,9 @@ class _ListView extends StatelessWidget {
         final title = isGreek && book.titleEl.isNotEmpty
             ? book.titleEl
             : book.titleAr;
-        final author = isGreek && book.authorEl.isNotEmpty
-            ? book.authorEl
-            : book.authorAr;
+        final description = isGreek && book.descriptionEl.isNotEmpty
+            ? book.descriptionEl
+            : book.descriptionAr;
 
         return GestureDetector(
           onTap: () => Navigator.push(
@@ -411,10 +411,10 @@ class _ListView extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
-                      if (author.isNotEmpty) ...[
+                      if (description.isNotEmpty) ...[
                         const SizedBox(height: 3),
                         Text(
-                          author,
+                          description,
                           textDirection: isGreek
                               ? TextDirection.ltr
                               : TextDirection.rtl,

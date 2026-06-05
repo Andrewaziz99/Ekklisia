@@ -2,40 +2,34 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Available app languages.
-enum AppLanguage { arabic, coptic, greek, english }
+enum AppLanguage { arabic, greek }
 
 extension AppLanguageX on AppLanguage {
   String get code {
     switch (this) {
       case AppLanguage.arabic:  return 'ar';
-      case AppLanguage.coptic:  return 'cop';
       case AppLanguage.greek:   return 'el';
-      case AppLanguage.english: return 'en';
+
     }
   }
 
   String get label {
     switch (this) {
       case AppLanguage.arabic:  return 'العربية';
-      case AppLanguage.coptic:  return 'ⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ';
       case AppLanguage.greek:   return 'Ελληνικά';
-      case AppLanguage.english: return 'English';
     }
   }
 
   String get flagEmoji {
     switch (this) {
       case AppLanguage.arabic:  return '🇸🇦';
-      case AppLanguage.coptic:  return '🇪🇬';
       case AppLanguage.greek:   return '🇬🇷';
-      case AppLanguage.english: return '🇬🇧';
     }
   }
 
   static AppLanguage fromCode(String code) {
     switch (code) {
       case 'ar':  return AppLanguage.arabic;
-      case 'cop': return AppLanguage.coptic;
       case 'el':  return AppLanguage.greek;
       default:    return AppLanguage.arabic;
     }

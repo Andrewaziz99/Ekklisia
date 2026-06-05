@@ -507,30 +507,22 @@ class _LanguageCard extends StatelessWidget {
 
   static const Map<AppLanguage, String?> _fontFamilies = {
     AppLanguage.arabic:  'Scheherazade',
-    AppLanguage.coptic:  'CopticFont',
     AppLanguage.greek:   'GFSDidot',
-    AppLanguage.english: null,
   };
 
   static const Map<AppLanguage, String> _nativeNames = {
     AppLanguage.arabic:  'العربية',
-    AppLanguage.coptic:  'ⲙⲉⲧⲣⲉⲙⲛ̀ⲭⲏⲙⲓ',
     AppLanguage.greek:   'Ελληνικά',
-    AppLanguage.english: 'English',
   };
 
   static const Map<AppLanguage, String> _subtitles = {
     AppLanguage.arabic:  'Arabic',
-    AppLanguage.coptic:  'Coptic',
     AppLanguage.greek:   'Greek',
-    AppLanguage.english: 'English',
   };
 
   static const Map<AppLanguage, String> _samples = {
     AppLanguage.arabic:  'الكتاب المقدس',
-    AppLanguage.coptic:  'ⲡⲓⲃⲓⲃⲗⲟⲥ',
     AppLanguage.greek:   'Ἁγία Γραφή',
-    AppLanguage.english: 'Holy Scripture',
   };
 
   @override

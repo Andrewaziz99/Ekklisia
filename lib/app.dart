@@ -160,8 +160,6 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
   static Locale _localeFromLanguage(AppLanguage lang) {
     switch (lang) {
       case AppLanguage.greek:   return const Locale('el');
-      case AppLanguage.english: return const Locale('en');
-      case AppLanguage.coptic:  return const Locale('ar'); // fallback
       case AppLanguage.arabic:  return const Locale('ar');
     }
   }
@@ -170,10 +168,8 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
   static TextDirection _textDirFromLanguage(AppLanguage lang) {
     switch (lang) {
       case AppLanguage.greek:
-      case AppLanguage.english:
         return TextDirection.ltr;
       case AppLanguage.arabic:
-      case AppLanguage.coptic:
         return TextDirection.rtl;
     }
   }
