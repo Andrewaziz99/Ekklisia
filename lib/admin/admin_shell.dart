@@ -115,6 +115,13 @@ const _cmsItems = <_NavItem>[
     labelAr: 'آية اليوم',
     labelEn: 'Daily Verse',
   ),
+  _NavItem(
+    path: Routes.adminCmsAgbeya,
+    icon: Icons.access_time_outlined,
+    activeIcon: Icons.access_time,
+    labelAr: 'الأجبية',
+    labelEn: 'Agbeya',
+  ),
 ];
 
 // ════════════════════════════════════════════════════════════════════════════

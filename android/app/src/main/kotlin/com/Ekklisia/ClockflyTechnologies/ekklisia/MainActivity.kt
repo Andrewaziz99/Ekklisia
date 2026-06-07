@@ -1,5 +1,7 @@
 package com.Ekklisia.ClockflyTechnologies
 
-import io.flutter.embedding.android.FlutterActivity
+// audio_service requires FlutterFragmentActivity (not FlutterActivity)
+// so it can use MediaBrowserServiceCompat, which needs a FragmentActivity.
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+class MainActivity : FlutterFragmentActivity()

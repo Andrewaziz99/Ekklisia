@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/brightness_colors.dart';
+import '../../features/agbeya/screens/agbeya_home_screen.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../features/books/screens/book_detail_screen.dart';
@@ -85,6 +86,8 @@ class HomeTabScreen extends StatelessWidget {
 }
 
 // ── App Bar ───────────────────────────────────────────────────────────────────
+// Banner image fills the expanded space (matches the Ekklisia brand banner).
+// Collapsed: compact navy bar retaining the menu + bell icons.
 
 class _HomeAppBar extends StatelessWidget {
   const _HomeAppBar({required this.onSearch});
@@ -92,77 +95,88 @@ class _HomeAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
-
     return SliverAppBar(
       pinned: true,
+      expandedHeight: 210,
       backgroundColor: _kNavy,
       elevation: 0,
-      toolbarHeight: 82,
+      toolbarHeight: 56,
       automaticallyImplyLeading: false,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0),
-        child: Container(
-          height: 0.5,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                _kGold.withValues(alpha: 0.5),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
+
+      // ── Collapsed leading: hamburger ──────────────────────────────────
+      leading: _IconPill(
+        child: const Icon(Icons.menu, color: Colors.white, size: 22),
+        onTap: () {},
       ),
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(height: 1.1),
-                    children: [
-                      TextSpan(
-                        text: isGreek ? 'Εκκλησία' : 'إكليسيا',
-                        style: const TextStyle(
-                          color: _kGold,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+
+      // ── Collapsed action: notification bell ───────────────────────────
+      actions: [
+        _IconPill(
+          child: const Icon(
+              Icons.notifications_none_outlined,
+              color: Colors.white,
+              size: 22),
+          onTap: () {},
+        ),
+        const SizedBox(width: 8),
+      ],
+
+      // ── Expanded: full banner image ───────────────────────────────────
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.pin,
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/ekklisia_banner.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+            // Thin gold gradient rule at the very bottom edge
+            Positioned(
+              bottom: 0, left: 0, right: 0,
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      _kGold.withValues(alpha: 0.6),
+                      Colors.transparent,
                     ],
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  isGreek
-                      ? 'ΚΟΠΤΙΚΗ ΟΡΘΟΔΟΞΗ ΒΙΒΛΙΟΘΗΚΗ'
-                      : 'المكتبة القبطية الأرثوذكسية',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
-                    fontSize: 9,
-                    letterSpacing: 2.0,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          CustomPaint(
-            size: const Size(38, 38),
-            painter: _CopticCrossPainter(color: _kGold),
-          ),
-          const SizedBox(width: 2),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Icon pill (semi-transparent dark circle used for menu / bell) ─────────────
+
+class _IconPill extends StatelessWidget {
+  const _IconPill({required this.child, required this.onTap});
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.all(10),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.35),
+          shape: BoxShape.circle,
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+        ),
+        child: Center(child: child),
       ),
     );
   }
@@ -556,6 +570,7 @@ class _CategoryGrid extends StatelessWidget {
         itemCount: _categories.length,
         itemBuilder: (context, i) => _CategoryTile(
           item: _categories[i],
+          index: i,
           isGreek: isGreek,
           labelColor: labelColor,
         ),
@@ -580,17 +595,31 @@ class _CategoryItem {
 class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
     required this.item,
+    required this.index,
     required this.isGreek,
     required this.labelColor,
   });
   final _CategoryItem item;
+  final int index;
   final bool isGreek;
   final Color labelColor;
+
+  void _onTap(BuildContext context) {
+    // Index 0 → الأجبية
+    if (index == 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()),
+      );
+      return;
+    }
+    // Other categories — placeholder; wire as features are built
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => _onTap(context),
       child: Column(
         children: [
           Expanded(

@@ -105,6 +105,10 @@ dependencies:
   flutter_localization: ^0.4.0
   google_sign_in: ^6.2.2
 
+  # ── Audio ─────────────────────────────────────────────
+  just_audio: ^0.9.41          # Audio player engine
+  audio_service: ^0.18.15      # Background playback + lock-screen controls
+
 
 
 dev_dependencies:

@@ -13,6 +13,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
+import '../../features/agbeya/cubit/audio_player_cubit.dart';
+import '../../features/agbeya/cubit/audio_player_state.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../features/auth/auth_state.dart';
 import '../../features/bookmarks/bookmarks_screen.dart';
@@ -20,6 +22,7 @@ import '../../features/books/screens/books_home.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
+import '../../shared/widgets/audio_player_bar.dart';
 import 'home_tab_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -90,9 +93,19 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: tabs,
       ),
-      bottomNavigationBar: _EkklisiaBottomNav(
-        selectedIndex: _selectedIndex,
-        onTap: (i) => setState(() => _selectedIndex = i),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Persistent mini player — visible whenever a track is loaded
+          BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
+            builder: (ctx, state) =>
+                state.hasTrack ? const AudioPlayerBar() : const SizedBox.shrink(),
+          ),
+          _EkklisiaBottomNav(
+            selectedIndex: _selectedIndex,
+            onTap: (i) => setState(() => _selectedIndex = i),
+          ),
+        ],
       ),
     );
   }

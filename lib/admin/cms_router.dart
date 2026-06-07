@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/router/app_router.dart';
+import 'content/agbeya_manager.dart';
 import 'content/cms_content_manager.dart';
 import 'content/cms_additional_content.dart';
 
@@ -17,7 +18,8 @@ class CMSRouter {
   static const String liturgies = '/admin/cms/liturgies';
   static const String saints = '/admin/cms/saints';
   static const String calendars = '/admin/cms/calendars';
-  static const String books = '/admin/cms/books';
+  static const String books  = '/admin/cms/books';
+  static const String agbeya = '/admin/cms/agbeya';
 
   static final routes = [
     GoRoute(
@@ -45,6 +47,11 @@ class CMSRouter {
       name: 'cms-saints',
       builder: (context, state) => const SaintsManagerScreen(),
     ),
+    GoRoute(
+      path: agbeya,
+      name: 'cms-agbeya',
+      builder: (context, state) => const AgbeyaManagerScreen(),
+    ),
   ];
 }
 
@@ -66,6 +73,13 @@ class CMSNavItem {
 }
 
 final cmsNavItems = <CMSNavItem>[
+  CMSNavItem(
+    path: CMSRouter.agbeya,
+    labelEn: 'Agbeya',
+    labelAr: 'الأجبية',
+    icon: Icons.access_time_outlined,
+    activeIcon: Icons.access_time,
+  ),
   CMSNavItem(
     path: CMSRouter.bibles,
     labelEn: 'Bibles',

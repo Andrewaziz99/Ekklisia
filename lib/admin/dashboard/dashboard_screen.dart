@@ -149,27 +149,57 @@ class _WelcomeBanner extends StatelessWidget {
                       fontSize:   13,
                     )),
                 const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: EkklisiaColors.goldSubtle,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                        color: EkklisiaColors.goldBorder, width: 0.5),
+                Row(children: [
+                  // Admin badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: EkklisiaColors.goldSubtle,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: EkklisiaColors.goldBorder, width: 0.5),
+                    ),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.admin_panel_settings_outlined,
+                          size: 12, color: EkklisiaColors.gold),
+                      SizedBox(width: 5),
+                      Text('Admin', style: TextStyle(
+                        color:      EkklisiaColors.gold,
+                        fontSize:   10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      )),
+                    ]),
                   ),
-                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.admin_panel_settings_outlined,
-                        size: 12, color: EkklisiaColors.gold),
-                    SizedBox(width: 5),
-                    Text('Admin', style: TextStyle(
-                      color:      EkklisiaColors.gold,
-                      fontSize:   10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    )),
-                  ]),
-                ),
+                  const SizedBox(width: 8),
+                  // ← View App button
+                  GestureDetector(
+                    onTap: () => context.go(Routes.home),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: EkklisiaColors.tealDark.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: EkklisiaColors.tealMid.withOpacity(0.4),
+                            width: 0.5),
+                      ),
+                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.home_outlined,
+                            size: 12, color: EkklisiaColors.tealMid),
+                        SizedBox(width: 5),
+                        Text('View App', style: TextStyle(
+                          color:      EkklisiaColors.tealMid,
+                          fontSize:   10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        )),
+                      ]),
+                    ),
+                  ),
+                ]),
               ],
             )),
             Container(
@@ -257,34 +287,89 @@ class _StatCard extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Expanded(
-        child: _ActionButton(
-          label: 'Upload Book',
-          labelAr: 'رفع كتاب',
-          icon: Icons.upload_file,
-          color: EkklisiaColors.gold,
-          onTap: () => context.go(Routes.adminUpload),
+    return Column(children: [
+      Row(children: [
+        Expanded(
+          child: _ActionButton(
+            label: 'Upload Book',
+            labelAr: 'رفع كتاب',
+            icon: Icons.upload_file,
+            color: EkklisiaColors.gold,
+            onTap: () => context.go(Routes.adminUpload),
+          ),
         ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _ActionButton(
-          label: 'Send Notification',
-          labelAr: 'إرسال إشعار',
-          icon: Icons.notifications_active_outlined,
-          color: EkklisiaColors.maroonMid,
-          onTap: () => context.go(Routes.adminNotify),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionButton(
+            label: 'Send Notification',
+            labelAr: 'إرسال إشعار',
+            icon: Icons.notifications_active_outlined,
+            color: EkklisiaColors.maroonMid,
+            onTap: () => context.go(Routes.adminNotify),
+          ),
         ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _ActionButton(
-          label: 'Users',
-          labelAr: 'المستخدمون',
-          icon: Icons.people_outline,
-          color: EkklisiaColors.tealMid,
-          onTap: () => context.go(Routes.adminUsers),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ActionButton(
+            label: 'Users',
+            labelAr: 'المستخدمون',
+            icon: Icons.people_outline,
+            color: EkklisiaColors.tealMid,
+            onTap: () => context.go(Routes.adminUsers),
+          ),
+        ),
+      ]),
+      const SizedBox(height: 10),
+      // ── View App — full-width, prominent ──────────────────────────────
+      Material(
+        color: EkklisiaColors.tealDark.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => context.go(Routes.home),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: EkklisiaColors.tealMid.withOpacity(0.35), width: 0.8),
+            ),
+            child: Row(children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: EkklisiaColors.tealDark.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: EkklisiaColors.tealMid.withOpacity(0.4),
+                      width: 0.8),
+                ),
+                child: const Icon(Icons.home_outlined,
+                    color: EkklisiaColors.tealMid, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('View App',
+                        style: TextStyle(
+                            color: EkklisiaColors.tealMid,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700)),
+                    Text('عرض التطبيق',
+                        style: TextStyle(
+                            fontFamily: 'Scheherazade',
+                            color: EkklisiaColors.textSecondary,
+                            fontSize: 11)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios,
+                  color: EkklisiaColors.tealMid, size: 14),
+            ]),
+          ),
         ),
       ),
     ]);
@@ -307,6 +392,8 @@ class _CmsShortcuts extends StatelessWidget {
       color: EkklisiaColors.plum, path: Routes.adminCmsSaints),
     (label: 'Daily Verse', labelAr: 'آية اليوم', icon: Icons.menu_book_outlined,
       color: EkklisiaColors.tealMid, path: Routes.adminCmsDailyVerse),
+    (label: 'Agbeya', labelAr: 'الأجبية', icon: Icons.access_time_outlined,
+      color: EkklisiaColors.maroon, path: Routes.adminCmsAgbeya),
   ];
 
   @override

@@ -13,6 +13,7 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/theme.dart';
 import 'data/repositories/books_repository.dart';
+import 'features/agbeya/cubit/audio_player_cubit.dart';
 import 'features/auth/auth_cubit.dart';
 import 'features/auth/auth_state.dart';
 import 'features/books/cubit/books_cubit.dart';
@@ -93,6 +94,11 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
         ),
         BlocProvider<DailyVerseCubit>(
           create: (_) => DailyVerseCubit(sl<DailyVerseRepository>())..loadTodayVerse(),
+          lazy: false,
+        ),
+        // Global audio player — singleton so state persists across all screens
+        BlocProvider<AudioPlayerCubit>(
+          create: (_) => sl<AudioPlayerCubit>(),
           lazy: false,
         ),
       ],

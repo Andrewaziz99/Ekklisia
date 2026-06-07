@@ -15,6 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/datasources/firebase/firestore_datasource.dart';
+import '../../data/repositories/agbeya_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../data/repositories/daily_verse_repository.dart';
 import '../../services/auth_service.dart';
@@ -92,6 +93,9 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<DailyVerseRepository>(
       () => DailyVerseRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<AgbeyaRepository>(
+      () => AgbeyaRepository(sl<FirebaseFirestore>()),
     );
 
     // ── Services ──────────────────────────────────────────────────────────
