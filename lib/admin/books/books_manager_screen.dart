@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/colors.dart';
 import '../../core/router/app_router.dart';
+import '../../core/utils/text_normalizer.dart';
 import '../../data/models/book_model.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../core/di/service_locator.dart';
@@ -35,11 +36,9 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<BooksCubit, BooksState>(
       builder: (context, state) {
-        final q       = _search.text.toLowerCase();
         final visible = state.books.where((b) {
-          final matchSearch = q.isEmpty ||
-              b.titleAr.toLowerCase().contains(q) ||
-              b.category.contains(q);
+          final matchSearch = TextNormalizer.anyContains(
+              [b.titleAr, b.titleEl, b.category], _search.text);
           final matchCat = _filterCat == null || b.category == _filterCat;
           return matchSearch && matchCat;
         }).toList();

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/utils/text_normalizer.dart';
 import '../../../data/models/book_model.dart';
 import '../../../data/repositories/books_repository.dart';
 import 'books_state.dart';
@@ -75,14 +76,9 @@ class BooksCubit extends Cubit<BooksState> {
     }
 
     if (query.isNotEmpty) {
-      final q = query.toLowerCase();
-      result = result.where((b) {
-        return b.titleAr.toLowerCase().contains(q) ||
-            b.titleCop.toLowerCase().contains(q) ||
-            b.titleEl.toLowerCase().contains(q) ||
-            b.descriptionAr.toLowerCase().contains(q) ||
-            b.tags.any((t) => t.toLowerCase().contains(q));
-      }).toList();
+      result = result.where((b) => TextNormalizer.anyContains([
+        b.titleAr, b.titleCop, b.titleEl, b.descriptionAr, ...b.tags,
+      ], query)).toList();
     }
 
     return result;

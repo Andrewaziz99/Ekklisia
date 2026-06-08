@@ -25,13 +25,15 @@ import '../../admin/admin_shell.dart';
 import '../../admin/books/books_manager_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
 import '../../admin/content/agbeya_manager.dart';
+import '../../admin/content/bible_manager.dart';
 import '../../admin/content/book_category_manager.dart';
 import '../../admin/content/cms_additional_content.dart';
 import '../../admin/content/daily_verse_manager.dart';
+import '../../admin/content/pdf_content_manager.dart';
+import '../../data/models/pdf_content_model.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
 import '../../admin/notifications/admin_notification_screen.dart';
 import '../../admin/users/admin_users_screen.dart';
-import '../../admin/content/cms_content_manager.dart';
 import '../../data/models/book_model.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/splash_screen.dart';
@@ -73,11 +75,22 @@ abstract class Routes {
   static const String adminCmsDailyVerse  = '/admin/cms/daily-verse';
   static const String adminCmsAgbeya      = '/admin/cms/agbeya';
   static const String adminCmsCategories  = '/admin/cms/categories';
+  // PDF content managers
+  static const String adminCmsPsalmody    = '/admin/cms/psalmody';
+  static const String adminCmsReadings    = '/admin/cms/readings';
+  static const String adminCmsOccasions   = '/admin/cms/occasions';
+
+  // User content routes (pushed via Navigator, not go_router shell)
+  static const String homeBible       = '/home/bible';
+  static const String homePsalmody    = '/home/psalmody';
+  static const String homeLiturgy     = '/home/liturgy';
+  static const String homeReadings    = '/home/readings';
+  static const String homeHymns       = '/home/hymns';
+  static const String homeOccasions   = '/home/occasions';
 
   // Helpers
   static String bookDetailPath(String id) => '/home/book/$id';
   static String pdfViewerPath(String id)  => '/home/pdf/$id';
-
 
   // Settings
   static const String settings = '/settings';
@@ -232,12 +245,16 @@ class AppRouter {
           GoRoute(
             path:    Routes.adminCmsBibles,
             name:    'adminCmsBibles',
-            builder: (_, __) => const BiblesManagerScreen(),
+            builder: (_, __) => const BibleManagerScreen(),
           ),
           GoRoute(
             path:    Routes.adminCmsHymns,
             name:    'adminCmsHymns',
-            builder: (_, __) => const HymnsManagerScreen(),
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.hymns,
+              labelAr:  PdfCategory.labelAr[PdfCategory.hymns]!,
+              labelEn:  'Hymns',
+            ),
           ),
           GoRoute(
             path:    Routes.adminCmsPrayers,
@@ -247,7 +264,11 @@ class AppRouter {
           GoRoute(
             path:    Routes.adminCmsLiturgies,
             name:    'adminCmsLiturgies',
-            builder: (_, __) => const LiturgiesManagerScreen(),
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.liturgy,
+              labelAr:  PdfCategory.labelAr[PdfCategory.liturgy]!,
+              labelEn:  'Liturgies',
+            ),
           ),
           GoRoute(
             path:    Routes.adminCmsSaints,
@@ -268,6 +289,33 @@ class AppRouter {
             path:    Routes.adminCmsCategories,
             name:    'adminCmsCategories',
             builder: (_, __) => const BookCategoryManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsPsalmody,
+            name:    'adminCmsPsalmody',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.psalmody,
+              labelAr:  PdfCategory.labelAr[PdfCategory.psalmody]!,
+              labelEn:  'Psalmody',
+            ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsReadings,
+            name:    'adminCmsReadings',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.readings,
+              labelAr:  PdfCategory.labelAr[PdfCategory.readings]!,
+              labelEn:  'Readings',
+            ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsOccasions,
+            name:    'adminCmsOccasions',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.occasions,
+              labelAr:  PdfCategory.labelAr[PdfCategory.occasions]!,
+              labelEn:  'Occasions',
+            ),
           ),
         ],
       ),

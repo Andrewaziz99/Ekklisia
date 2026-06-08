@@ -3,6 +3,7 @@
 // Master CMS content manager with CRUD for all content types
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
+import '../../core/utils/text_normalizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/colors.dart';
@@ -52,10 +53,7 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
         _bibles = docs
             .map((d) => BibleModel.fromFirestore(d))
             .where((b) =>
-        _searchQuery.isEmpty ||
-            b.titleAr.toLowerCase().contains(_searchQuery) ||
-            b.titleEn.toLowerCase().contains(_searchQuery) ||
-            b.version.toLowerCase().contains(_searchQuery))
+        TextNormalizer.anyContains([b.titleAr, b.titleEn, b.version], _searchQuery))
             .toList();
 
         return AdminDataTable<BibleModel>(
@@ -250,9 +248,7 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
         _hymns = docs
             .map((d) => HymnModel.fromFirestore(d))
             .where((h) =>
-        _searchQuery.isEmpty ||
-            h.titleAr.toLowerCase().contains(_searchQuery) ||
-            h.titleEn.toLowerCase().contains(_searchQuery))
+        TextNormalizer.anyContains([h.titleAr, h.titleEn], _searchQuery))
             .toList();
 
         return AdminDataTable<HymnModel>(

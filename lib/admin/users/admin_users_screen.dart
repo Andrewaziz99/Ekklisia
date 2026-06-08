@@ -16,6 +16,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/utils/text_normalizer.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
@@ -268,14 +269,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           color: EkklisiaColors.textSecondary)));
             }
 
-            final q = _search.text.toLowerCase();
             final docs = (snap.data?.docs ?? [])
                 .map((d) => UserModel.fromFirestore(d))
                 .where((u) {
-                  final matchesSearch = q.isEmpty ||
-                      u.email.toLowerCase().contains(q) ||
-                      u.uid.toLowerCase().contains(q) ||
-                      u.displayName.toLowerCase().contains(q);
+                  final matchesSearch = TextNormalizer.anyContains(
+                      [u.email, u.uid, u.displayName], _search.text);
                   final matchesTab = _filter == 'all' ||
                       (_filter == 'admin'    && u.isAdmin) ||
                       (_filter == 'anon'     && u.isAnonymous) ||

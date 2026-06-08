@@ -16,7 +16,9 @@ import '../../features/auth/auth_cubit.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/datasources/firebase/firestore_datasource.dart';
 import '../../data/repositories/agbeya_repository.dart';
+import '../../data/repositories/bible_repository.dart';
 import '../../data/repositories/book_category_repository.dart';
+import '../../data/repositories/pdf_content_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../data/repositories/daily_verse_repository.dart';
 import '../../services/auth_service.dart';
@@ -100,6 +102,16 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<BookCategoryRepository>(
       () => BookCategoryRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<PdfContentRepository>(
+      () => PdfContentRepository(sl<FirebaseFirestore>()),
+    );
+
+    // Configure BibleRepository singleton with Firestore + Dio so admin
+    // features (remote XML, verse overrides) work after DI is ready.
+    BibleRepository.instance.configure(
+      sl<FirebaseFirestore>(),
+      sl<Dio>(),
     );
 
     // ── Services ──────────────────────────────────────────────────────────

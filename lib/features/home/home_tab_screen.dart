@@ -12,8 +12,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/brightness_colors.dart';
+import '../../data/models/pdf_content_model.dart';
 import '../../features/agbeya/screens/agbeya_home_screen.dart';
+import '../../features/bible/bible_home_screen.dart';
 import '../../features/books/cubit/books_cubit.dart';
+import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../features/books/screens/book_detail_screen.dart';
 import '../../features/daily_verse/daily_verse_cubit.dart';
@@ -605,15 +608,66 @@ class _CategoryTile extends StatelessWidget {
   final Color labelColor;
 
   void _onTap(BuildContext context) {
-    // Index 0 → الأجبية
-    if (index == 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()),
-      );
-      return;
+    switch (index) {
+      case 0: // الأجبية
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()));
+        break;
+      case 1: // التسابيح
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (_) => PdfContentListScreen(
+                category: PdfCategory.psalmody,
+                labelAr:  PdfCategory.labelAr[PdfCategory.psalmody]!,
+                labelEl:  PdfCategory.labelEl[PdfCategory.psalmody]!,
+              ),
+            ));
+        break;
+      case 2: // الكتاب المقدس
+        Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const BibleHomeScreen()));
+        break;
+      case 3: // القداسات
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (_) => PdfContentListScreen(
+                category: PdfCategory.liturgy,
+                labelAr:  PdfCategory.labelAr[PdfCategory.liturgy]!,
+                labelEl:  PdfCategory.labelEl[PdfCategory.liturgy]!,
+              ),
+            ));
+        break;
+      case 4: // القراءات
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (_) => PdfContentListScreen(
+                category: PdfCategory.readings,
+                labelAr:  PdfCategory.labelAr[PdfCategory.readings]!,
+                labelEl:  PdfCategory.labelEl[PdfCategory.readings]!,
+              ),
+            ));
+        break;
+      case 5: // الألحان
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (_) => PdfContentListScreen(
+                category: PdfCategory.hymns,
+                labelAr:  PdfCategory.labelAr[PdfCategory.hymns]!,
+                labelEl:  PdfCategory.labelEl[PdfCategory.hymns]!,
+              ),
+            ));
+        break;
+      case 6: // مناسبات
+        Navigator.push(context,
+            MaterialPageRoute(
+              builder: (_) => PdfContentListScreen(
+                category: PdfCategory.occasions,
+                labelAr:  PdfCategory.labelAr[PdfCategory.occasions]!,
+                labelEl:  PdfCategory.labelEl[PdfCategory.occasions]!,
+              ),
+            ));
+        break;
     }
-    // Other categories — placeholder; wire as features are built
   }
 
   @override

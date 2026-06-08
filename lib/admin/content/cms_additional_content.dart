@@ -3,6 +3,7 @@
 // CMS screens for Prayers, Liturgies, Saints, and Calendar Events
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
+import '../../core/utils/text_normalizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -50,9 +51,7 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
         _prayers = docs
             .map((d) => PrayerModel.fromFirestore(d))
             .where((p) =>
-        _searchQuery.isEmpty ||
-            p.titleAr.toLowerCase().contains(_searchQuery) ||
-            p.titleEn.toLowerCase().contains(_searchQuery))
+        TextNormalizer.anyContains([p.titleAr, p.titleEn], _searchQuery))
             .toList();
 
         return AdminDataTable<PrayerModel>(
@@ -242,9 +241,7 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
         _liturgies = docs
             .map((d) => LiturgyModel.fromFirestore(d))
             .where((l) =>
-        _searchQuery.isEmpty ||
-            l.titleAr.toLowerCase().contains(_searchQuery) ||
-            l.titleEn.toLowerCase().contains(_searchQuery))
+        TextNormalizer.anyContains([l.titleAr, l.titleEn], _searchQuery))
             .toList();
 
         return AdminDataTable<LiturgyModel>(
@@ -441,9 +438,7 @@ class _SaintsManagerScreenState extends State<SaintsManagerScreen> {
         _saints = docs
             .map((d) => SaintModel.fromFirestore(d))
             .where((s) =>
-        _searchQuery.isEmpty ||
-            s.nameAr.toLowerCase().contains(_searchQuery) ||
-            s.nameEn.toLowerCase().contains(_searchQuery))
+        TextNormalizer.anyContains([s.nameAr, s.nameEn], _searchQuery))
             .toList();
 
         return AdminDataTable<SaintModel>(
