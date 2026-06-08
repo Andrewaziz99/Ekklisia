@@ -25,6 +25,7 @@ import '../../admin/admin_shell.dart';
 import '../../admin/books/books_manager_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
 import '../../admin/content/agbeya_manager.dart';
+import '../../admin/content/book_category_manager.dart';
 import '../../admin/content/cms_additional_content.dart';
 import '../../admin/content/daily_verse_manager.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
@@ -71,6 +72,7 @@ abstract class Routes {
   static const String adminCmsSaints      = '/admin/cms/saints';
   static const String adminCmsDailyVerse  = '/admin/cms/daily-verse';
   static const String adminCmsAgbeya      = '/admin/cms/agbeya';
+  static const String adminCmsCategories  = '/admin/cms/categories';
 
   // Helpers
   static String bookDetailPath(String id) => '/home/book/$id';
@@ -261,6 +263,11 @@ class AppRouter {
             path:    Routes.adminCmsAgbeya,
             name:    'adminCmsAgbeya',
             builder: (_, __) => const AgbeyaManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsCategories,
+            name:    'adminCmsCategories',
+            builder: (_, __) => const BookCategoryManagerScreen(),
           ),
         ],
       ),

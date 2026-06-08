@@ -2,11 +2,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Library tab — All Books / Downloaded / Recent with grid/list toggle.
 // ─────────────────────────────────────────────────────────────────────────────
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/constants/app_constants.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/theme/brightness_colors.dart';
+import '../../../data/models/book_category_model.dart';
+import '../../../data/repositories/book_category_repository.dart';
 import '../../../features/daily_verse/widgets/daily_verse_card.dart';
 import '../../../features/settings/cubit/settings_cubit.dart';
 import '../../../services/settings_service.dart';
@@ -557,33 +561,35 @@ class _SearchBar extends StatelessWidget {
 }
 
 // ── Category Filter ───────────────────────────────────────────────────────────
+// Streams visible categories from Firestore so any admin changes are reflected
+// immediately without restarting the app.
 
-class _CategoryFilter extends StatelessWidget {
+class _CategoryFilter extends StatefulWidget {
   const _CategoryFilter();
 
-  static const _labelsAr = <String, String>{
-    'bible': 'الإنجيل',
-    'prayers': 'الصلوات',
-    'liturgy': 'القداس',
-    'hymns': 'التسابيح',
-    'saints': 'القديسون',
-    'fathers': 'الآباء',
-    'commentaries': 'الشروحات',
-    'studies': 'الدراسات',
-    'other': 'أخرى',
-  };
+  @override
+  State<_CategoryFilter> createState() => _CategoryFilterState();
+}
 
-  static const _labelsEl = <String, String>{
-    'bible': 'Βίβλος',
-    'prayers': 'Προσευχές',
-    'liturgy': 'Λειτουργία',
-    'hymns': 'Ψαλμωδία',
-    'saints': 'Άγιοι',
-    'fathers': 'Πατέρες',
-    'commentaries': 'Σχόλια',
-    'studies': 'Μελέτες',
-    'other': 'Άλλα',
-  };
+class _CategoryFilterState extends State<_CategoryFilter> {
+  final _repo = sl<BookCategoryRepository>();
+  StreamSubscription<List<BookCategory>>? _sub;
+  List<BookCategory> _categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = _repo.watchVisibleCategories().listen(
+      (cats) { if (mounted) setState(() => _categories = cats); },
+      onError: (_) {/* silently fall back to empty — "All" chip still works */},
+    );
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -599,32 +605,32 @@ class _CategoryFilter extends StatelessWidget {
         return SizedBox(
           height: 44,
           child: ListView(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             scrollDirection: Axis.horizontal,
             children: [
+              // "All" chip
               _chip(
                 context,
                 label: isGreek ? 'ΟΛΑ' : 'الكل',
                 isSelected: state.selectedCategory == null,
                 isGreek: isGreek,
-                onTap: () => context
-                    .read<BooksCubit>()
-                    .filterByCategory(null),
+                onTap: () =>
+                    context.read<BooksCubit>().filterByCategory(null),
               ),
-              ...AppConstants.bookCategories.map(
-                (cat) => _chip(
+              // Dynamic chips from Firestore
+              ..._categories.map((cat) {
+                final label = isGreek
+                    ? (cat.nameEl.isNotEmpty ? cat.nameEl : cat.nameAr)
+                    : (cat.nameAr.isNotEmpty ? cat.nameAr : cat.slug);
+                return _chip(
                   context,
-                  label: isGreek
-                      ? (_labelsEl[cat] ?? cat)
-                      : (_labelsAr[cat] ?? cat),
-                  isSelected: state.selectedCategory == cat,
+                  label: label,
+                  isSelected: state.selectedCategory == cat.slug,
                   isGreek: isGreek,
-                  onTap: () => context
-                      .read<BooksCubit>()
-                      .filterByCategory(cat),
-                ),
-              ),
+                  onTap: () =>
+                      context.read<BooksCubit>().filterByCategory(cat.slug),
+                );
+              }),
             ],
           ),
         );

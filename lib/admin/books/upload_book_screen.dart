@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart';
 import '../../core/theme/colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
+import '../../data/models/book_category_model.dart';
+import '../../data/repositories/book_category_repository.dart';
 import '../../core/router/app_router.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../features/auth/auth_cubit.dart';
@@ -44,6 +46,10 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   bool    _publishNow  = true;
   bool    _sendNotif   = true;
 
+  // ── Categories (loaded from Firestore, falls back to constants) ──────────
+  List<BookCategory> _categories = [];
+  bool _categoriesLoading = true;
+
   // ── Upload state ─────────────────────────────────────────────────────────
   bool    _uploading    = false;
   double  _pdfProgress  = 0;
@@ -51,6 +57,43 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   double  _dbProgress   = 0;
   String  _progressStep = '';
   bool    _done         = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final cats = await sl<BookCategoryRepository>()
+          .fetchCategories(visibleOnly: true);
+      if (mounted) {
+        setState(() {
+          _categories = cats;
+          _categoriesLoading = false;
+        });
+      }
+    } catch (_) {
+      // Fallback: build BookCategory stubs from the hardcoded constants
+      if (mounted) {
+        setState(() {
+          _categories = AppConstants.bookCategories
+              .asMap()
+              .entries
+              .map((e) => BookCategory(
+                    id: e.value,
+                    slug: e.value,
+                    nameAr: e.value,
+                    sortOrder: e.key,
+                    createdAt: DateTime.now(),
+                  ))
+              .toList();
+          _categoriesLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -286,22 +329,40 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
           child: Column(children: [
             _label('Category *'),
             const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              value: _category.isEmpty ? null : _category,
-              dropdownColor: EkklisiaColors.bgElevated,
-              style: const TextStyle(
-                  color: EkklisiaColors.textPrimary, fontSize: 14),
-              decoration: _inputDec(hint: 'Select a category'),
-              items: AppConstants.bookCategories
-                  .map((c) => DropdownMenuItem(
-                  value: c,
-                  child: Text(c, style: const TextStyle(
-                      color: EkklisiaColors.textPrimary))))
-                  .toList(),
-              onChanged: (v) => setState(() => _category = v ?? ''),
-              validator: (v) =>
-              (v == null || v.isEmpty) ? 'Required' : null,
-            ),
+            _categoriesLoading
+                ? const SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: EkklisiaColors.gold),
+                    ),
+                  )
+                : DropdownButtonFormField<String>(
+                    value: _category.isNotEmpty &&
+                            _categories.any((c) => c.slug == _category)
+                        ? _category
+                        : null,
+                    dropdownColor: EkklisiaColors.bgElevated,
+                    style: const TextStyle(
+                        color: EkklisiaColors.textPrimary, fontSize: 14),
+                    decoration: _inputDec(hint: 'Select a category'),
+                    items: {for (final c in _categories) c.slug: c}
+                        .values
+                        .map((c) => DropdownMenuItem(
+                              value: c.slug,
+                              child: Text(
+                                c.nameAr.isNotEmpty ? c.nameAr : c.slug,
+                                style: const TextStyle(
+                                    fontFamily: 'Scheherazade',
+                                    color: EkklisiaColors.textPrimary),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (v) => setState(() => _category = v ?? ''),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
             const SizedBox(height: 14),
             _ArabicField(
               controller: _tags,

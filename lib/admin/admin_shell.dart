@@ -122,6 +122,13 @@ const _cmsItems = <_NavItem>[
     labelAr: 'الأجبية',
     labelEn: 'Agbeya',
   ),
+  _NavItem(
+    path: Routes.adminCmsCategories,
+    icon: Icons.category_outlined,
+    activeIcon: Icons.category,
+    labelAr: 'تصنيفات الكتب',
+    labelEn: 'Book Categories',
+  ),
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
