@@ -18,6 +18,7 @@ import '../../data/datasources/firebase/firestore_datasource.dart';
 import '../../data/repositories/agbeya_repository.dart';
 import '../../data/repositories/bible_repository.dart';
 import '../../data/repositories/book_category_repository.dart';
+import '../../data/repositories/game_repository.dart';
 import '../../data/repositories/pdf_content_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../data/repositories/daily_verse_repository.dart';
@@ -105,6 +106,9 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<PdfContentRepository>(
       () => PdfContentRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<GameRepository>(
+      () => GameRepository(sl<FirebaseFirestore>()),
     );
 
     // Configure BibleRepository singleton with Firestore + Dio so admin

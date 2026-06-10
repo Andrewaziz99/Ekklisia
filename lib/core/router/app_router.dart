@@ -29,6 +29,7 @@ import '../../admin/content/bible_manager.dart';
 import '../../admin/content/book_category_manager.dart';
 import '../../admin/content/cms_additional_content.dart';
 import '../../admin/content/daily_verse_manager.dart';
+import '../../admin/content/game_manager_screen.dart';
 import '../../admin/content/pdf_content_manager.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
@@ -79,6 +80,7 @@ abstract class Routes {
   static const String adminCmsPsalmody    = '/admin/cms/psalmody';
   static const String adminCmsReadings    = '/admin/cms/readings';
   static const String adminCmsOccasions   = '/admin/cms/occasions';
+  static const String adminCmsGames       = '/admin/cms/games';
 
   // User content routes (pushed via Navigator, not go_router shell)
   static const String homeBible       = '/home/bible';
@@ -316,6 +318,11 @@ class AppRouter {
               labelAr:  PdfCategory.labelAr[PdfCategory.occasions]!,
               labelEn:  'Occasions',
             ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsGames,
+            name:    'adminCmsGames',
+            builder: (_, __) => const GameManagerScreen(),
           ),
         ],
       ),

@@ -16,11 +16,12 @@ import '../../data/models/pdf_content_model.dart';
 import '../../features/agbeya/screens/agbeya_home_screen.dart';
 import '../../features/bible/bible_home_screen.dart';
 import '../../features/books/cubit/books_cubit.dart';
-import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../features/books/screens/book_detail_screen.dart';
 import '../../features/daily_verse/daily_verse_cubit.dart';
 import '../../features/daily_verse/daily_verse_state.dart';
+import '../../features/games/screens/games_home_screen.dart';
+import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 
@@ -30,10 +31,17 @@ const _kCrimson = Color(0xFF6B1A1A);
 const _kGold = Color(0xFFC9A84C);
 const _kParchment = Color(0xFFF5F0E8);
 
-class HomeTabScreen extends StatelessWidget {
+class HomeTabScreen extends StatefulWidget {
   const HomeTabScreen({super.key, required this.onGoToLibrary});
 
   final VoidCallback onGoToLibrary;
+
+  @override
+  State<HomeTabScreen> createState() => _HomeTabScreenState();
+}
+
+class _HomeTabScreenState extends State<HomeTabScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +50,22 @@ class HomeTabScreen extends StatelessWidget {
         ? _kParchment
         : BrightnessColors.bgDeep(brightness);
 
+    final lang = context.select<SettingsCubit, AppLanguage>(
+      (c) => c.state.language,
+    );
+    final isGreek = lang == AppLanguage.greek;
+
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: bodyBg,
+      endDrawer: _GamesEndDrawer(isGreek: isGreek),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          _HomeAppBar(onSearch: onGoToLibrary),
+          _HomeAppBar(
+            onSearch: widget.onGoToLibrary,
+            onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
           SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,7 +79,7 @@ class HomeTabScreen extends StatelessWidget {
                 _SectionHeader(
                   arLabel: 'مكتبة المحتوى',
                   enLabel: 'Content Library',
-                  onAction: onGoToLibrary,
+                  onAction: widget.onGoToLibrary,
                   actionIsSearch: true,
                 ),
                 const SizedBox(height: 14),
@@ -73,7 +91,7 @@ class HomeTabScreen extends StatelessWidget {
                 _SectionHeader(
                   arLabel: 'أحدث الإضافات',
                   enLabel: 'Πρόσφατα προστέθηκε',
-                  onAction: onGoToLibrary,
+                  onAction: widget.onGoToLibrary,
                   actionIsSearch: false,
                 ),
                 const SizedBox(height: 12),
@@ -93,8 +111,9 @@ class HomeTabScreen extends StatelessWidget {
 // Collapsed: compact navy bar retaining the menu + bell icons.
 
 class _HomeAppBar extends StatelessWidget {
-  const _HomeAppBar({required this.onSearch});
+  const _HomeAppBar({required this.onSearch, required this.onMenuTap});
   final VoidCallback onSearch;
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
@@ -106,20 +125,21 @@ class _HomeAppBar extends StatelessWidget {
       toolbarHeight: 56,
       automaticallyImplyLeading: false,
 
-      // ── Collapsed leading: hamburger ──────────────────────────────────
+      // ── Collapsed leading: hamburger (opens end drawer) ───────────────
       leading: _IconPill(
-        child: const Icon(Icons.menu, color: Colors.white, size: 22),
+        child: const Icon(
+          Icons.notifications_none_outlined,
+          color: Colors.white,
+          size: 22,
+        ),
         onTap: () {},
       ),
 
       // ── Collapsed action: notification bell ───────────────────────────
       actions: [
         _IconPill(
-          child: const Icon(
-              Icons.notifications_none_outlined,
-              color: Colors.white,
-              size: 22),
-          onTap: () {},
+          onTap: onMenuTap,
+          child: const Icon(Icons.menu, color: Colors.white, size: 22),
         ),
         const SizedBox(width: 8),
       ],
@@ -137,7 +157,9 @@ class _HomeAppBar extends StatelessWidget {
             ),
             // Thin gold gradient rule at the very bottom edge
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
                 height: 1,
                 decoration: BoxDecoration(
@@ -177,7 +199,9 @@ class _IconPill extends StatelessWidget {
           color: Colors.black.withValues(alpha: 0.35),
           shape: BoxShape.circle,
           border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15), width: 0.5),
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
         ),
         child: Center(child: child),
       ),
@@ -261,13 +285,13 @@ class _DailyVerseBanner extends StatelessWidget {
         final verseText = verse == null
             ? ''
             : (isGreek && verse.verseEl.isNotEmpty
-                ? verse.verseEl
-                : verse.verseAr);
+                  ? verse.verseEl
+                  : verse.verseAr);
         final reference = verse == null
             ? ''
             : (isGreek && verse.referenceEl.isNotEmpty
-                ? verse.referenceEl
-                : verse.referenceAr);
+                  ? verse.referenceEl
+                  : verse.referenceAr);
 
         return Container(
           color: _kCrimson,
@@ -397,13 +421,13 @@ class _BannerShimmer extends StatelessWidget {
   }
 
   Widget _shimmer(double w, double h) => Container(
-        width: w,
-        height: h,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(4),
-        ),
-      );
+    width: w,
+    height: h,
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(4),
+    ),
+  );
 }
 
 // ── Section Header ────────────────────────────────────────────────────────────
@@ -610,62 +634,76 @@ class _CategoryTile extends StatelessWidget {
   void _onTap(BuildContext context) {
     switch (index) {
       case 0: // الأجبية
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()),
+        );
         break;
       case 1: // التسابيح
-        Navigator.push(context,
-            MaterialPageRoute(
-              builder: (_) => PdfContentListScreen(
-                category: PdfCategory.psalmody,
-                labelAr:  PdfCategory.labelAr[PdfCategory.psalmody]!,
-                labelEl:  PdfCategory.labelEl[PdfCategory.psalmody]!,
-              ),
-            ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfContentListScreen(
+              category: PdfCategory.psalmody,
+              labelAr: PdfCategory.labelAr[PdfCategory.psalmody]!,
+              labelEl: PdfCategory.labelEl[PdfCategory.psalmody]!,
+            ),
+          ),
+        );
         break;
       case 2: // الكتاب المقدس
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const BibleHomeScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BibleHomeScreen()),
+        );
         break;
       case 3: // القداسات
-        Navigator.push(context,
-            MaterialPageRoute(
-              builder: (_) => PdfContentListScreen(
-                category: PdfCategory.liturgy,
-                labelAr:  PdfCategory.labelAr[PdfCategory.liturgy]!,
-                labelEl:  PdfCategory.labelEl[PdfCategory.liturgy]!,
-              ),
-            ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfContentListScreen(
+              category: PdfCategory.liturgy,
+              labelAr: PdfCategory.labelAr[PdfCategory.liturgy]!,
+              labelEl: PdfCategory.labelEl[PdfCategory.liturgy]!,
+            ),
+          ),
+        );
         break;
       case 4: // القراءات
-        Navigator.push(context,
-            MaterialPageRoute(
-              builder: (_) => PdfContentListScreen(
-                category: PdfCategory.readings,
-                labelAr:  PdfCategory.labelAr[PdfCategory.readings]!,
-                labelEl:  PdfCategory.labelEl[PdfCategory.readings]!,
-              ),
-            ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfContentListScreen(
+              category: PdfCategory.readings,
+              labelAr: PdfCategory.labelAr[PdfCategory.readings]!,
+              labelEl: PdfCategory.labelEl[PdfCategory.readings]!,
+            ),
+          ),
+        );
         break;
       case 5: // الألحان
-        Navigator.push(context,
-            MaterialPageRoute(
-              builder: (_) => PdfContentListScreen(
-                category: PdfCategory.hymns,
-                labelAr:  PdfCategory.labelAr[PdfCategory.hymns]!,
-                labelEl:  PdfCategory.labelEl[PdfCategory.hymns]!,
-              ),
-            ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfContentListScreen(
+              category: PdfCategory.hymns,
+              labelAr: PdfCategory.labelAr[PdfCategory.hymns]!,
+              labelEl: PdfCategory.labelEl[PdfCategory.hymns]!,
+            ),
+          ),
+        );
         break;
       case 6: // مناسبات
-        Navigator.push(context,
-            MaterialPageRoute(
-              builder: (_) => PdfContentListScreen(
-                category: PdfCategory.occasions,
-                labelAr:  PdfCategory.labelAr[PdfCategory.occasions]!,
-                labelEl:  PdfCategory.labelEl[PdfCategory.occasions]!,
-              ),
-            ));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PdfContentListScreen(
+              category: PdfCategory.occasions,
+              labelAr: PdfCategory.labelAr[PdfCategory.occasions]!,
+              labelEl: PdfCategory.labelEl[PdfCategory.occasions]!,
+            ),
+          ),
+        );
         break;
     }
   }
@@ -846,6 +884,238 @@ class _RecentBooksRow extends StatelessWidget {
             color: Color(0xFFC8A84B),
             fontSize: 22,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Games End Drawer ──────────────────────────────────────────────────────────
+
+class _GamesEndDrawer extends StatelessWidget {
+  const _GamesEndDrawer({required this.isGreek});
+  final bool isGreek;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bg = brightness == Brightness.light
+        ? const Color(0xFFF5F0E8)
+        : const Color(0xFF0D1B2A);
+
+    return Drawer(
+      backgroundColor: bg,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Header ──────────────────────────────────────────────────
+            Container(
+              color: _kNavy,
+              padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _kGold.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: _kGold.withValues(alpha: 0.35),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '✦',
+                        style: TextStyle(color: _kGold, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isGreek ? 'Εκκλησία' : 'إكليسيا',
+                          style: TextStyle(
+                            fontFamily: isGreek ? null : 'Scheherazade',
+                            color: _kGold,
+                            fontSize: isGreek ? 15 : 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          isGreek ? 'Εφαρμογή' : 'التطبيق',
+                          style: TextStyle(
+                            fontFamily: isGreek ? null : 'Scheherazade',
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: isGreek ? 10 : 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Menu items ───────────────────────────────────────────────
+            _DrawerItem(
+              icon: Icons.gamepad_outlined,
+              labelAr: 'الألعاب',
+              labelEl: 'Παιχνίδια',
+              isGreek: isGreek,
+              accentColor: const Color(0xFFC9A84C),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GamesHomeScreen()),
+                );
+              },
+            ),
+
+            const Spacer(),
+
+            // ── Footer divider ───────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: _kGold.withValues(alpha: 0.2)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      '✦',
+                      style: TextStyle(
+                        color: _kGold.withValues(alpha: 0.3),
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: _kGold.withValues(alpha: 0.2)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  const _DrawerItem({
+    required this.icon,
+    required this.labelAr,
+    required this.labelEl,
+    required this.isGreek,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String labelAr;
+  final String labelEl;
+  final bool isGreek;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bg = brightness == Brightness.light
+        ? Colors.white
+        : const Color(0xFF162535);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: accentColor.withValues(alpha: 0.25),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isGreek ? labelEl : labelAr,
+                      style: TextStyle(
+                        fontFamily: isGreek ? null : 'Scheherazade',
+                        color: brightness == Brightness.light
+                            ? const Color(0xFF1B2A4A)
+                            : Colors.white.withValues(alpha: 0.9),
+                        fontSize: isGreek ? 15 : 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      isGreek ? labelAr : labelEl,
+                      style: TextStyle(
+                        fontFamily: isGreek ? 'Scheherazade' : null,
+                        color: brightness == Brightness.light
+                            ? const Color(0xFF6B7280)
+                            : Colors.white.withValues(alpha: 0.45),
+                        fontSize: isGreek ? 13 : 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 13,
+                color: accentColor.withValues(alpha: 0.5),
+              ),
+            ],
           ),
         ),
       ),

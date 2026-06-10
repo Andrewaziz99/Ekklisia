@@ -150,6 +150,13 @@ const _cmsItems = <_NavItem>[
     labelAr: 'تصنيفات الكتب',
     labelEn: 'Book Categories',
   ),
+  _NavItem(
+    path: Routes.adminCmsGames,
+    icon: Icons.gamepad_outlined,
+    activeIcon: Icons.gamepad,
+    labelAr: 'الألعاب',
+    labelEn: 'Games',
+  ),
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
