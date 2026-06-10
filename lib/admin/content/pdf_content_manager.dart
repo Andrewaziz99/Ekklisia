@@ -33,6 +33,45 @@ import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../data/repositories/pdf_content_repository.dart';
 
+// ── Audio track entry (mutable form state per track) ──────────────────────────
+
+class _AudioTrackEntry {
+  _AudioTrackEntry({
+    String labelAr = '',
+    String labelEl = '',
+    this.url               = '',
+    this.cloudinaryAudioId = '',
+    this.durationSeconds   = 0,
+  }) : labelArCtrl = TextEditingController(text: labelAr),
+       labelElCtrl = TextEditingController(text: labelEl);
+
+  final TextEditingController labelArCtrl;
+  final TextEditingController labelElCtrl;
+  String     url;
+  String     cloudinaryAudioId;
+  int        durationSeconds;
+  File?      audioFile;
+  Uint8List? audioBytes;
+  String?    audioFileName;
+  double?    uploadProgress;
+
+  bool get hasPendingFile => audioFile != null || audioBytes != null;
+  bool get hasAudio       => url.isNotEmpty || hasPendingFile;
+
+  ContentAudioTrack toModel() => ContentAudioTrack(
+    labelAr:           labelArCtrl.text.trim(),
+    labelEl:           labelElCtrl.text.trim(),
+    url:               url,
+    cloudinaryAudioId: cloudinaryAudioId,
+    durationSeconds:   durationSeconds,
+  );
+
+  void dispose() {
+    labelArCtrl.dispose();
+    labelElCtrl.dispose();
+  }
+}
+
 // ── Palette aliases ────────────────────────────────────────────────────────────
 const _kNavy   = EkklisiaColors.bgDeep;
 const _kGold   = EkklisiaColors.gold;
@@ -93,6 +132,9 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   String _pdfUrl          = '';
   String _cloudinaryPdfId = '';
 
+  // ── Audio tracks state ──────────────────────────────────────────────────────
+  List<_AudioTrackEntry> _audioTracks = [];
+
   // ── Reorder buffer ──────────────────────────────────────────────────────────
   List<PdfContent>? _reorderBuffer;
   bool _reordering = false;
@@ -101,6 +143,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   void dispose() {
     _titleArCtrl.dispose();
     _titleElCtrl.dispose();
+    for (final e in _audioTracks) e.dispose();
     super.dispose();
   }
 
@@ -118,6 +161,8 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     _uploadProgress   = null;
     _pdfUrl           = '';
     _cloudinaryPdfId  = '';
+    for (final e in _audioTracks) e.dispose();
+    _audioTracks = [];
     setState(() => _mode = _Mode.form);
   }
 
@@ -133,6 +178,14 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     _uploadProgress   = null;
     _pdfUrl           = item.pdfUrl;
     _cloudinaryPdfId  = item.cloudinaryPdfId;
+    for (final e in _audioTracks) e.dispose();
+    _audioTracks = item.audioTracks.map((t) => _AudioTrackEntry(
+      labelAr:           t.labelAr,
+      labelEl:           t.labelEl,
+      url:               t.url,
+      cloudinaryAudioId: t.cloudinaryAudioId,
+      durationSeconds:   t.durationSeconds,
+    )).toList();
     setState(() => _mode = _Mode.form);
   }
 
@@ -211,6 +264,72 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     }
   }
 
+  // ── Pick audio for a track ──────────────────────────────────────────────────
+
+  Future<void> _pickAudio(int trackIndex) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+      withData: kIsWeb,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final f = result.files.first;
+    setState(() {
+      final entry         = _audioTracks[trackIndex];
+      entry.audioFileName = f.name;
+      entry.url           = '';          // reset — new file needs upload
+      entry.uploadProgress = null;
+      if (kIsWeb) {
+        entry.audioBytes = f.bytes;
+        entry.audioFile  = null;
+      } else {
+        entry.audioFile  = File(f.path!);
+        entry.audioBytes = null;
+      }
+    });
+  }
+
+  // ── Upload all pending audio tracks ─────────────────────────────────────────
+
+  Future<bool> _uploadAudioTracksIfNeeded() async {
+    for (int i = 0; i < _audioTracks.length; i++) {
+      final entry = _audioTracks[i];
+      if (!entry.hasPendingFile) continue;
+
+      setState(() => entry.uploadProgress = 0);
+      try {
+        final folder = 'Ekklisia/${widget.category}/audio';
+        CloudinaryUploadResult result;
+        if (kIsWeb && entry.audioBytes != null) {
+          result = await _cloudinary.uploadAudioBytes(
+            bytes:    entry.audioBytes!,
+            fileName: entry.audioFileName ?? 'audio.mp3',
+            folder:   folder,
+            onProgress: (p) => setState(() => entry.uploadProgress = p),
+          );
+        } else {
+          result = await _cloudinary.uploadAudio(
+            audioFile:  entry.audioFile!,
+            folder:     folder,
+            onProgress: (p) => setState(() => entry.uploadProgress = p),
+          );
+        }
+        entry.url               = result.secureUrl;
+        entry.cloudinaryAudioId = result.publicId;
+        setState(() => entry.uploadProgress = 1.0);
+      } catch (e) {
+        setState(() => entry.uploadProgress = null);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Audio upload failed (track ${i + 1}): $e'),
+            backgroundColor: Colors.red.shade800,
+          ));
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
   // ── Save ────────────────────────────────────────────────────────────────────
 
   Future<void> _save() async {
@@ -228,9 +347,19 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     setState(() => _saving = true);
 
     try {
-      // Upload first if a new file was chosen.
-      final uploaded = await _uploadPdfIfNeeded();
-      if (!uploaded) return;
+      // 1. Upload PDF if needed.
+      final pdfUploaded = await _uploadPdfIfNeeded();
+      if (!pdfUploaded) return;
+
+      // 2. Upload any pending audio tracks.
+      final audioUploaded = await _uploadAudioTracksIfNeeded();
+      if (!audioUploaded) return;
+
+      // 3. Build audio track list (skip any with no URL).
+      final tracks = _audioTracks
+          .where((e) => e.url.isNotEmpty)
+          .map((e) => e.toModel())
+          .toList();
 
       final titleAr = _titleArCtrl.text.trim();
       final titleEl = _titleElCtrl.text.trim();
@@ -244,9 +373,10 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
           pdfUrl:          _pdfUrl,
           cloudinaryPdfId: _cloudinaryPdfId,
           coverUrl:        '',
-          sortOrder:       0, // repo.add() determines the final value
+          sortOrder:       0,
           isVisible:       _isVisible,
           createdAt:       DateTime.now(),
+          audioTracks:     tracks,
         ));
       } else {
         await _repo.update(_editing!.copyWith(
@@ -255,6 +385,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
           pdfUrl:          _pdfUrl,
           cloudinaryPdfId: _cloudinaryPdfId,
           isVisible:       _isVisible,
+          audioTracks:     tracks,
         ));
       }
 
@@ -521,6 +652,87 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                   ),
                   const SizedBox(height: 14),
 
+                  // ── Audio Tracks ───────────────────────────────────────
+                  _FormCard(
+                    title:   'Audio Tracks',
+                    titleAr: 'التسجيلات الصوتية',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Optional. Add one or more audio tracks (MP3, AAC…).',
+                          style: TextStyle(
+                            color: EkklisiaColors.textSecondary
+                                .withValues(alpha: 0.7),
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Per-track entries
+                        ..._audioTracks.asMap().entries.map((e) {
+                          final idx   = e.key;
+                          final entry = e.value;
+                          return _AudioTrackTile(
+                            key:      ValueKey(idx),
+                            entry:    entry,
+                            index:    idx,
+                            saving:   _saving,
+                            onPick:   () => _pickAudio(idx),
+                            onRemove: () => setState(() {
+                              _audioTracks.removeAt(idx);
+                            }),
+                          );
+                        }),
+
+                        const SizedBox(height: 8),
+
+                        // Add track button
+                        GestureDetector(
+                          onTap: _saving
+                              ? null
+                              : () => setState(
+                                    () => _audioTracks.add(_AudioTrackEntry()),
+                                  ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 10),
+                            decoration: BoxDecoration(
+                              color:        EkklisiaColors.bgMid,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: EkklisiaColors.goldBorder,
+                                  width: 0.8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add,
+                                    size: 16,
+                                    color: _saving
+                                        ? EkklisiaColors.textSecondary
+                                        : EkklisiaColors.gold),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Add Audio Track',
+                                  style: TextStyle(
+                                    color: _saving
+                                        ? EkklisiaColors.textSecondary
+                                        : EkklisiaColors.gold,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
                   // ── Visibility ─────────────────────────────────────────
                   _FormCard(
                     title:   'Visibility',
@@ -663,7 +875,21 @@ class _ContentRow extends StatelessWidget {
             child: const Icon(Icons.picture_as_pdf_outlined,
                 color: _kGold, size: 14),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 4),
+
+          // ── Audio badge (shown when item has tracks) ─────────────────────
+          if (item.hasAudio)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color:        _kNavy,
+                borderRadius: BorderRadius.circular(4),
+                border:       Border.all(color: _kBorder),
+              ),
+              child: const Icon(Icons.music_note,
+                  color: _kGold, size: 14),
+            ),
+          const SizedBox(width: 6),
 
           // ── Titles ──────────────────────────────────────────────────────
           Expanded(
@@ -1166,6 +1392,179 @@ class _FormCard extends StatelessWidget {
     );
   }
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// AUDIO TRACK TILE
+// ════════════════════════════════════════════════════════════════════════════
+
+class _AudioTrackTile extends StatefulWidget {
+  const _AudioTrackTile({
+    super.key,
+    required this.entry,
+    required this.index,
+    required this.saving,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final _AudioTrackEntry entry;
+  final int              index;
+  final bool             saving;
+  final VoidCallback     onPick;
+  final VoidCallback     onRemove;
+
+  @override
+  State<_AudioTrackTile> createState() => _AudioTrackTileState();
+}
+
+class _AudioTrackTileState extends State<_AudioTrackTile> {
+  @override
+  Widget build(BuildContext context) {
+    final entry = widget.entry;
+    final hasFile = entry.hasAudio;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color:        EkklisiaColors.bgPrimary,
+        borderRadius: BorderRadius.circular(10),
+        border:       Border.all(color: EkklisiaColors.goldBorder, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header row: track # + remove button
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color:        EkklisiaColors.bgDeep,
+                borderRadius: BorderRadius.circular(6),
+                border:       Border.all(color: EkklisiaColors.goldBorder),
+              ),
+              child: Text('Track ${widget.index + 1}',
+                  style: const TextStyle(
+                    color:      EkklisiaColors.gold,
+                    fontSize:   10,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: Icon(Icons.close,
+                  size: 18, color: Colors.red.shade400),
+              onPressed: widget.saving ? null : widget.onRemove,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              tooltip: 'Remove track',
+            ),
+          ]),
+          const SizedBox(height: 10),
+
+          // Arabic label
+          _Field(
+            controller: entry.labelArCtrl,
+            label:      'Label (Arabic, optional)',
+            hint:       'e.g. اللحن القبطي',
+            textDirection: TextDirection.rtl,
+            fontFamily: 'Scheherazade',
+          ),
+          const SizedBox(height: 8),
+
+          // English/Greek label
+          _Field(
+            controller: entry.labelElCtrl,
+            label:      'Label (English/Greek, optional)',
+            hint:       'e.g. Coptic Melody',
+          ),
+          const SizedBox(height: 10),
+
+          // Audio file picker
+          GestureDetector(
+            onTap: widget.saving ? null : widget.onPick,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color:        EkklisiaColors.bgMid,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: hasFile
+                      ? EkklisiaColors.tealMid
+                      : EkklisiaColors.goldBorder,
+                  width: hasFile ? 1.0 : 0.5,
+                ),
+              ),
+              child: Row(children: [
+                Icon(
+                  hasFile
+                      ? Icons.check_circle_outline
+                      : Icons.audio_file_outlined,
+                  size:  22,
+                  color: hasFile
+                      ? EkklisiaColors.tealMid
+                      : EkklisiaColors.goldDim,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasFile
+                            ? (entry.audioFileName ??
+                                _shortUrl(entry.url))
+                            : 'Select Audio File',
+                        style: TextStyle(
+                          color: hasFile
+                              ? EkklisiaColors.textPrimary
+                              : EkklisiaColors.textSecondary,
+                          fontSize:   12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        hasFile
+                            ? 'Tap to replace'
+                            : 'MP3, M4A, AAC…',
+                        style: const TextStyle(
+                          color:    EkklisiaColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right,
+                    color: EkklisiaColors.goldDim, size: 16),
+              ]),
+            ),
+          ),
+
+          // Upload progress (shown while uploading)
+          if (entry.uploadProgress != null) ...[
+            const SizedBox(height: 8),
+            _UploadProgressBar(progress: entry.uploadProgress!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _shortUrl(String url) {
+    try {
+      return Uri.parse(url).pathSegments.last;
+    } catch (_) {
+      return 'audio';
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEXT FIELD
+// ════════════════════════════════════════════════════════════════════════════
 
 class _Field extends StatelessWidget {
   const _Field({

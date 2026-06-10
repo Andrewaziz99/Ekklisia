@@ -189,9 +189,11 @@ class _ItemList extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (_) => GenericPdfViewerScreen(
-              url: items[i].pdfUrl,
-              titleAr: items[i].titleAr,
-              titleEl: items[i].titleEl,
+              url:         items[i].pdfUrl,
+              titleAr:     items[i].titleAr,
+              titleEl:     items[i].titleEl,
+              contentId:   items[i].id,
+              audioTracks: items[i].audioTracks,
             ),
           ),
         ),
@@ -281,6 +283,20 @@ class _ItemCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
+
+            // ── Audio badge (when tracks available) ──────────────────────
+            if (item.hasAudio)
+              Container(
+                margin: const EdgeInsets.only(right: 4),
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color:        gold.withOpacity(0.12),
+                  shape:        BoxShape.circle,
+                  border: Border.all(color: gold.withOpacity(0.35), width: 0.8),
+                ),
+                child: Icon(Icons.music_note,
+                    size: 12, color: gold.withOpacity(0.8)),
+              ),
 
             // ── Chevron ──────────────────────────────────────────────────
             Icon(Icons.chevron_right, color: gold.withOpacity(0.5), size: 20),

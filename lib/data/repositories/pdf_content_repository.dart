@@ -65,6 +65,7 @@ class PdfContentRepository {
     'cloudinary_pdf_id': item.cloudinaryPdfId,
     'cover_url':         item.coverUrl,
     'is_visible':        item.isVisible,
+    'audio_tracks':      item.audioTracks.map((t) => t.toMap()).toList(),
   });
 
   Future<void> toggleVisibility(PdfContent item) =>

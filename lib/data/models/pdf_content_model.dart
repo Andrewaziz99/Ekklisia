@@ -15,11 +15,58 @@
 //     sort_order:          int,
 //     is_visible:          bool,
 //     created_at:          Timestamp,
+//     audio_tracks:        List<Map>, // optional audio tracks
 //   }
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+
+// ── ContentAudioTrack ─────────────────────────────────────────────────────────
+
+class ContentAudioTrack extends Equatable {
+  const ContentAudioTrack({
+    required this.labelAr,
+    required this.labelEl,
+    required this.url,
+    required this.cloudinaryAudioId,
+    required this.durationSeconds,
+  });
+
+  final String labelAr;
+  final String labelEl;
+  final String url;
+  final String cloudinaryAudioId;
+  final int    durationSeconds;
+
+  String get formattedDuration {
+    if (durationSeconds <= 0) return '';
+    final m = durationSeconds ~/ 60;
+    final s = durationSeconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  factory ContentAudioTrack.fromMap(Map<String, dynamic> m) => ContentAudioTrack(
+    labelAr:           m['label_ar']             as String? ?? '',
+    labelEl:           m['label_el']             as String? ?? '',
+    url:               m['url']                  as String? ?? '',
+    cloudinaryAudioId: m['cloudinary_audio_id']  as String? ?? '',
+    durationSeconds:   m['duration_seconds']     as int?    ?? 0,
+  );
+
+  Map<String, dynamic> toMap() => {
+    'label_ar':            labelAr,
+    'label_el':            labelEl,
+    'url':                 url,
+    'cloudinary_audio_id': cloudinaryAudioId,
+    'duration_seconds':    durationSeconds,
+  };
+
+  @override
+  List<Object?> get props => [labelAr, labelEl, url, cloudinaryAudioId, durationSeconds];
+}
+
+// ── PdfContent ────────────────────────────────────────────────────────────────
 
 class PdfContent extends Equatable {
   const PdfContent({
@@ -33,6 +80,7 @@ class PdfContent extends Equatable {
     required this.sortOrder,
     required this.isVisible,
     required this.createdAt,
+    this.audioTracks = const [],
   });
 
   final String   id;
@@ -45,11 +93,21 @@ class PdfContent extends Equatable {
   final int      sortOrder;
   final bool     isVisible;
   final DateTime createdAt;
+  final List<ContentAudioTrack> audioTracks;
+
+  bool get hasAudio => audioTracks.isNotEmpty;
 
   // ── From Firestore ───────────────────────────────────────────────────────
 
   factory PdfContent.fromFirestore(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
+    final rawTracks = d['audio_tracks'];
+    final tracks = rawTracks is List
+        ? rawTracks
+            .whereType<Map<String, dynamic>>()
+            .map(ContentAudioTrack.fromMap)
+            .toList()
+        : const <ContentAudioTrack>[];
     return PdfContent(
       id:              doc.id,
       titleAr:         (d['title_ar']          as String? ?? ''),
@@ -61,6 +119,7 @@ class PdfContent extends Equatable {
       sortOrder:       (d['sort_order']        as int?    ?? 0),
       isVisible:       (d['is_visible']        as bool?   ?? true),
       createdAt:       (d['created_at']        as Timestamp?)?.toDate() ?? DateTime.now(),
+      audioTracks:     tracks,
     );
   }
 
@@ -76,6 +135,7 @@ class PdfContent extends Equatable {
     'sort_order':        sortOrder,
     'is_visible':        isVisible,
     'created_at':        FieldValue.serverTimestamp(),
+    'audio_tracks':      audioTracks.map((t) => t.toMap()).toList(),
   };
 
   // ── CopyWith ─────────────────────────────────────────────────────────────
@@ -88,6 +148,7 @@ class PdfContent extends Equatable {
     String?   coverUrl,
     int?      sortOrder,
     bool?     isVisible,
+    List<ContentAudioTrack>? audioTracks,
   }) => PdfContent(
     id:              id,
     titleAr:         titleAr         ?? this.titleAr,
@@ -99,12 +160,13 @@ class PdfContent extends Equatable {
     sortOrder:       sortOrder       ?? this.sortOrder,
     isVisible:       isVisible       ?? this.isVisible,
     createdAt:       createdAt,
+    audioTracks:     audioTracks     ?? this.audioTracks,
   );
 
   @override
   List<Object?> get props => [
     id, titleAr, titleEl, category, pdfUrl, cloudinaryPdfId,
-    coverUrl, sortOrder, isVisible, createdAt,
+    coverUrl, sortOrder, isVisible, createdAt, audioTracks,
   ];
 }
 
