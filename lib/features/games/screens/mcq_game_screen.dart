@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/game_model.dart';
+import '../../../shared/widgets/cached_image.dart';
 import '../cubit/game_cubit.dart';
 import '../cubit/game_state.dart';
 import 'game_screen_base.dart';
@@ -121,12 +122,12 @@ class _McqPlayView extends StatelessWidget {
                   if (q.imageUrl.isNotEmpty) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        q.imageUrl,
+                      child: CachedImage(
+                        url: q.imageUrl,
                         height: 140,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        errorWidget: const SizedBox.shrink(),
                       ),
                     ),
                     const SizedBox(height: 14),

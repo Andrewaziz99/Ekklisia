@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../data/models/book_model.dart';
+import '../../../shared/widgets/cached_pdf_viewer.dart';
 
 /// Full-screen PDF reader powered by Syncfusion PdfViewer.
 ///
@@ -68,9 +69,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           children: [
             // ── PDF Viewer ───────────────────────────────────────────────
             Positioned.fill(
-              child: SfPdfViewer.network(
-                widget.book.pdfUrl,
-                key: _pdfKey,
+              child: CachedPdfViewer(
+                url: widget.book.pdfUrl,
+                pdfKey: _pdfKey,
                 controller: _pdfController,
                 enableDoubleTapZooming: true,
                 enableTextSelection: true,

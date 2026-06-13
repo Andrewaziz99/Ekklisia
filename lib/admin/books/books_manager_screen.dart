@@ -8,6 +8,7 @@ import '../../core/utils/text_normalizer.dart';
 import '../../data/models/book_model.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../core/di/service_locator.dart';
+import '../../shared/widgets/cached_image.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 
@@ -193,14 +194,14 @@ class _BookRow extends StatelessWidget {
             border: Border.all(
                 color: EkklisiaColors.goldBorder, width: 0.5),
           ),
-          child: book.coverUrl.isNotEmpty
-              ? ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.network(book.coverUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_,__,___) =>
-                      _CoverInitials(title: book.titleAr)))
-              : _CoverInitials(title: book.titleAr),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: CachedImage(
+              url: book.coverUrl,
+              fit: BoxFit.cover,
+              errorWidget: _CoverInitials(title: book.titleAr),
+            ),
+          ),
         ),
         const SizedBox(width: 12),
 

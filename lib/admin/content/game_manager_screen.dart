@@ -20,6 +20,7 @@ import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/game_model.dart';
 import '../../data/repositories/game_repository.dart';
+import '../../shared/widgets/cached_image.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const _kNavy    = Color(0xFF1B2A4A);
@@ -238,13 +239,12 @@ class _QuestionTile extends StatelessWidget {
         leading: question.imageUrl.isNotEmpty
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  question.imageUrl,
+                child: CachedImage(
+                  url: question.imageUrl,
                   width: 52,
                   height: 52,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      const _FallbackIcon(type: GameType.guessWho),
+                  errorWidget: const _FallbackIcon(type: GameType.guessWho),
                 ),
               )
             : _FallbackIcon(type: question.type),
@@ -723,13 +723,12 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                 if (_imageUrl.isNotEmpty && _imageFile == null && _imageBytes == null) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      _imageUrl,
+                    child: CachedImage(
+                      url: _imageUrl,
                       height: 160,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const SizedBox.shrink(),
+                      errorWidget: const SizedBox.shrink(),
                     ),
                   ),
                   const SizedBox(height: 8),

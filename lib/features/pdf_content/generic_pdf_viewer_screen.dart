@@ -13,6 +13,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
+import '../../shared/widgets/cached_pdf_viewer.dart';
+
 import '../../data/models/pdf_content_model.dart';
 import '../agbeya/cubit/audio_player_cubit.dart';
 import '../agbeya/cubit/audio_player_state.dart';
@@ -126,9 +128,9 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
               left: 0,
               right: 0,
               bottom: stripH,
-              child: SfPdfViewer.network(
-                widget.url,
-                key: _pdfKey,
+              child: CachedPdfViewer(
+                url: widget.url,
+                pdfKey: _pdfKey,
                 controller: _pdfController,
                 enableDoubleTapZooming: true,
                 enableTextSelection: true,

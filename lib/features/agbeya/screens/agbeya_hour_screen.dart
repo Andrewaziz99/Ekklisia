@@ -21,6 +21,7 @@ import '../cubit/audio_player_state.dart';
 import '../widgets/full_audio_player_sheet.dart';
 import '../widgets/track_picker_sheet.dart';
 import 'agbeya_pdf_reader_screen.dart';
+import '../../../shared/widgets/cached_image.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const _kNavy    = Color(0xFF1B2A4A);
@@ -186,10 +187,12 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
             ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    widget.hour.coverUrl,
+                  CachedImage(
+                    url: widget.hour.coverUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: _kNavy),
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorWidget: Container(color: _kNavy),
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(

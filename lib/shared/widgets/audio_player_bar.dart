@@ -20,6 +20,7 @@ import '../../data/models/agbeya_model.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
 import '../../features/agbeya/cubit/audio_player_state.dart';
 import '../../features/agbeya/widgets/full_audio_player_sheet.dart';
+import 'cached_image.dart';
 
 const _kNavy = Color(0xFF1B2A4A);
 const _kCrimson = Color(0xFF6B1A1A);
@@ -199,13 +200,11 @@ class _CoverThumb extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9),
-        child: artUri != null
-            ? Image.network(
-                artUri.toString(),
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _crossIcon(),
-              )
-            : _crossIcon(),
+        child: CachedImage(
+          url: artUri?.toString() ?? '',
+          fit: BoxFit.cover,
+          errorWidget: _crossIcon(),
+        ),
       ),
     );
   }

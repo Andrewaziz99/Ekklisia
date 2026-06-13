@@ -12,6 +12,7 @@ import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/book_category_model.dart';
 import '../../../data/repositories/book_category_repository.dart';
 import '../../../features/daily_verse/widgets/daily_verse_card.dart';
+import '../../../shared/widgets/cached_image.dart';
 import '../../../features/settings/cubit/settings_cubit.dart';
 import '../../../services/settings_service.dart';
 import '../cubit/books_cubit.dart';
@@ -384,12 +385,11 @@ class _ListView extends StatelessWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: book.coverUrl.isNotEmpty
-                        ? Image.network(book.coverUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _fallbackCover(book.titleAr, bgElevated))
-                        : _fallbackCover(book.titleAr, bgElevated),
+                    child: CachedImage(
+                      url: book.coverUrl,
+                      fit: BoxFit.cover,
+                      errorWidget: _fallbackCover(book.titleAr, bgElevated),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

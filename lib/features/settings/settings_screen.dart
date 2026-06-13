@@ -8,6 +8,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
 import '../../../services/settings_service.dart';
+import '../../../shared/widgets/cached_image.dart';
 import '../auth/auth_cubit.dart';
 import '../auth/auth_state.dart';
 import 'cubit/settings_cubit.dart';
@@ -1150,12 +1151,11 @@ class _Avatar extends StatelessWidget {
         ),
       ),
       child: ClipOval(
-        child: photoUrl.isNotEmpty
-            ? Image.network(photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    _fallback(bgElevated, isAdmin ? gold : textSecondary))
-            : _fallback(bgElevated, isAdmin ? gold : textSecondary),
+        child: CachedImage(
+          url: photoUrl,
+          fit: BoxFit.cover,
+          errorWidget: _fallback(bgElevated, isAdmin ? gold : textSecondary),
+        ),
       ),
     );
   }

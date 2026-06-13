@@ -23,6 +23,7 @@ import '../../features/daily_verse/daily_verse_state.dart';
 import '../../features/games/screens/games_home_screen.dart';
 import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
+import '../../shared/widgets/cached_image.dart';
 import '../../services/settings_service.dart';
 
 // ── Palette constants ─────────────────────────────────────────────────────────
@@ -829,14 +830,11 @@ class _RecentBooksRow extends StatelessWidget {
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(11),
                           ),
-                          child: book.coverUrl.isNotEmpty
-                              ? Image.network(
-                                  book.coverUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _coverFallback(book.titleAr, brightness),
-                                )
-                              : _coverFallback(book.titleAr, brightness),
+                          child: CachedImage(
+                            url: book.coverUrl,
+                            fit: BoxFit.cover,
+                            errorWidget: _coverFallback(book.titleAr, brightness),
+                          ),
                         ),
                       ),
                       Padding(

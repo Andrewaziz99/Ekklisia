@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/models/agbeya_model.dart';
+import '../../../shared/widgets/cached_image.dart';
 import '../cubit/audio_player_cubit.dart';
 import '../cubit/audio_player_state.dart';
 
@@ -84,13 +85,11 @@ class FullAudioPlayerSheet extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(19),
-                        child: hour.coverUrl.isNotEmpty
-                            ? Image.network(
-                                hour.coverUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _crossArt(),
-                              )
-                            : _crossArt(),
+                        child: CachedImage(
+                          url: hour.coverUrl,
+                          fit: BoxFit.cover,
+                          errorWidget: _crossArt(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 28),

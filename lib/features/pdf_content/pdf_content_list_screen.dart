@@ -7,6 +7,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../shared/widgets/cached_image.dart';
+
 import '../../core/di/service_locator.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/pdf_content_model.dart';
@@ -333,13 +335,11 @@ class _CoverThumbnail extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(7),
-        child: coverUrl.isNotEmpty
-            ? Image.network(
-                coverUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(),
-              )
-            : _fallback(),
+        child: CachedImage(
+          url: coverUrl,
+          fit: BoxFit.cover,
+          errorWidget: _fallback(),
+        ),
       ),
     );
   }

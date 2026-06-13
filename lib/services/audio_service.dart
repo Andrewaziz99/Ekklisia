@@ -53,12 +53,15 @@ class AgbeyaAudioHandler extends BaseAudioHandler with SeekHandler {
   // ── Public API ──────────────────────────────────────────────────────────────
 
   /// Load [item] from its Cloudinary URL (item.id) and begin playback.
+  ///
+  /// Uses [LockCachingAudioSource] so the audio file is cached locally while
+  /// streaming — subsequent plays are served from disk with no network request.
   Future<void> playFromUrl(MediaItem item) async {
     mediaItem.add(item);
     queue.add([item]);
     try {
       await _player.setAudioSource(
-        AudioSource.uri(Uri.parse(item.id)),
+        LockCachingAudioSource(Uri.parse(item.id)),
         preload: true,
       );
       await _player.play();

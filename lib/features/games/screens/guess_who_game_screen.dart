@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/game_model.dart';
+import '../../../shared/widgets/cached_image.dart';
 import '../cubit/game_cubit.dart';
 import '../cubit/game_state.dart';
 import 'game_screen_base.dart';
@@ -116,19 +117,13 @@ class _GuessWhoPlayView extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
-                  child: q.imageUrl.isNotEmpty
-                      ? Image.network(
-                          q.imageUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          loadingBuilder: (_, child, progress) {
-                            if (progress == null) return child;
-                            return _ImagePlaceholder(isLoading: true);
-                          },
-                          errorBuilder: (_, __, ___) =>
-                              const _ImagePlaceholder(isLoading: false),
-                        )
-                      : const _ImagePlaceholder(isLoading: false),
+                  child: CachedImage(
+                    url: q.imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    placeholder: const _ImagePlaceholder(isLoading: true),
+                    errorWidget: const _ImagePlaceholder(isLoading: false),
+                  ),
                 ),
               ),
             ),
