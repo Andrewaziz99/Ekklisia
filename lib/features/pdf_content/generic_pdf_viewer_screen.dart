@@ -13,21 +13,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
+import '../../core/theme/brightness_colors.dart';
 import '../../shared/widgets/cached_pdf_viewer.dart';
+import '../../shared/widgets/video_player_widget.dart';
 
 import '../../data/models/pdf_content_model.dart';
 import '../agbeya/cubit/audio_player_cubit.dart';
 import '../agbeya/cubit/audio_player_state.dart';
-
-// ── Palette (always dark — reading context) ───────────────────────────────────
-const _kBgDeep    = Color(0xFF08111C);
-const _kBgPrimary = Color(0xFF0D1B2A);
-const _kNavy      = Color(0xFF1B2A4A);
-const _kCrimson   = Color(0xFF6B1A1A);
-const _kGold      = Color(0xFFC8A84B);
-const _kGoldBorder= Color(0x59C8A84B);
-const _kTextPrimary   = Color(0xFFF0E6C8);
-const _kTextSecondary = Color(0xFFA89060);
 
 class GenericPdfViewerScreen extends StatefulWidget {
   const GenericPdfViewerScreen({
@@ -37,6 +29,7 @@ class GenericPdfViewerScreen extends StatefulWidget {
     this.titleEl = '',
     this.audioTracks = const [],
     this.contentId   = '',
+    this.videoUrl    = '',
   });
 
   final String url;
@@ -50,7 +43,11 @@ class GenericPdfViewerScreen extends StatefulWidget {
   /// Use PdfContent.id when available.
   final String contentId;
 
+  /// Optional video URL. When non-empty, a videocam icon appears in the AppBar.
+  final String videoUrl;
+
   bool get hasAudio => audioTracks.isNotEmpty;
+  bool get hasVideo => videoUrl.isNotEmpty;
 
   @override
   State<GenericPdfViewerScreen> createState() => _GenericPdfViewerScreenState();
@@ -61,23 +58,16 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
   final GlobalKey<SfPdfViewerState> _pdfKey = GlobalKey();
 
   bool _showToolbar = true;
-  bool _isLoading = true;
-  bool _hasError = false;
-  String _errorDescription = '';
+  // _isLoading removed — CachedPdfViewer renders its own loading/error overlay.
+  // We only track page count (set once the document is parsed by SfPdfViewer).
   int _currentPage = 1;
-  int _totalPages = 0;
+  int _totalPages  = 0;
 
   @override
   void initState() {
     super.initState();
     _pdfController = PdfViewerController();
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: _kBgDeep,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
-    );
+    // System UI overlay is managed globally by app.dart based on theme mode.
   }
 
   @override
@@ -86,107 +76,78 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
     super.dispose();
   }
 
-  // ── Toggle toolbar on center tap ─────────────────────────────────────────
-
   void _onBodyTap(TapUpDetails details) {
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
     final x = details.globalPosition.dx;
     final y = details.globalPosition.dy;
-
-    final inCenterX = x > w * 0.25 && x < w * 0.75;
-    final inCenterY = y > h * 0.25 && y < h * 0.75;
-
-    if (inCenterX && inCenterY) {
+    if (x > w * 0.25 && x < w * 0.75 && y > h * 0.25 && y < h * 0.75) {
       setState(() => _showToolbar = !_showToolbar);
     }
   }
 
-  // ── Retry ────────────────────────────────────────────────────────────────
-
-  void _retry() {
-    setState(() {
-      _hasError = false;
-      _isLoading = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final stripH = widget.hasAudio ? _ContentAudioStrip.height : 0.0;
 
     return Scaffold(
-      backgroundColor: _kBgPrimary,
+      backgroundColor: BrightnessColors.bgPrimary(brightness),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTapUp: _onBodyTap,
         child: Stack(
           children: [
-            // ── PDF Viewer ───────────────────────────────────────────────
+            // ── PDF Viewer (or inline video / placeholder) ───────────────
             Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: stripH,
-              child: CachedPdfViewer(
-                url: widget.url,
-                pdfKey: _pdfKey,
-                controller: _pdfController,
-                enableDoubleTapZooming: true,
-                enableTextSelection: true,
-                canShowScrollHead: true,
-                canShowScrollStatus: false,
-                scrollDirection: PdfScrollDirection.vertical,
-                pageLayoutMode: PdfPageLayoutMode.continuous,
-                initialZoomLevel: 1.0,
-                onDocumentLoaded: (details) {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                      _totalPages = details.document.pages.count;
-                    });
-                  }
-                },
-                onDocumentLoadFailed: (details) {
-                  if (mounted) {
-                    setState(() {
-                      _isLoading = false;
-                      _hasError = true;
-                      _errorDescription = details.description;
-                    });
-                  }
-                },
-                onPageChanged: (details) {
-                  if (mounted) {
-                    setState(() => _currentPage = details.newPageNumber);
-                  }
-                },
+              top: 0, left: 0, right: 0, bottom: stripH,
+              child: widget.url.isEmpty
+                  ? (widget.hasVideo
+                      ? _InlineVideoView(
+                          videoUrl: widget.videoUrl,
+                          titleAr:  widget.titleAr,
+                        )
+                      : _NoPdfPlaceholder(hasVideo: false))
+                  : CachedPdfViewer(
+                      url: widget.url,
+                      pdfKey: _pdfKey,
+                      controller: _pdfController,
+                      enableDoubleTapZooming: true,
+                      enableTextSelection: true,
+                      canShowScrollHead: true,
+                      canShowScrollStatus: false,
+                      scrollDirection: PdfScrollDirection.vertical,
+                      pageLayoutMode: PdfPageLayoutMode.continuous,
+                      initialZoomLevel: 1.0,
+                      onDocumentLoaded: (d) {
+                        if (mounted) {
+                          setState(() {
+                            _totalPages = d.document.pages.count;
+                          });
+                        }
+                      },
+                      onPageChanged: (d) {
+                        if (mounted) {
+                          setState(() => _currentPage = d.newPageNumber);
+                        }
+                      },
+                    ),
+            ),
+
+            // ── AppBar — always visible so video button is always reachable
+            AnimatedOpacity(
+              opacity: _showToolbar ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 250),
+              child: IgnorePointer(
+                ignoring: !_showToolbar,
+                child: _buildAppBar(context),
               ),
             ),
 
-            // ── Loading overlay ──────────────────────────────────────────
-            if (_isLoading) _buildLoadingOverlay(),
-
-            // ── Error overlay ────────────────────────────────────────────
-            if (_hasError) _buildErrorOverlay(),
-
-            // ── AppBar (animated) ────────────────────────────────────────
-            if (!_hasError && !_isLoading)
-              AnimatedOpacity(
-                opacity: _showToolbar ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
-                child: IgnorePointer(
-                  ignoring: !_showToolbar,
-                  child: _buildAppBar(context),
-                ),
-              ),
-
-            // ── Page indicator (bottom, above audio strip) ───────────────
-            if (_totalPages > 0 && !_hasError && !_isLoading)
+            // ── Page indicator (only once pages are known) ───────────────
+            if (_totalPages > 0)
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: stripH,
+                left: 0, right: 0, bottom: stripH,
                 child: AnimatedOpacity(
                   opacity: _showToolbar ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 250),
@@ -200,9 +161,7 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
             // ── Persistent audio strip ───────────────────────────────────
             if (widget.hasAudio)
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
+                left: 0, right: 0, bottom: 0,
                 child: _ContentAudioStrip(
                   tracks:    widget.audioTracks,
                   contentId: widget.contentId.isNotEmpty
@@ -220,7 +179,13 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
   // ── AppBar ───────────────────────────────────────────────────────────────
 
   Widget _buildAppBar(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
+    final brightness  = Theme.of(context).brightness;
+    final bgDeep      = BrightnessColors.bgDeep(brightness);
+    final gold        = BrightnessColors.gold(brightness);
+    final goldBorder  = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final topPadding  = MediaQuery.of(context).padding.top;
 
     return Container(
       padding: EdgeInsets.only(top: topPadding),
@@ -229,9 +194,9 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            _kBgDeep,
-            _kBgDeep.withOpacity(0.95),
-            _kBgDeep.withOpacity(0),
+            bgDeep,
+            bgDeep.withOpacity(0.95),
+            bgDeep.withOpacity(0),
           ],
           stops: const [0.0, 0.7, 1.0],
         ),
@@ -244,15 +209,11 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           icon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: _kBgDeep.withOpacity(0.85),
+              color: bgDeep.withOpacity(0.85),
               shape: BoxShape.circle,
-              border: Border.all(color: _kGoldBorder, width: 0.5),
+              border: Border.all(color: goldBorder, width: 0.5),
             ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              size: 15,
-              color: _kGold,
-            ),
+            child: Icon(Icons.arrow_back_ios_new, size: 15, color: gold),
           ),
           onPressed: () => Navigator.pop(context),
           tooltip: 'رجوع',
@@ -263,9 +224,9 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           children: [
             Text(
               widget.titleAr,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: _kTextPrimary,
+                color: textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
@@ -276,8 +237,8 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
             if (widget.titleEl.isNotEmpty)
               Text(
                 widget.titleEl,
-                style: const TextStyle(
-                  color: _kTextSecondary,
+                style: TextStyle(
+                  color: textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
                   height: 1.2,
@@ -287,9 +248,23 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
               ),
           ],
         ),
+        actions: [
+          // Show video icon only when there IS a PDF — otherwise the video
+          // is already displayed inline in the body.
+          if (widget.hasVideo && widget.url.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.videocam_outlined, color: gold, size: 22),
+              tooltip: 'مشاهدة الفيديو',
+              onPressed: () => showVideoSheet(
+                context,
+                widget.videoUrl,
+                titleAr: widget.titleAr,
+              ),
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Container(height: 0.5, color: _kGoldBorder),
+          child: Container(height: 0.5, color: goldBorder),
         ),
       ),
     );
@@ -298,6 +273,10 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
   // ── Page Indicator ───────────────────────────────────────────────────────
 
   Widget _buildPageIndicator(BuildContext context) {
+    final brightness    = Theme.of(context).brightness;
+    final bgDeep        = BrightnessColors.bgDeep(brightness);
+    final goldBorder    = BrightnessColors.goldBorder(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -307,9 +286,9 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            _kBgDeep,
-            _kBgDeep.withOpacity(0.9),
-            _kBgDeep.withOpacity(0),
+            bgDeep,
+            bgDeep.withOpacity(0.9),
+            bgDeep.withOpacity(0),
           ],
           stops: const [0.0, 0.65, 1.0],
         ),
@@ -326,15 +305,15 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
             decoration: BoxDecoration(
-              color: _kBgDeep.withOpacity(0.8),
+              color: bgDeep.withOpacity(0.8),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _kGoldBorder, width: 0.5),
+              border: Border.all(color: goldBorder, width: 0.5),
             ),
             child: Text(
               'صفحة $_currentPage / $_totalPages',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: _kTextSecondary,
+                color: textSecondary,
                 fontSize: 13,
                 height: 1.2,
               ),
@@ -351,128 +330,71 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
     );
   }
 
-  // ── Loading Overlay ──────────────────────────────────────────────────────
+}
 
-  Widget _buildLoadingOverlay() {
-    return Positioned.fill(
-      child: Container(
-        color: _kBgPrimary,
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '✦',
-              style: TextStyle(color: _kTextSecondary, fontSize: 28),
-            ),
-            SizedBox(height: 24),
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(_kGold),
-              strokeWidth: 2,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'جارٍ التحميل...',
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: _kTextSecondary,
-                fontSize: 16,
-              ),
-            ),
-          ],
+// ── Inline video view ─────────────────────────────────────────────────────────
+// Shown when there is no PDF but a video URL exists.
+// Displays the video player directly in the body (no bottom-sheet modal).
+
+class _InlineVideoView extends StatelessWidget {
+  const _InlineVideoView({required this.videoUrl, required this.titleAr});
+  final String videoUrl;
+  final String titleAr;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return ColoredBox(
+      color: BrightnessColors.bgPrimary(brightness),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: EkklisiaVideoPlayer(url: videoUrl, titleAr: titleAr),
         ),
       ),
     );
   }
+}
 
-  // ── Error Overlay ────────────────────────────────────────────────────────
+// ── No-PDF placeholder ────────────────────────────────────────────────────────
+// Shown when the content has neither a PDF nor a video URL.
 
-  Widget _buildErrorOverlay() {
-    return Positioned.fill(
-      child: Container(
-        color: _kBgPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.picture_as_pdf_outlined,
-              size: 56,
-              color: Colors.redAccent,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'تعذّر تحميل الملف',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: _kTextPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
+class _NoPdfPlaceholder extends StatelessWidget {
+  const _NoPdfPlaceholder({required this.hasVideo});
+  final bool hasVideo;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return Container(
+        color: BrightnessColors.bgPrimary(brightness),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                hasVideo
+                    ? Icons.play_circle_outline_rounded
+                    : Icons.picture_as_pdf_outlined,
+                size: 64,
+                color: BrightnessColors.gold(brightness).withOpacity(0.4),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'تأكد من اتصالك بالإنترنت وأعد المحاولة',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: _kTextSecondary,
-                fontSize: 14,
-              ),
-            ),
-            if (_errorDescription.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               Text(
-                _errorDescription,
+                hasVideo
+                    ? 'اضغط على أيقونة الفيديو أعلاه لمشاهدة المحتوى'
+                    : 'لا يوجد ملف PDF لهذا المحتوى',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: _kTextSecondary,
-                  fontSize: 11,
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: BrightnessColors.textSecondary(brightness),
+                  fontSize: 16,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
-            const SizedBox(height: 28),
-            OutlinedButton.icon(
-              onPressed: _retry,
-              icon: const Icon(Icons.refresh, size: 16, color: _kGold),
-              label: const Text(
-                'إعادة المحاولة',
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: _kGold,
-                  fontSize: 15,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _kGold,
-                side: const BorderSide(color: _kGoldBorder),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'رجوع',
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: _kTextSecondary,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -491,23 +413,27 @@ class _PageNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep     = BrightnessColors.bgDeep(brightness);
+    final gold       = BrightnessColors.gold(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+
     return GestureDetector(
       onTap: enabled ? onPressed : null,
       child: Container(
-        width: 36,
-        height: 36,
+        width: 36, height: 36,
         decoration: BoxDecoration(
-          color: _kBgDeep.withOpacity(0.85),
+          color: bgDeep.withOpacity(0.85),
           shape: BoxShape.circle,
           border: Border.all(
-            color: enabled ? _kGoldBorder : _kGoldBorder.withOpacity(0.3),
+            color: enabled ? goldBorder : goldBorder.withOpacity(0.3),
             width: 0.5,
           ),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: enabled ? _kGold : _kGold.withOpacity(0.3),
+          color: enabled ? gold : gold.withOpacity(0.3),
         ),
       ),
     );
@@ -539,13 +465,16 @@ class _ContentAudioStrip extends StatelessWidget {
         final isCurrent = state.currentItem?.extras?['contentId'] == contentId;
         final isPlaying = isCurrent && state.isPlaying;
 
+        final brightness = Theme.of(context).brightness;
+        final gold       = BrightnessColors.gold(brightness);
+        final bgMid      = BrightnessColors.bgMid(brightness);
+
         return Container(
           height: height,
           decoration: BoxDecoration(
-            color: _kNavy,
+            color: bgMid,
             border: Border(
-              top: BorderSide(
-                  color: _kGold.withValues(alpha: 0.4), width: 0.8),
+              top: BorderSide(color: gold.withOpacity(0.4), width: 0.8),
             ),
             boxShadow: [
               BoxShadow(
@@ -579,7 +508,8 @@ class _ContentAudioStrip extends StatelessWidget {
           LinearProgressIndicator(
             value: state.progress,
             backgroundColor: Colors.white.withValues(alpha: 0.1),
-            valueColor: const AlwaysStoppedAnimation(_kGold),
+            valueColor: AlwaysStoppedAnimation(
+                BrightnessColors.gold(Theme.of(context).brightness)),
             minHeight: 2,
           ),
 
@@ -588,22 +518,22 @@ class _ContentAudioStrip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(children: [
               // Cross decoration
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E1A2E),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: _kGold.withValues(alpha: 0.4), width: 0.8),
-                ),
-                child: Center(
-                  child: Text('✦',
-                      style: TextStyle(
-                          color: _kGold.withValues(alpha: 0.6),
-                          fontSize: 16)),
-                ),
-              ),
+              Builder(builder: (ctx) {
+                final gold = BrightnessColors.gold(Theme.of(ctx).brightness);
+                final bgDeep = BrightnessColors.bgDeep(Theme.of(ctx).brightness);
+                return Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: bgDeep,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: gold.withOpacity(0.4), width: 0.8),
+                  ),
+                  child: Center(
+                    child: Text('✦',
+                        style: TextStyle(color: gold.withOpacity(0.6), fontSize: 16)),
+                  ),
+                );
+              }),
               const SizedBox(width: 10),
 
               // Title + time
@@ -725,15 +655,16 @@ class _StripBtn extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    icon: Icon(icon, size: 22,
-        color: onTap != null
-            ? _kGold
-            : _kGold.withValues(alpha: 0.3)),
-    onPressed: onTap,
-    padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-  );
+  Widget build(BuildContext context) {
+    final gold = BrightnessColors.gold(Theme.of(context).brightness);
+    return IconButton(
+      icon: Icon(icon, size: 22,
+          color: onTap != null ? gold : gold.withOpacity(0.3)),
+      onPressed: onTap,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+    );
+  }
 }
 
 class _PlayPauseBtn extends StatelessWidget {
@@ -747,35 +678,35 @@ class _PlayPauseBtn extends StatelessWidget {
   final VoidCallback     onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 40,
-      height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color:  _kCrimson,
-        shape:  BoxShape.circle,
-        border: Border.all(
-            color: _kGold.withValues(alpha: 0.5), width: 0.8),
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final gold   = BrightnessColors.gold(brightness);
+    final maroon = BrightnessColors.maroon(brightness);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: maroon,
+          shape: BoxShape.circle,
+          border: Border.all(color: gold.withOpacity(0.5), width: 0.8),
+        ),
+        child: Center(
+          child: state.isBuffering && isCurrent
+              ? SizedBox(
+                  width: 18, height: 18,
+                  child: CircularProgressIndicator(color: gold, strokeWidth: 2),
+                )
+              : Icon(
+                  isCurrent && state.isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: gold, size: 22,
+                ),
+        ),
       ),
-      child: Center(
-        child: state.isBuffering && isCurrent
-            ? const SizedBox(
-                width: 18, height: 18,
-                child: CircularProgressIndicator(
-                    color: _kGold, strokeWidth: 2),
-              )
-            : Icon(
-                isCurrent && state.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow,
-                color: _kGold,
-                size: 22,
-              ),
-      ),
-    ),
-  );
+    );
+  }
 }
 
 // ── Content Track Picker Sheet ────────────────────────────────────────────────
@@ -793,14 +724,15 @@ class _ContentTrackPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const sheetBg = Color(0xFF0D1825);
+    final brightness = Theme.of(context).brightness;
+    final sheetBg = BrightnessColors.bgDeep(brightness);
 
     return Container(
       decoration: BoxDecoration(
         color: sheetBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border.all(
-            color: _kGold.withValues(alpha: 0.2), width: 0.8),
+            color: BrightnessColors.gold(brightness).withValues(alpha: 0.2), width: 0.8),
       ),
       child: SafeArea(
         top: false,
@@ -814,7 +746,7 @@ class _ContentTrackPickerSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: _kGold.withValues(alpha: 0.35),
+                  color: BrightnessColors.gold(brightness).withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -826,13 +758,13 @@ class _ContentTrackPickerSheet extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _kCrimson.withValues(alpha: 0.3),
+                    color: BrightnessColors.maroon(brightness).withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: _kGold.withValues(alpha: 0.4), width: 0.8),
+                        color: BrightnessColors.gold(brightness).withValues(alpha: 0.4), width: 0.8),
                   ),
-                  child: const Icon(Icons.headphones,
-                      color: _kGold, size: 18),
+                  child: Icon(Icons.headphones,
+                      color: BrightnessColors.gold(brightness), size: 18),
                 ),
                 const SizedBox(width: 12),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -851,14 +783,14 @@ class _ContentTrackPickerSheet extends StatelessWidget {
                 ]),
               ]),
               const SizedBox(height: 16),
-              Divider(color: _kGold.withValues(alpha: 0.15), height: 1),
+              Divider(color: BrightnessColors.gold(brightness).withValues(alpha: 0.15), height: 1),
               const SizedBox(height: 14),
 
               // Track cards
               ...tracks.asMap().entries.map((e) {
                 final idx   = e.key;
                 final track = e.value;
-                const accents = [_kGold, Color(0xFF7EB8C9)];
+                final accents = [BrightnessColors.gold(brightness), const Color(0xFF7EB8C9)];
                 final accent  = accents[idx % accents.length];
 
                 return GestureDetector(

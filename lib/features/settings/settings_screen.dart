@@ -7,6 +7,7 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
+import '../../../services/cache_service.dart';
 import '../../../services/settings_service.dart';
 import '../../../shared/widgets/cached_image.dart';
 import '../auth/auth_cubit.dart';
@@ -80,6 +81,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const _SectionLabel('المظهر', 'Appearance'),
               const SizedBox(height: 10),
               _ThemeModeCard(current: _themeMode, onChanged: _setThemeMode),
+              const SizedBox(height: 28),
+
+              const _SectionLabel('التخزين', 'Storage'),
+              const SizedBox(height: 10),
+              const _StorageCard(),
               const SizedBox(height: 28),
 
               const _SectionLabel('الحساب', 'Account'),
@@ -752,6 +758,138 @@ class _ThemeModeTile extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 // SIGN-OUT CARD
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// STORAGE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _StorageCard extends StatefulWidget {
+  const _StorageCard();
+
+  @override
+  State<_StorageCard> createState() => _StorageCardState();
+}
+
+class _StorageCardState extends State<_StorageCard> {
+  String _cacheSize = '…';
+  bool   _clearing  = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSize();
+  }
+
+  Future<void> _loadSize() async {
+    final label = await CacheService.instance.getSizeLabel();
+    if (mounted) setState(() => _cacheSize = label);
+  }
+
+  Future<void> _clearCache() async {
+    setState(() => _clearing = true);
+    await CacheService.instance.clearAll();
+    await _loadSize();
+    if (mounted) {
+      setState(() => _clearing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم مسح الذاكرة المؤقتة'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness    = Theme.of(context).brightness;
+    final bgMid         = BrightnessColors.bgMid(brightness);
+    final gold          = BrightnessColors.gold(brightness);
+    final goldBorder    = BrightnessColors.goldBorder(brightness);
+    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
+    return _Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: gold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: goldBorder, width: 0.5),
+              ),
+              child: Icon(Icons.storage_outlined, color: gold, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'الذاكرة المؤقتة',
+                    style: TextStyle(
+                      fontFamily: 'Scheherazade',
+                      color: textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'الصور والملفات والصوت المحفوظة • $_cacheSize',
+                    style: TextStyle(
+                      fontFamily: 'Scheherazade',
+                      color: textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            _clearing
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(gold),
+                    ),
+                  )
+                : TextButton(
+                    onPressed: _clearCache,
+                    style: TextButton.styleFrom(
+                      foregroundColor: gold,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      side: BorderSide(color: goldBorder, width: 0.8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'مسح',
+                      style: TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGN-OUT CARD
+// ═══════════════════════════════════════════════════════════════════════════
+
 class _SignOutCard extends StatefulWidget {
   const _SignOutCard();
 

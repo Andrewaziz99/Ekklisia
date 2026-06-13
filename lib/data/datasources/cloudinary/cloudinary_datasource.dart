@@ -324,6 +324,94 @@ class CloudinaryDataSource {
     }
   }
 
+  // ── Video upload ─────────────────────────────────────────────────────────
+
+  Future<CloudinaryUploadResult> uploadVideo({
+    required File videoFile,
+    required String folder,
+    void Function(double progress)? onProgress,
+  }) async {
+    final fileName = videoFile.path.split('/').last;
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(videoFile.path, filename: fileName),
+      'upload_preset': AppConstants.cloudinaryUploadPreset,
+      'folder': folder,
+      'resource_type': 'video',
+      'tags': 'Ekklisia,video',
+    });
+    try {
+      final response = await _dio.post(
+        AppConstants.cloudinaryVideoUploadUrl,
+        data: formData,
+        onSendProgress: (sent, total) {
+          if (total > 0 && onProgress != null) onProgress(sent / total);
+        },
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+          receiveTimeout: const Duration(minutes: 30),
+          sendTimeout: const Duration(minutes: 30),
+        ),
+      );
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return CloudinaryUploadResult(
+          publicId: data['public_id'] as String,
+          secureUrl: data['secure_url'] as String,
+          format: data['format'] ?? 'mp4',
+          bytes: data['bytes'] as int,
+          resourceType: 'video',
+        );
+      }
+      throw CloudinaryUploadException('Video upload failed: ${response.statusCode}');
+    } on DioException catch (e) {
+      _logDioError(e);
+      rethrow;
+    }
+  }
+
+  Future<CloudinaryUploadResult> uploadVideoBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String folder,
+    void Function(double progress)? onProgress,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: fileName),
+      'upload_preset': AppConstants.cloudinaryUploadPreset,
+      'folder': folder,
+      'resource_type': 'video',
+      'tags': 'Ekklisia,video',
+    });
+    try {
+      final response = await _dio.post(
+        AppConstants.cloudinaryVideoUploadUrl,
+        data: formData,
+        onSendProgress: (sent, total) {
+          if (total > 0 && onProgress != null) onProgress(sent / total);
+        },
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+          receiveTimeout: const Duration(minutes: 30),
+          sendTimeout: const Duration(minutes: 30),
+        ),
+      );
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return CloudinaryUploadResult(
+          publicId: data['public_id'] as String,
+          secureUrl: data['secure_url'] as String,
+          format: data['format'] ?? 'mp4',
+          bytes: data['bytes'] as int,
+          resourceType: 'video',
+        );
+      }
+      throw CloudinaryUploadException('Video upload failed: ${response.statusCode}');
+    } on DioException catch (e) {
+      _logDioError(e);
+      rethrow;
+    }
+  }
+
   // ── Delete ──────────────────────────────────────────────────────────────
 
   /// Note: deletion requires a signed request (API secret).

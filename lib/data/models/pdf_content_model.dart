@@ -81,6 +81,8 @@ class PdfContent extends Equatable {
     required this.isVisible,
     required this.createdAt,
     this.audioTracks = const [],
+    this.videoUrl          = '',
+    this.cloudinaryVideoId = '',
   });
 
   final String   id;
@@ -94,8 +96,11 @@ class PdfContent extends Equatable {
   final bool     isVisible;
   final DateTime createdAt;
   final List<ContentAudioTrack> audioTracks;
+  final String   videoUrl;
+  final String   cloudinaryVideoId;
 
   bool get hasAudio => audioTracks.isNotEmpty;
+  bool get hasVideo => videoUrl.isNotEmpty;
 
   // ── From Firestore ───────────────────────────────────────────────────────
 
@@ -119,23 +124,27 @@ class PdfContent extends Equatable {
       sortOrder:       (d['sort_order']        as int?    ?? 0),
       isVisible:       (d['is_visible']        as bool?   ?? true),
       createdAt:       (d['created_at']        as Timestamp?)?.toDate() ?? DateTime.now(),
-      audioTracks:     tracks,
+      audioTracks:          tracks,
+      videoUrl:             (d['video_url']           as String? ?? ''),
+      cloudinaryVideoId:    (d['cloudinary_video_id'] as String? ?? ''),
     );
   }
 
   // ── To Firestore ─────────────────────────────────────────────────────────
 
   Map<String, dynamic> toFirestore() => {
-    'title_ar':          titleAr,
-    'title_el':          titleEl,
-    'category':          category,
-    'pdf_url':           pdfUrl,
-    'cloudinary_pdf_id': cloudinaryPdfId,
-    'cover_url':         coverUrl,
-    'sort_order':        sortOrder,
-    'is_visible':        isVisible,
-    'created_at':        FieldValue.serverTimestamp(),
-    'audio_tracks':      audioTracks.map((t) => t.toMap()).toList(),
+    'title_ar':             titleAr,
+    'title_el':             titleEl,
+    'category':             category,
+    'pdf_url':              pdfUrl,
+    'cloudinary_pdf_id':    cloudinaryPdfId,
+    'cover_url':            coverUrl,
+    'sort_order':           sortOrder,
+    'is_visible':           isVisible,
+    'created_at':           FieldValue.serverTimestamp(),
+    'audio_tracks':         audioTracks.map((t) => t.toMap()).toList(),
+    'video_url':            videoUrl,
+    'cloudinary_video_id':  cloudinaryVideoId,
   };
 
   // ── CopyWith ─────────────────────────────────────────────────────────────
@@ -149,24 +158,29 @@ class PdfContent extends Equatable {
     int?      sortOrder,
     bool?     isVisible,
     List<ContentAudioTrack>? audioTracks,
+    String?   videoUrl,
+    String?   cloudinaryVideoId,
   }) => PdfContent(
-    id:              id,
-    titleAr:         titleAr         ?? this.titleAr,
-    titleEl:         titleEl         ?? this.titleEl,
-    category:        category,
-    pdfUrl:          pdfUrl          ?? this.pdfUrl,
-    cloudinaryPdfId: cloudinaryPdfId ?? this.cloudinaryPdfId,
-    coverUrl:        coverUrl        ?? this.coverUrl,
-    sortOrder:       sortOrder       ?? this.sortOrder,
-    isVisible:       isVisible       ?? this.isVisible,
-    createdAt:       createdAt,
-    audioTracks:     audioTracks     ?? this.audioTracks,
+    id:                   id,
+    titleAr:              titleAr              ?? this.titleAr,
+    titleEl:              titleEl              ?? this.titleEl,
+    category:             category,
+    pdfUrl:               pdfUrl               ?? this.pdfUrl,
+    cloudinaryPdfId:      cloudinaryPdfId      ?? this.cloudinaryPdfId,
+    coverUrl:             coverUrl             ?? this.coverUrl,
+    sortOrder:            sortOrder            ?? this.sortOrder,
+    isVisible:            isVisible            ?? this.isVisible,
+    createdAt:            createdAt,
+    audioTracks:          audioTracks          ?? this.audioTracks,
+    videoUrl:             videoUrl             ?? this.videoUrl,
+    cloudinaryVideoId:    cloudinaryVideoId    ?? this.cloudinaryVideoId,
   );
 
   @override
   List<Object?> get props => [
     id, titleAr, titleEl, category, pdfUrl, cloudinaryPdfId,
     coverUrl, sortOrder, isVisible, createdAt, audioTracks,
+    videoUrl, cloudinaryVideoId,
   ];
 }
 

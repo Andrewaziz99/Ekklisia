@@ -4,6 +4,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// SaintModel lives in its own file (with media fields); re-export for compat.
+export 'saint_model.dart' show SaintModel;
+
 // ════════════════════════════════════════════════════════════════════════════
 // BIBLE MODEL
 // ════════════════════════════════════════════════════════════════════════════
@@ -332,82 +335,7 @@ class LiturgyModel {
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SAINT MODEL
-// ════════════════════════════════════════════════════════════════════════════
-class SaintModel {
-  final String id;
-  final String nameAr;
-  final String nameEn;
-  final String? nameCoptic;
-  final String? biographyAr;
-  final String? biographyEn;
-  final String? feastDate; // MM-DD format
-  final List<String> categories;
-  final String? imageUrl;
-  final String? patronOfAr;
-  final String? patronOfEn;
-  final bool isPublished;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
-  final String createdBy;
-
-  SaintModel({
-    required this.id,
-    required this.nameAr,
-    required this.nameEn,
-    this.nameCoptic,
-    this.biographyAr,
-    this.biographyEn,
-    this.feastDate,
-    this.categories = const [],
-    this.imageUrl,
-    this.patronOfAr,
-    this.patronOfEn,
-    required this.isPublished,
-    required this.createdAt,
-    this.updatedAt,
-    required this.createdBy,
-  });
-
-  Map<String, dynamic> toFirestore() => {
-    'nameAr': nameAr,
-    'nameEn': nameEn,
-    'nameCoptic': nameCoptic,
-    'biographyAr': biographyAr,
-    'biographyEn': biographyEn,
-    'feastDate': feastDate,
-    'categories': categories,
-    'imageUrl': imageUrl,
-    'patronOfAr': patronOfAr,
-    'patronOfEn': patronOfEn,
-    'isPublished': isPublished,
-    'createdAt': createdAt,
-    'updatedAt': updatedAt ?? DateTime.now(),
-    'createdBy': createdBy,
-  };
-
-  factory SaintModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return SaintModel(
-      id: doc.id,
-      nameAr: data['nameAr'] ?? '',
-      nameEn: data['nameEn'] ?? '',
-      nameCoptic: data['nameCoptic'],
-      biographyAr: data['biographyAr'],
-      biographyEn: data['biographyEn'],
-      feastDate: data['feastDate'],
-      categories: List<String>.from(data['categories'] ?? []),
-      imageUrl: data['imageUrl'],
-      patronOfAr: data['patronOfAr'],
-      patronOfEn: data['patronOfEn'],
-      isPublished: data['isPublished'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
-      createdBy: data['createdBy'] ?? '',
-    );
-  }
-}
+// SaintModel is defined in saint_model.dart and re-exported above.
 
 // ════════════════════════════════════════════════════════════════════════════
 // CALENDAR EVENT MODEL

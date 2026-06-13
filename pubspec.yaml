@@ -110,6 +110,12 @@ dependencies:
   just_audio: ^0.9.41          # Audio player engine
   audio_service: ^0.18.15      # Background playback + lock-screen controls
 
+  # ── Video ─────────────────────────────────────────────
+  video_player: ^2.9.2         # Direct video URL playback
+  chewie: ^1.8.5               # UI controls wrapper for video_player
+  youtube_player_iframe: ^6.0.2 # In-app YouTube IFrame player (no navigator hijack)
+  url_launcher: ^6.3.1         # Open external URLs
+
   # ── XML Parsing ───────────────────────────────────────
   xml: ^6.5.0                  # Parse Bible XML files from assets
 

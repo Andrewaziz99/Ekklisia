@@ -172,6 +172,8 @@ class AgbeyaHour extends Equatable {
   final bool isPublished;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String videoUrl;
+  final String cloudinaryVideoId;
 
   const AgbeyaHour({
     required this.id,
@@ -190,6 +192,8 @@ class AgbeyaHour extends Equatable {
     this.isPublished = true,
     required this.createdAt,
     required this.updatedAt,
+    this.videoUrl = '',
+    this.cloudinaryVideoId = '',
   });
 
   // ── Display helpers ─────────────────────────────────────────────────────────
@@ -214,6 +218,7 @@ class AgbeyaHour extends Equatable {
   }
 
   bool get hasPdf   => pdfUrl.isNotEmpty;
+  bool get hasVideo => videoUrl.isNotEmpty;
 
   /// True if there is at least one playable audio track.
   bool get hasAudio => audioTracks.isNotEmpty || audioUrl.isNotEmpty;
@@ -264,6 +269,8 @@ class AgbeyaHour extends Equatable {
           (d['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt:
           (d['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      videoUrl:          d['video_url']           as String? ?? '',
+      cloudinaryVideoId: d['cloudinary_video_id'] as String? ?? '',
     );
   }
 
@@ -283,6 +290,8 @@ class AgbeyaHour extends Equatable {
         'is_published': isPublished,
         'created_at': Timestamp.fromDate(createdAt),
         'updated_at': Timestamp.fromDate(updatedAt),
+        'video_url':           videoUrl,
+        'cloudinary_video_id': cloudinaryVideoId,
       };
 
   AgbeyaHour copyWith({
@@ -302,6 +311,8 @@ class AgbeyaHour extends Equatable {
     bool? isPublished,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? videoUrl,
+    String? cloudinaryVideoId,
   }) =>
       AgbeyaHour(
         id: id ?? this.id,
@@ -320,6 +331,8 @@ class AgbeyaHour extends Equatable {
         isPublished: isPublished ?? this.isPublished,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        videoUrl:          videoUrl          ?? this.videoUrl,
+        cloudinaryVideoId: cloudinaryVideoId ?? this.cloudinaryVideoId,
       );
 
   @override

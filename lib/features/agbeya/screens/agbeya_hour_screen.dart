@@ -22,6 +22,7 @@ import '../widgets/full_audio_player_sheet.dart';
 import '../widgets/track_picker_sheet.dart';
 import 'agbeya_pdf_reader_screen.dart';
 import '../../../shared/widgets/cached_image.dart';
+import '../../../shared/widgets/video_player_widget.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const _kNavy    = Color(0xFF1B2A4A);
@@ -116,8 +117,19 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
             color: Colors.white, size: 18),
         onPressed: () => Navigator.pop(context),
       ),
-      // Actions: PDF reader + audio play
+      // Actions: video + PDF reader + audio play
       actions: [
+        if (widget.hour.hasVideo)
+          IconButton(
+            icon: const Icon(Icons.videocam_outlined,
+                color: _kGold, size: 24),
+            tooltip: isGreek ? 'Βίντεο' : 'مشاهدة الفيديو',
+            onPressed: () => showVideoSheet(
+              context,
+              widget.hour.videoUrl,
+              titleAr: widget.hour.titleAr,
+            ),
+          ),
         if (widget.hour.hasPdf)
           IconButton(
             icon: const Icon(Icons.menu_book_outlined,

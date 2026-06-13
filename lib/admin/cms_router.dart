@@ -8,6 +8,7 @@ import '../core/router/app_router.dart';
 import 'content/agbeya_manager.dart';
 import 'content/cms_content_manager.dart';
 import 'content/cms_additional_content.dart';
+import 'content/saints_manager.dart';
 
 /// CMS routes configuration
 class CMSRouter {

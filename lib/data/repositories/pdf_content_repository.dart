@@ -59,13 +59,15 @@ class PdfContentRepository {
   }
 
   Future<void> update(PdfContent item) => _col.doc(item.id).update({
-    'title_ar':          item.titleAr,
-    'title_el':          item.titleEl,
-    'pdf_url':           item.pdfUrl,
-    'cloudinary_pdf_id': item.cloudinaryPdfId,
-    'cover_url':         item.coverUrl,
-    'is_visible':        item.isVisible,
-    'audio_tracks':      item.audioTracks.map((t) => t.toMap()).toList(),
+    'title_ar':             item.titleAr,
+    'title_el':             item.titleEl,
+    'pdf_url':              item.pdfUrl,
+    'cloudinary_pdf_id':    item.cloudinaryPdfId,
+    'cover_url':            item.coverUrl,
+    'is_visible':           item.isVisible,
+    'audio_tracks':         item.audioTracks.map((t) => t.toMap()).toList(),
+    'video_url':            item.videoUrl,
+    'cloudinary_video_id':  item.cloudinaryVideoId,
   });
 
   Future<void> toggleVisibility(PdfContent item) =>

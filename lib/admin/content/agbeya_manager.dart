@@ -454,6 +454,17 @@ class _EditViewState extends State<_EditView> {
   // Paste-URL field — lets the admin reuse a previously uploaded PDF
   final _pdfUrlCtrl = TextEditingController();
 
+  // Paste-URL field for video
+  final _videoUrlCtrl = TextEditingController();
+
+  // ── Video ─────────────────────────────────────────────────────────────────
+  String     _videoUrl          = '';
+  String     _cloudinaryVideoId = '';
+  File?      _videoFile;
+  Uint8List? _videoBytes;
+  String?    _videoName;
+  double?    _videoUploadProgress;
+
   // ── Sections ──────────────────────────────────────────────────────────────
   late List<_SectionDraft> _sections;
 
@@ -469,6 +480,18 @@ class _EditViewState extends State<_EditView> {
       final v = _pdfUrlCtrl.text.trim();
       if (v != _pdfUrl) setState(() => _pdfUrl = v);
     });
+    _videoUrlCtrl.addListener(() {
+      final v = _videoUrlCtrl.text.trim();
+      if (v != _videoUrl) {
+        setState(() {
+          _videoUrl          = v;
+          _cloudinaryVideoId = '';
+          _videoFile         = null;
+          _videoBytes        = null;
+          _videoName         = null;
+        });
+      }
+    });
     final h = widget.initial;
     if (h != null) {
       _titleAr.text  = h.titleAr;
@@ -481,6 +504,9 @@ class _EditViewState extends State<_EditView> {
       _pdfUrl           = h.pdfUrl;
       _pdfCloudinaryId  = h.cloudinaryPdfId;
       _pdfUrlCtrl.text  = h.pdfUrl;
+      _videoUrl          = h.videoUrl;
+      _cloudinaryVideoId = h.cloudinaryVideoId;
+      _videoUrlCtrl.text = h.videoUrl;
       // Load audio tracks — fall back to legacy single audioUrl
       if (h.audioTracks.isNotEmpty) {
         _tracks = h.audioTracks
@@ -515,6 +541,7 @@ class _EditViewState extends State<_EditView> {
     _descAr.dispose();
     _durationCtrl.dispose();
     _pdfUrlCtrl.dispose();
+    _videoUrlCtrl.dispose();
     for (final t in _tracks) t.dispose();
     super.dispose();
   }
@@ -658,11 +685,63 @@ class _EditViewState extends State<_EditView> {
     }
   }
 
+  // ── Video picker + upload ─────────────────────────────────────────────────
+
+  Future<void> _pickVideo() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.video,
+      withData: kIsWeb,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final f = result.files.first;
+    setState(() {
+      _videoName  = f.name;
+      _videoFile  = kIsWeb ? null : File(f.path!);
+      _videoBytes = kIsWeb ? f.bytes : null;
+      _videoUrl   = '';
+      _cloudinaryVideoId = '';
+    });
+  }
+
+  Future<void> _uploadVideoIfNeeded() async {
+    if (_videoFile == null && _videoBytes == null) return;
+    setState(() => _videoUploadProgress = 0);
+    try {
+      final result = kIsWeb
+          ? await _cloudinary.uploadVideoBytes(
+              bytes: _videoBytes!,
+              fileName: _videoName!,
+              folder: 'Ekklisia/agbeya/video',
+              onProgress: (p) => setState(() => _videoUploadProgress = p),
+            )
+          : await _cloudinary.uploadVideo(
+              videoFile: _videoFile!,
+              folder: 'Ekklisia/agbeya/video',
+              onProgress: (p) => setState(() => _videoUploadProgress = p),
+            );
+      _videoUrl          = result.secureUrl;
+      _cloudinaryVideoId = result.publicId;
+      setState(() => _videoUploadProgress = null);
+      _snack('Video uploaded ✓');
+    } catch (e) {
+      setState(() => _videoUploadProgress = null);
+      _snack('Video upload failed: $e', error: true);
+      rethrow;
+    }
+  }
+
   // ── Save ─────────────────────────────────────────────────────────────────
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() { _saving = true; _saveError = ''; });
+
+    try {
+      await _uploadVideoIfNeeded();
+    } catch (_) {
+      setState(() => _saving = false);
+      return;
+    }
 
     final now = DateTime.now();
     final sections = _sections
@@ -706,6 +785,8 @@ class _EditViewState extends State<_EditView> {
       isPublished: _published,
       createdAt: widget.initial?.createdAt ?? now,
       updatedAt: now,
+      videoUrl:          _videoUrl,
+      cloudinaryVideoId: _cloudinaryVideoId,
     );
 
     try {
@@ -1197,6 +1278,146 @@ class _EditViewState extends State<_EditView> {
                     ),
                   ),
                 ]),
+              ),
+              const SizedBox(height: 14),
+
+              // ── Video ─────────────────────────────────────────────────
+              _AdminCard(
+                title: 'Video',
+                titleAr: 'الفيديو',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Optional. Upload a video file or paste a YouTube / Cloudinary URL.',
+                      style: TextStyle(
+                        color: EkklisiaColors.textSecondary
+                            .withValues(alpha: 0.7),
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // URL paste field
+                    TextField(
+                      controller: _videoUrlCtrl,
+                      style: const TextStyle(
+                          color: EkklisiaColors.textPrimary, fontSize: 12),
+                      decoration: InputDecoration(
+                        hintText:
+                            'https://youtube.com/... or https://res.cloudinary.com/...',
+                        hintStyle: const TextStyle(
+                            color: EkklisiaColors.textSecondary,
+                            fontSize: 11),
+                        filled: true,
+                        fillColor: EkklisiaColors.bgElevated,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        suffixIcon: _videoUrlCtrl.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close,
+                                    size: 14,
+                                    color: EkklisiaColors.textSecondary),
+                                onPressed: () {
+                                  _videoUrlCtrl.clear();
+                                  setState(() {
+                                    _videoUrl          = '';
+                                    _cloudinaryVideoId = '';
+                                  });
+                                },
+                              )
+                            : null,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                              color: _videoUrl.isNotEmpty
+                                  ? EkklisiaColors.tealMid.withOpacity(0.5)
+                                  : EkklisiaColors.goldBorder,
+                              width: 0.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                              color: EkklisiaColors.gold, width: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // OR divider
+                    Row(children: [
+                      const Expanded(
+                          child:
+                              Divider(color: EkklisiaColors.goldBorder)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('OR',
+                            style: TextStyle(
+                                color: EkklisiaColors.textSecondary
+                                    .withValues(alpha: 0.6),
+                                fontSize: 11)),
+                      ),
+                      const Expanded(
+                          child:
+                              Divider(color: EkklisiaColors.goldBorder)),
+                    ]),
+                    const SizedBox(height: 8),
+
+                    // Upload progress or file badge + pick button
+                    if (_videoUploadProgress != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: _videoUploadProgress,
+                              minHeight: 5,
+                              backgroundColor: EkklisiaColors.bgElevated,
+                              valueColor: const AlwaysStoppedAnimation(
+                                  EkklisiaColors.gold),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Uploading… ${((_videoUploadProgress ?? 0) * 100).toStringAsFixed(0)}%',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: EkklisiaColors.textSecondary,
+                                fontSize: 11),
+                          ),
+                        ],
+                      )
+                    else ...[
+                      if (_videoName != null)
+                        _UrlBadge(
+                          icon: Icons.videocam_outlined,
+                          label: 'Video selected',
+                          labelAr: 'تم اختيار الفيديو',
+                          url: _videoName!,
+                          onClear: () => setState(() {
+                            _videoFile         = null;
+                            _videoBytes        = null;
+                            _videoName         = null;
+                            _videoUrl          = '';
+                            _cloudinaryVideoId = '';
+                            _videoUrlCtrl.clear();
+                          }),
+                          onReplace: _pickVideo,
+                        )
+                      else
+                        _DropZone(
+                          icon: Icons.videocam_outlined,
+                          title: 'Select Video File',
+                          titleAr: 'اختر ملف فيديو',
+                          subtitle: 'MP4 / MOV / MKV',
+                          hasFile: false,
+                          borderColor: EkklisiaColors.goldBorder,
+                          onTap: _saving ? null : _pickVideo,
+                        ),
+                    ],
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
 

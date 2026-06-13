@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
@@ -19,8 +20,8 @@ import '../../features/auth/auth_cubit.dart';
 import '../../features/auth/auth_state.dart';
 import '../../features/bookmarks/bookmarks_screen.dart';
 import '../../features/books/screens/books_home.dart';
-import '../../features/settings/settings_screen.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
+import '../../features/settings/settings_screen.dart';
 import '../../services/settings_service.dart';
 import '../../shared/widgets/audio_player_bar.dart';
 import 'home_tab_screen.dart';
@@ -44,13 +45,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // Keep system UI in sync with theme
     final isDark = brightness == Brightness.dark;
     final navBgColor = BrightnessColors.bgDeep(brightness);
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: navBgColor,
-      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: navBgColor,
-      systemNavigationBarIconBrightness:
-          isDark ? Brightness.light : Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: navBgColor,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: navBgColor,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+    );
 
     final tabs = <Widget>[
       HomeTabScreen(onGoToLibrary: _goToLibrary),
@@ -89,22 +93,21 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             : const SizedBox.shrink(),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: tabs,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: tabs),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Persistent mini player — visible whenever a track is loaded
           BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
-            builder: (ctx, state) =>
-                state.hasTrack ? const AudioPlayerBar() : const SizedBox.shrink(),
+            builder: (ctx, state) => state.hasTrack
+                ? const AudioPlayerBar()
+                : const SizedBox.shrink(),
           ),
           _EkklisiaBottomNav(
             selectedIndex: _selectedIndex,
             onTap: (i) => setState(() => _selectedIndex = i),
           ),
+          const _ClockflyCopyright(),
         ],
       ),
     );
@@ -114,10 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
 // ── Bottom Navigation Bar ─────────────────────────────────────────────────────
 
 class _EkklisiaBottomNav extends StatelessWidget {
-  const _EkklisiaBottomNav({
-    required this.selectedIndex,
-    required this.onTap,
-  });
+  const _EkklisiaBottomNav({required this.selectedIndex, required this.onTap});
 
   final int selectedIndex;
   final ValueChanged<int> onTap;
@@ -173,9 +173,7 @@ class _EkklisiaBottomNav extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: bgDeep,
-        border: Border(
-          top: BorderSide(color: goldBorder, width: 0.5),
-        ),
+        border: Border(top: BorderSide(color: goldBorder, width: 0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.12),
@@ -224,6 +222,64 @@ class _EkklisiaBottomNav extends StatelessWidget {
                 ),
               );
             }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Clockfly Copyright Strip ──────────────────────────────────────────────────
+
+class _ClockflyCopyright extends StatelessWidget {
+  const _ClockflyCopyright();
+
+  static const _url = 'https://www.clockfly.net';
+
+  Future<void> _launch() async {
+    final uri = Uri.parse(_url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgColor = BrightnessColors.bgDeep(brightness);
+    final textColor = BrightnessColors.textSecondary(brightness);
+
+    return GestureDetector(
+      onTap: _launch,
+      behavior: HitTestBehavior.opaque,
+      child: ColoredBox(
+        color: bgColor,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 6, top: 4),
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Developed by ',
+                    style: TextStyle(color: textColor, fontSize: 10),
+                  ),
+                  Image.asset('assets/images/clockfly.png', height: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Clockfly Technologies',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

@@ -196,6 +196,7 @@ class _ItemList extends StatelessWidget {
               titleEl:     items[i].titleEl,
               contentId:   items[i].id,
               audioTracks: items[i].audioTracks,
+              videoUrl:    items[i].videoUrl,
             ),
           ),
         ),

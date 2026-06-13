@@ -18,6 +18,7 @@ import '../../../core/theme/colors.dart';
 import '../../../data/models/agbeya_model.dart';
 import '../../../shared/widgets/cached_image.dart';
 import '../../../shared/widgets/cached_pdf_viewer.dart';
+import '../../../shared/widgets/video_player_widget.dart';
 import '../cubit/audio_player_cubit.dart';
 import '../cubit/audio_player_state.dart';
 import '../widgets/full_audio_player_sheet.dart';
@@ -212,6 +213,17 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          if (widget.hour.hasVideo)
+            IconButton(
+              tooltip: 'مشاهدة الفيديو',
+              icon: const Icon(Icons.videocam_outlined,
+                  color: EkklisiaColors.gold),
+              onPressed: () => showVideoSheet(
+                context,
+                widget.hour.videoUrl,
+                titleAr: widget.hour.titleAr,
+              ),
+            ),
           IconButton(
             tooltip: 'وضع القراءة',
             icon: Icon(_modeIcon, color: EkklisiaColors.gold),
