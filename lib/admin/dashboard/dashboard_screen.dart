@@ -382,7 +382,7 @@ class _CmsShortcuts extends StatelessWidget {
   static final _items = [
     (label: 'Bible', labelAr: 'الكتاب المقدس', icon: Icons.book_outlined,
       color: EkklisiaColors.gold, path: Routes.adminCmsBibles),
-    (label: 'Hymns', labelAr: 'التسابيح', icon: Icons.music_note_outlined,
+    (label: 'Hymns', labelAr: 'الترانيم', icon: Icons.music_note_outlined,
       color: EkklisiaColors.tealDark, path: Routes.adminCmsHymns),
     (label: 'Prayers', labelAr: 'الصلوات', icon: Icons.favorite_outline,
       color: EkklisiaColors.maroonMid, path: Routes.adminCmsPrayers),

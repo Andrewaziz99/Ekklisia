@@ -99,7 +99,7 @@ class _ListViewState extends State<_ListView> {
         return Column(children: [
           // ── Toolbar ───────────────────────────────────────────────────
           _Toolbar(
-            title: 'Saints',
+            title: 'Άγιοι',
             titleAr: 'القديسون',
             count: saints.length,
             onSearch: (q) => setState(() => _search = q),
@@ -290,7 +290,7 @@ class _SaintCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          saint.isPublished ? 'LIVE' : 'DRAFT',
+                          saint.isPublished ? 'ΕΝΕΡΓΟ' : 'ΠΡΌΧΕΙΡΟ',
                           style: TextStyle(
                             color: saint.isPublished
                                 ? EkklisiaColors.tealMid
@@ -695,7 +695,7 @@ class _EditViewState extends State<_EditView> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
-                isNew ? 'Add Saint' : 'Edit Saint',
+                isNew ? 'Προσθήκη Αγίου' : 'Επεξεργασία Αγίου',
                 style: const TextStyle(
                   color: EkklisiaColors.textPrimary,
                   fontSize: 15,
@@ -735,7 +735,7 @@ class _EditViewState extends State<_EditView> {
                           color: EkklisiaColors.gold, strokeWidth: 2),
                     )
                   : Text(
-                      isNew ? 'Create' : 'Update',
+                      isNew ? 'Δημιουργία' : 'Ενημέρωση',
                       style: const TextStyle(
                         color: EkklisiaColors.gold,
                         fontSize: 13,
@@ -771,7 +771,7 @@ class _EditViewState extends State<_EditView> {
             children: [
               // ── Cover image ─────────────────────────────────────────
               _FormCard(
-                title: 'Cover Image',
+                title: 'Εικόνα Εξωφύλλου',
                 titleAr: 'الصورة',
                 child: _CoverPicker(
                   url: _coverUrl,
@@ -791,25 +791,25 @@ class _EditViewState extends State<_EditView> {
 
               // ── Names ──────────────────────────────────────────────
               _FormCard(
-                title: 'Names',
+                title: 'Ονόματα',
                 titleAr: 'الأسماء',
                 child: Column(children: [
                   _Field(
                     ctrl: _nameEn,
-                    label: 'English Name',
+                    label: 'Ονομασία (Ελληνικά)',
                     required: true,
                   ),
                   const SizedBox(height: 10),
                   _Field(
                     ctrl: _nameAr,
-                    label: 'Arabic Name  الاسم بالعربية',
+                    label: 'Ονομασία (Αραβικά)  الاسم بالعربية',
                     required: true,
                     arabic: true,
                   ),
                   const SizedBox(height: 10),
                   _Field(
                     ctrl: _nameCop,
-                    label: 'Coptic Name (optional)',
+                    label: 'Κοπτικό Όνομα (προαιρετικό)',
                   ),
                 ]),
               ),
@@ -817,23 +817,23 @@ class _EditViewState extends State<_EditView> {
 
               // ── Details ────────────────────────────────────────────
               _FormCard(
-                title: 'Details',
+                title: 'Λεπτομέρειες',
                 titleAr: 'التفاصيل',
                 child: Column(children: [
                   _Field(
                     ctrl: _feastDate,
-                    label: 'Feast Date (MM-DD, e.g. 11-17)',
+                    label: 'Ημ. Εορτής (ΜΜ-ΗΗ, π.χ. 11-17)',
                     hint: '01-07',
                   ),
                   const SizedBox(height: 10),
                   _Field(
                     ctrl: _patronEn,
-                    label: 'Patron Of (English)',
+                    label: 'Προστάτης (Ελληνικά)',
                   ),
                   const SizedBox(height: 10),
                   _Field(
                     ctrl: _patronAr,
-                    label: 'Patron Of (Arabic)',
+                    label: 'Προστάτης (Αραβικά)',
                     arabic: true,
                   ),
                 ]),
@@ -842,12 +842,12 @@ class _EditViewState extends State<_EditView> {
 
               // ── Biography ──────────────────────────────────────────
               _FormCard(
-                title: 'Biography',
+                title: 'Βιογραφία',
                 titleAr: 'السيرة',
                 child: Column(children: [
                   _Field(
                     ctrl: _bioEn,
-                    label: 'English Biography',
+                    label: 'Βιογραφία (Ελληνικά)',
                     multiline: true,
                     minLines: 4,
                     maxLines: 12,
@@ -855,7 +855,7 @@ class _EditViewState extends State<_EditView> {
                   const SizedBox(height: 10),
                   _Field(
                     ctrl: _bioAr,
-                    label: 'Arabic Biography  السيرة بالعربية',
+                    label: 'Βιογραφία (Αραβικά)  السيرة بالعربية',
                     multiline: true,
                     minLines: 4,
                     maxLines: 12,
@@ -867,13 +867,13 @@ class _EditViewState extends State<_EditView> {
 
               // ── PDF (optional) ─────────────────────────────────────
               _FormCard(
-                title: 'PDF (Optional)',
+                title: 'PDF (Προαιρετικό)',
                 titleAr: 'ملف PDF',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Attach a PDF document — or paste a URL.',
+                      'Επισυνάψτε PDF ή επικολλήστε URL.',
                       style: TextStyle(
                           color: EkklisiaColors.textSecondary, fontSize: 12),
                     ),
@@ -883,7 +883,7 @@ class _EditViewState extends State<_EditView> {
                       controller: _pdfUrlCtrl,
                       style: const TextStyle(
                           color: EkklisiaColors.textPrimary, fontSize: 13),
-                      decoration: _inputDeco('Paste PDF URL…'),
+                      decoration: _inputDeco('Επικολλήστε URL PDF…'),
                       onChanged: (v) {
                         if (v.trim().isNotEmpty) {
                           setState(() {
@@ -900,7 +900,7 @@ class _EditViewState extends State<_EditView> {
                       const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('OR',
+                        child: Text('Ή',
                             style: TextStyle(
                                 color: EkklisiaColors.textSecondary,
                                 fontSize: 11)),
@@ -945,7 +945,7 @@ class _EditViewState extends State<_EditView> {
                             Icon(Icons.upload_file_outlined,
                                 color: EkklisiaColors.gold, size: 16),
                             SizedBox(width: 6),
-                            Text('Choose PDF File',
+                            Text('Επιλογή αρχείου PDF',
                                 style: TextStyle(
                                     color: EkklisiaColors.gold,
                                     fontSize: 13)),
@@ -960,13 +960,13 @@ class _EditViewState extends State<_EditView> {
 
               // ── Audio (optional) ───────────────────────────────────
               _FormCard(
-                title: 'Audio (Optional)',
+                title: 'Ήχος (Προαιρετικό)',
                 titleAr: 'الصوت',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Upload an MP3 or M4A audio file.',
+                      'Μεταφορτώστε αρχείο MP3 ή M4A.',
                       style: TextStyle(
                           color: EkklisiaColors.textSecondary, fontSize: 12),
                     ),
@@ -1005,7 +1005,7 @@ class _EditViewState extends State<_EditView> {
                             Icon(Icons.audio_file_outlined,
                                 color: EkklisiaColors.tealMid, size: 16),
                             SizedBox(width: 6),
-                            Text('Choose Audio File',
+                            Text('Επιλογή αρχείου ήχου',
                                 style: TextStyle(
                                     color: EkklisiaColors.tealMid,
                                     fontSize: 13)),
@@ -1020,13 +1020,13 @@ class _EditViewState extends State<_EditView> {
 
               // ── Video (optional) ───────────────────────────────────
               _FormCard(
-                title: 'Video (Optional)',
+                title: 'Βίντεο (Προαιρετικό)',
                 titleAr: 'الفيديو',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Upload a video file or paste a YouTube / Cloudinary URL.',
+                      'Μεταφορτώστε βίντεο ή επικολλήστε URL YouTube/Cloudinary.',
                       style: TextStyle(
                           color: EkklisiaColors.textSecondary, fontSize: 12),
                     ),
@@ -1035,14 +1035,14 @@ class _EditViewState extends State<_EditView> {
                       controller: _videoUrlCtrl,
                       style: const TextStyle(
                           color: EkklisiaColors.textPrimary, fontSize: 13),
-                      decoration: _inputDeco('Paste YouTube or video URL…'),
+                      decoration: _inputDeco('Επικολλήστε URL YouTube ή βίντεο…'),
                     ),
                     const SizedBox(height: 10),
                     Row(children: [
                       const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('OR',
+                        child: Text('Ή',
                             style: TextStyle(
                                 color: EkklisiaColors.textSecondary,
                                 fontSize: 11)),
@@ -1084,7 +1084,7 @@ class _EditViewState extends State<_EditView> {
                             Icon(Icons.video_file_outlined,
                                 color: EkklisiaColors.plum, size: 16),
                             SizedBox(width: 6),
-                            Text('Choose Video File',
+                            Text('Επιλογή αρχείου βίντεο',
                                 style: TextStyle(
                                     color: EkklisiaColors.plum,
                                     fontSize: 13)),
@@ -1099,14 +1099,14 @@ class _EditViewState extends State<_EditView> {
 
               // ── Publish ────────────────────────────────────────────
               _FormCard(
-                title: 'Visibility',
+                title: 'Ορατότητα',
                 titleAr: 'الظهور',
                 child: Row(children: [
                   Expanded(
                     child: Text(
                       _published
-                          ? 'Published — visible to all users'
-                          : 'Draft — only admins can see this',
+                          ? 'Δημοσιευμένο — ορατό σε όλους'
+                          : 'Πρόχειρο — ορατό μόνο σε διαχειριστές',
                       style: const TextStyle(
                         color: EkklisiaColors.textSecondary,
                         fontSize: 12,
@@ -1255,7 +1255,7 @@ class _CoverPicker extends StatelessWidget {
       Icon(Icons.image_outlined,
           color: EkklisiaColors.goldBorder, size: 36),
       SizedBox(height: 8),
-      Text('Tap to add cover image',
+      Text('Πατήστε για προσθήκη εικόνας',
           style: TextStyle(
               color: EkklisiaColors.textSecondary, fontSize: 12)),
     ],
@@ -1363,7 +1363,7 @@ class _Field extends StatelessWidget {
       decoration: _inputDeco(hint ?? label),
       validator: required
           ? (v) =>
-              (v == null || v.trim().isEmpty) ? 'Required' : null
+              (v == null || v.trim().isEmpty) ? 'Υποχρεωτικό' : null
           : null,
     );
   }
@@ -1433,7 +1433,7 @@ class _ToolbarState extends State<_Toolbar> {
                   autofocus: true,
                   style: const TextStyle(
                       color: EkklisiaColors.textPrimary, fontSize: 13),
-                  decoration: _inputDeco('Search saints…'),
+                  decoration: _inputDeco('Αναζήτηση αγίων…'),
                   onChanged: widget.onSearch,
                 )
               : Column(
@@ -1483,7 +1483,7 @@ class _ToolbarState extends State<_Toolbar> {
             child: const Row(children: [
               Icon(Icons.add, color: EkklisiaColors.gold, size: 14),
               SizedBox(width: 4),
-              Text('Add',
+              Text('Προσθήκη',
                   style: TextStyle(
                       color: EkklisiaColors.gold, fontSize: 12)),
             ]),
@@ -1551,7 +1551,7 @@ class _ProgressBar extends StatelessWidget {
       ),
       const SizedBox(height: 4),
       Text(
-        'Uploading… ${(progress * 100).round()}%',
+        'Μεταφόρτωση… ${(progress * 100).round()}%',
         style: const TextStyle(
             color: EkklisiaColors.textSecondary, fontSize: 10),
       ),
@@ -1641,7 +1641,7 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
                 color: EkklisiaColors.goldBorder, fontSize: 40)),
         const SizedBox(height: 12),
-        const Text('No saints added yet',
+        const Text('Δεν έχουν προστεθεί άγιοι',
             style: TextStyle(
                 color: EkklisiaColors.textSecondary, fontSize: 14)),
         const SizedBox(height: 4),
@@ -1662,7 +1662,7 @@ class _EmptyState extends StatelessWidget {
                   color: EkklisiaColors.gold.withValues(alpha: 0.4),
                   width: 0.5),
             ),
-            child: const Text('Add First Saint',
+            child: const Text('Προσθήκη Πρώτου Αγίου',
                 style: TextStyle(
                     color: EkklisiaColors.gold, fontSize: 13)),
           ),
@@ -1686,19 +1686,19 @@ class _DeleteConfirmRow extends StatelessWidget {
           color: EkklisiaColors.maroonMid, size: 18),
       const SizedBox(width: 8),
       const Expanded(
-        child: Text('Delete this saint?',
+        child: Text('Διαγραφή αυτού του αγίου;',
             style: TextStyle(
                 color: EkklisiaColors.textPrimary, fontSize: 13)),
       ),
       TextButton(
         onPressed: onCancel,
-        child: const Text('Cancel',
+        child: const Text('Ακύρωση',
             style: TextStyle(color: EkklisiaColors.textSecondary)),
       ),
       const SizedBox(width: 4),
       TextButton(
         onPressed: onConfirm,
-        child: const Text('Delete',
+        child: const Text('Διαγραφή',
             style: TextStyle(color: EkklisiaColors.maroonMid)),
       ),
     ]),

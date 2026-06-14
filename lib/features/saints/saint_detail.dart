@@ -10,15 +10,15 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/theme/brightness_colors.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/saint_model.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
+import '../../features/settings/cubit/settings_cubit.dart';
+import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 import '../../shared/widgets/cached_pdf_viewer.dart';
 import '../../shared/widgets/video_player_widget.dart';
-
-const _kGold = EkklisiaColors.gold;
-const _kRadius = BorderRadius.all(Radius.circular(10));
 
 class SaintDetailScreen extends StatefulWidget {
   const SaintDetailScreen({super.key, required this.saint});
@@ -35,7 +35,6 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
   @override
   void initState() {
     super.initState();
-    // Only show both tabs if we have both languages
     final hasBothBios =
         (widget.saint.biographyEn?.isNotEmpty ?? false) &&
         (widget.saint.biographyAr?.isNotEmpty ?? false);
@@ -50,8 +49,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
 
   void _playAudio() {
     final s = widget.saint;
-    final cubit = context.read<AudioPlayerCubit>();
-    cubit.play(
+    context.read<AudioPlayerCubit>().play(
       MediaItem(
         id: s.audioUrl,
         title: s.nameAr,
@@ -64,37 +62,41 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isGreek = context.select<SettingsCubit, bool>(
+      (c) => c.state.language == AppLanguage.greek,
+    );
     final s = widget.saint;
     final hasBothBios =
         (s.biographyEn?.isNotEmpty ?? false) &&
         (s.biographyAr?.isNotEmpty ?? false);
 
+    final bgDeep     = BrightnessColors.bgDeep(brightness);
+    final bgMid      = BrightnessColors.bgMid(brightness);
+    final gold       = BrightnessColors.gold(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final teal       = BrightnessColors.tealMid(brightness);
+    final plum       = BrightnessColors.plum(brightness);
+
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgDeep,
+      backgroundColor: bgDeep,
       body: CustomScrollView(
         slivers: [
           // ── SliverAppBar with cover ─────────────────────────────────────
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
-            backgroundColor: EkklisiaColors.bgDeep,
+            backgroundColor: bgDeep,
             leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new,
-                color: _kGold,
-                size: 18,
-              ),
+              icon: Icon(Icons.arrow_back_ios_new, color: gold, size: 18),
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
               if (s.hasVideo)
                 IconButton(
                   tooltip: 'مشاهدة الفيديو',
-                  icon: const Icon(
-                    Icons.videocam_outlined,
-                    color: _kGold,
-                    size: 22,
-                  ),
+                  icon: Icon(Icons.videocam_outlined, color: gold, size: 22),
                   onPressed: () =>
                       showVideoSheet(context, s.videoUrl, titleAr: s.nameAr),
                 ),
@@ -105,7 +107,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                 children: [
                   s.hasImage
                       ? CachedImage(url: s.imageUrl, fit: BoxFit.cover)
-                      : Container(color: EkklisiaColors.bgMid),
+                      : Container(color: bgMid),
                   // Gradient overlay
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -115,7 +117,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                         stops: const [0.4, 1.0],
                         colors: [
                           Colors.transparent,
-                          EkklisiaColors.bgDeep.withValues(alpha: 0.95),
+                          bgDeep.withValues(alpha: 0.95),
                         ],
                       ),
                     ),
@@ -179,20 +181,24 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                           if (s.feastDate != null)
                             _InfoChip(
                               icon: Icons.calendar_today_outlined,
-                              label: 'Feast: ${s.feastDate!}',
-                              color: _kGold,
+                              label: isGreek
+                                  ? 'Εορτή: ${s.feastDate!}'
+                                  : 'العيد: ${s.feastDate!}',
+                              color: gold,
                             ),
                           if (s.patronOfEn != null)
                             _InfoChip(
                               icon: Icons.shield_outlined,
-                              label: 'Patron of ${s.patronOfEn}',
-                              color: EkklisiaColors.tealMid,
+                              label: isGreek
+                                  ? 'Προστάτης ${s.patronOfEn}'
+                                  : 'شفيع ${s.patronOfEn}',
+                              color: teal,
                             ),
                           if (s.patronOfAr != null)
                             _InfoChip(
                               icon: Icons.shield_outlined,
                               label: s.patronOfAr!,
-                              color: EkklisiaColors.tealMid,
+                              color: teal,
                               arabic: true,
                             ),
                         ],
@@ -201,7 +207,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
 
                   // ── Media action buttons ─────────────────────────────
                   if (s.hasPdf || s.hasAudio || s.hasVideo) ...[
-                    const _SectionDivider(label: 'Media'),
+                    _SectionDivider(label: isGreek ? 'Μέσα' : 'وسائط', gold: gold),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
@@ -210,7 +216,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                         if (s.hasPdf)
                           _MediaButton(
                             icon: Icons.picture_as_pdf_outlined,
-                            label: 'Read PDF',
+                            label: isGreek ? 'Ανάγνωση PDF' : 'قراءة PDF',
                             color: EkklisiaColors.bronze,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
@@ -221,15 +227,15 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                         if (s.hasAudio)
                           _MediaButton(
                             icon: Icons.headphones_outlined,
-                            label: 'Play Audio',
-                            color: EkklisiaColors.tealMid,
+                            label: isGreek ? 'Αναπαραγωγή Ήχου' : 'تشغيل الصوت',
+                            color: teal,
                             onTap: _playAudio,
                           ),
                         if (s.hasVideo)
                           _MediaButton(
                             icon: Icons.play_circle_outline,
-                            label: 'Watch Video',
-                            color: EkklisiaColors.plum,
+                            label: isGreek ? 'Παρακολούθηση Βίντεο' : 'مشاهدة الفيديو',
+                            color: plum,
                             onTap: () => showVideoSheet(
                               context,
                               s.videoUrl,
@@ -243,31 +249,31 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
 
                   // ── Biography ────────────────────────────────────────
                   if (s.biographyEn != null || s.biographyAr != null) ...[
-                    const _SectionDivider(label: 'Biography  السيرة'),
+                    _SectionDivider(
+                      label: isGreek ? 'Βιογραφία  السيرة' : 'السيرة  Βιογραφία',
+                      gold: gold,
+                    ),
                     const SizedBox(height: 10),
                     if (hasBothBios) ...[
                       Container(
                         decoration: BoxDecoration(
-                          color: EkklisiaColors.bgMid,
+                          color: bgMid,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: EkklisiaColors.goldBorder,
-                            width: 0.5,
-                          ),
+                          border: Border.all(color: goldBorder, width: 0.5),
                         ),
                         child: TabBar(
                           controller: _tabs,
-                          labelColor: _kGold,
-                          unselectedLabelColor: EkklisiaColors.textSecondary,
-                          indicatorColor: _kGold,
+                          labelColor: gold,
+                          unselectedLabelColor: textSecondary,
+                          indicatorColor: gold,
                           indicatorSize: TabBarIndicatorSize.tab,
                           labelStyle: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
-                          tabs: const [
-                            Tab(text: 'English'),
-                            Tab(text: 'عربي'),
+                          tabs: [
+                            Tab(text: isGreek ? 'Αγγλικά' : 'إنجليزي'),
+                            const Tab(text: 'عربي'),
                           ],
                         ),
                       ),
@@ -307,23 +313,27 @@ class _PdfScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final gold   = BrightnessColors.gold(brightness);
+
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgDeep,
+      backgroundColor: bgDeep,
       appBar: AppBar(
-        backgroundColor: EkklisiaColors.bgDeep,
-        foregroundColor: _kGold,
+        backgroundColor: bgDeep,
+        foregroundColor: gold,
         title: Text(
           saint.nameAr,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: _kGold,
+            color: gold,
             fontSize: 16,
           ),
         ),
         actions: [
           if (saint.hasVideo)
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, color: _kGold),
+              icon: Icon(Icons.videocam_outlined, color: gold),
               onPressed: () => showVideoSheet(
                 context,
                 saint.videoUrl,
@@ -340,27 +350,29 @@ class _PdfScreen extends StatelessWidget {
 // ── Shared sub-widgets ────────────────────────────────────────────────────────
 
 class _SectionDivider extends StatelessWidget {
-  const _SectionDivider({required this.label});
+  const _SectionDivider({required this.label, required this.gold});
   final String label;
+  final Color gold;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Text(
-        label,
-        style: const TextStyle(
-          color: _kGold,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+  Widget build(BuildContext context) {
+    final goldBorder = BrightnessColors.goldBorder(Theme.of(context).brightness);
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: gold,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
         ),
-      ),
-      const SizedBox(width: 8),
-      const Expanded(
-        child: Divider(color: EkklisiaColors.goldBorder, height: 1),
-      ),
-    ],
-  );
+        const SizedBox(width: 8),
+        Expanded(child: Divider(color: goldBorder, height: 1)),
+      ],
+    );
+  }
 }
 
 class _InfoChip extends StatelessWidget {
@@ -448,24 +460,31 @@ class _BiographyText extends StatelessWidget {
   final bool arabic;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: EkklisiaColors.bgElevated,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
-    ),
-    child: SingleChildScrollView(
-      child: Text(
-        text,
-        textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
-        style: TextStyle(
-          color: EkklisiaColors.textPrimary,
-          fontFamily: arabic ? 'Scheherazade' : null,
-          fontSize: arabic ? 16 : 14,
-          height: 1.65,
+  Widget build(BuildContext context) {
+    final brightness  = Theme.of(context).brightness;
+    final bgElevated  = BrightnessColors.bgElevated(brightness);
+    final goldBorder  = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgElevated,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: goldBorder, width: 0.5),
+      ),
+      child: SingleChildScrollView(
+        child: Text(
+          text,
+          textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
+          style: TextStyle(
+            color: textPrimary,
+            fontFamily: arabic ? 'Scheherazade' : null,
+            fontSize: arabic ? 16 : 14,
+            height: 1.65,
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

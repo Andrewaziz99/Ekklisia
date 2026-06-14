@@ -149,7 +149,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isGreek ? 'LIBRARY' : 'LIBRARY',
+                    isGreek ? 'ΒΙΒΛΙΟΘΗΚΗ' : 'LIBRARY',
                     style: TextStyle(
                       color: goldDim,
                       fontSize: 9,
@@ -210,7 +210,9 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                   ),
                   onPressed: () =>
                       setState(() => _isListView = !_isListView),
-                  tooltip: _isListView ? 'Grid view' : 'List view',
+                  tooltip: _isListView
+                      ? (isGreek ? 'Προβολή πλέγματος' : 'عرض شبكي')
+                      : (isGreek ? 'Προβολή λίστας' : 'عرض قائمة'),
                 ),
               ),
             ],

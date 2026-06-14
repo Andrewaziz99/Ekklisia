@@ -4,10 +4,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../core/router/app_router.dart';
+
 import 'content/agbeya_manager.dart';
-import 'content/cms_content_manager.dart';
 import 'content/cms_additional_content.dart';
+import 'content/cms_content_manager.dart';
 import 'content/saints_manager.dart';
 
 /// CMS routes configuration
@@ -19,7 +19,7 @@ class CMSRouter {
   static const String liturgies = '/admin/cms/liturgies';
   static const String saints = '/admin/cms/saints';
   static const String calendars = '/admin/cms/calendars';
-  static const String books  = '/admin/cms/books';
+  static const String books = '/admin/cms/books';
   static const String agbeya = '/admin/cms/agbeya';
 
   static final routes = [
@@ -91,7 +91,7 @@ final cmsNavItems = <CMSNavItem>[
   CMSNavItem(
     path: CMSRouter.hymns,
     labelEn: 'Hymns',
-    labelAr: 'التسابيح',
+    labelAr: 'الترانيم',
     icon: Icons.music_note_outlined,
     activeIcon: Icons.music_note,
   ),

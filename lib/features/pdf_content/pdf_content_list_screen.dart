@@ -137,7 +137,7 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'LIBRARY',
+                    isGreek ? 'ΒΙΒΛΙΟΘΗΚΗ' : 'LIBRARY',
                     style: TextStyle(
                       color: goldDim,
                       fontSize: 9,

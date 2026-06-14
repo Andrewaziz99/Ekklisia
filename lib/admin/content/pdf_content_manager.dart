@@ -92,7 +92,7 @@ class PdfContentManagerScreen extends StatefulWidget {
   /// PdfCategory.psalmody | .liturgy | .readings | .hymns | .occasions
   final String category;
 
-  /// e.g. 'التسابيح'
+  /// e.g. 'الترانيم'
   final String labelAr;
 
   /// e.g. 'Psalmody'
@@ -577,7 +577,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new,
                     color: EkklisiaColors.textSecondary, size: 18),
-                onPressed: () => context.pop(),
+                onPressed: () => context.go('/admin/dashboard'),
               ),
               trailing: _SmallBtn(
                 icon:    Icons.add,

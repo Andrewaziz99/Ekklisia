@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
@@ -65,34 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgDeep(brightness),
-      // Admin FAB — only for admin users
-      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, auth) => auth.isAdmin
-            ? FloatingActionButton.small(
-                heroTag: 'adminFab',
-                onPressed: () => context.go(Routes.adminDashboard),
-                backgroundColor: BrightnessColors.bgMid(brightness),
-                elevation: 3,
-                shape: const CircleBorder(),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: BrightnessColors.goldBorder(brightness),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.admin_panel_settings_outlined,
-                    size: 18,
-                    color: BrightnessColors.goldDim(brightness),
-                  ),
-                ),
-              )
-            : const SizedBox.shrink(),
-      ),
       body: IndexedStack(index: _selectedIndex, children: tabs),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
@@ -107,7 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIndex: _selectedIndex,
             onTap: (i) => setState(() => _selectedIndex = i),
           ),
-          const _ClockflyCopyright(),
         ],
       ),
     );
@@ -222,64 +192,6 @@ class _EkklisiaBottomNav extends StatelessWidget {
                 ),
               );
             }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Clockfly Copyright Strip ──────────────────────────────────────────────────
-
-class _ClockflyCopyright extends StatelessWidget {
-  const _ClockflyCopyright();
-
-  static const _url = 'https://www.clockfly.net';
-
-  Future<void> _launch() async {
-    final uri = Uri.parse(_url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final bgColor = BrightnessColors.bgDeep(brightness);
-    final textColor = BrightnessColors.textSecondary(brightness);
-
-    return GestureDetector(
-      onTap: _launch,
-      behavior: HitTestBehavior.opaque,
-      child: ColoredBox(
-        color: bgColor,
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 6, top: 4),
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Developed by ',
-                    style: TextStyle(color: textColor, fontSize: 10),
-                  ),
-                  Image.asset('assets/images/clockfly.png', height: 14),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Clockfly Technologies',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ),

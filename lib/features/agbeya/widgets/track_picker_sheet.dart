@@ -18,6 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../data/models/agbeya_model.dart';
+import '../../../features/settings/cubit/settings_cubit.dart';
+import '../../../services/settings_service.dart';
 import '../cubit/audio_player_cubit.dart';
 
 const _kNavy    = Color(0xFF1B2A4A);
@@ -35,6 +37,9 @@ class TrackPickerSheet extends StatelessWidget {
     final isDark = brightness == Brightness.dark;
     final sheetBg =
         isDark ? const Color(0xFF0D1825) : const Color(0xFF152236);
+    final isGreek = context.select<SettingsCubit, bool>(
+      (c) => c.state.language == AppLanguage.greek,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -76,9 +81,9 @@ class TrackPickerSheet extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text(
-                    'Choose Recording',
-                    style: TextStyle(
+                  Text(
+                    isGreek ? 'Επιλογή Κομματιού' : 'اختر التسجيل',
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w700),

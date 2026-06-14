@@ -68,27 +68,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const _ProfileCard(),
               const SizedBox(height: 28),
 
-              const _SectionLabel('حجم الخط', 'Font Size'),
+              const _SectionLabel('حجم الخط', 'Μέγεθος γραμματοσειράς'),
               const SizedBox(height: 10),
               _FontSizeCard(current: _fontScale, onChanged: _setFontScale),
               const SizedBox(height: 28),
 
-              const _SectionLabel('لغة العرض', 'Display Language'),
+              const _SectionLabel('لغة العرض', 'Γλώσσα'),
               const SizedBox(height: 10),
               _LanguageCard(current: _language, onChanged: _setLanguage),
               const SizedBox(height: 28),
 
-              const _SectionLabel('المظهر', 'Appearance'),
+              const _SectionLabel('المظهر', 'Εμφάνιση'),
               const SizedBox(height: 10),
               _ThemeModeCard(current: _themeMode, onChanged: _setThemeMode),
               const SizedBox(height: 28),
 
-              const _SectionLabel('التخزين', 'Storage'),
+              const _SectionLabel('التخزين', 'Αποθήκευση'),
               const SizedBox(height: 10),
               const _StorageCard(),
               const SizedBox(height: 28),
 
-              const _SectionLabel('الحساب', 'Account'),
+              const _SectionLabel('الحساب', 'Λογαριασμός'),
               const SizedBox(height: 10),
               const _SignOutCard(),
               const SizedBox(height: 32),
@@ -152,7 +152,7 @@ class _SettingsAppBar extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'SETTINGS',
+                        'ΡΥΘΜΙΣΕΙΣ',
                         style: TextStyle(
                           color: goldDim,
                           fontSize: 9,
@@ -663,7 +663,7 @@ class _ThemeModeCard extends StatelessWidget {
           children: [
             _ThemeModeTile(
               labelAr: 'فاتح',
-              labelEn: 'Light',
+              labelEn: 'Φωτεινή λειτουργία',
               icon: Icons.wb_sunny_outlined,
               isActive: current == AppThemeMode.light,
               onTap: () => onChanged(AppThemeMode.light),
@@ -671,7 +671,7 @@ class _ThemeModeCard extends StatelessWidget {
             const SizedBox(width: 10),
             _ThemeModeTile(
               labelAr: 'داكن',
-              labelEn: 'Dark',
+              labelEn: 'Σκοτεινή λειτουργία',
               icon: Icons.nights_stay_outlined,
               isActive: current == AppThemeMode.dark,
               onTap: () => onChanged(AppThemeMode.dark),
@@ -980,7 +980,7 @@ class _SignOutCardState extends State<_SignOutCard> {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        'Sign Out',
+                        'Αποσύνδεση',
                         style: TextStyle(
                           color: textSecondary,
                           fontSize: 10,

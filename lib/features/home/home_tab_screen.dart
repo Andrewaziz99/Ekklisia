@@ -10,21 +10,27 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/services/coptic_calendar_service.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../features/agbeya/screens/agbeya_home_screen.dart';
+import '../../features/auth/auth_cubit.dart';
 import '../../features/bible/bible_home_screen.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../features/books/screens/book_detail_screen.dart';
+import '../../features/coptic_calendar/coptic_calendar_screen.dart';
 import '../../features/daily_verse/daily_verse_cubit.dart';
 import '../../features/daily_verse/daily_verse_state.dart';
 import '../../features/games/screens/games_home_screen.dart';
 import '../../features/pdf_content/pdf_content_list_screen.dart';
+import '../../features/saints/saints_list.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
-import '../../shared/widgets/cached_image.dart';
 import '../../services/settings_service.dart';
+import '../../shared/widgets/cached_image.dart';
 
 // ── Palette constants ─────────────────────────────────────────────────────────
 const _kNavy = Color(0xFF1B2A4A);
@@ -55,11 +61,12 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
       (c) => c.state.language,
     );
     final isGreek = lang == AppLanguage.greek;
+    final isAdmin = context.select<AuthCubit, bool>((c) => c.state.isAdmin);
 
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bodyBg,
-      endDrawer: _GamesEndDrawer(isGreek: isGreek),
+      endDrawer: _GamesEndDrawer(isGreek: isGreek, isAdmin: isAdmin),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -79,7 +86,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 // ── Content Library ───────────────────────────────────
                 _SectionHeader(
                   arLabel: 'مكتبة المحتوى',
-                  enLabel: 'Content Library',
+                  enLabel: 'Βιβλιοθήκη Περιεχομένου',
                   onAction: widget.onGoToLibrary,
                   actionIsSearch: true,
                 ),
@@ -536,7 +543,7 @@ class _CategoryGrid extends StatelessWidget {
       bgColor: Color(0xFF1B2A4A),
     ),
     _CategoryItem(
-      arLabel: 'التسابيح',
+      arLabel: 'الترانيم',
       enLabel: 'Ψαλμωδία',
       icon: 'assets/images/icons/psalmody.jpg',
       bgColor: Color(0xFF2A1A38),
@@ -570,6 +577,12 @@ class _CategoryGrid extends StatelessWidget {
       enLabel: 'περιστάσεις',
       icon: 'assets/images/icons/special.jpg',
       bgColor: Color(0xFF6B1A1A),
+    ),
+    _CategoryItem(
+      arLabel: 'التقويم القبطي',
+      enLabel: 'Κοπτικό Ημερολόγιο',
+      icon: '',
+      bgColor: Color(0xFF1A3A2A),
     ),
   ];
 
@@ -640,7 +653,7 @@ class _CategoryTile extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const AgbeyaHomeScreen()),
         );
         break;
-      case 1: // التسابيح
+      case 1: // الترانيم
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -706,6 +719,12 @@ class _CategoryTile extends StatelessWidget {
           ),
         );
         break;
+      case 7: // التقويم القبطي
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CopticCalendarScreen()),
+        );
+        break;
     }
   }
 
@@ -740,12 +759,14 @@ class _CategoryTile extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  item.icon,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                child: index == 7
+                    ? _CalendarTileContent(bgColor: item.bgColor)
+                    : Image.asset(
+                        item.icon,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
               ),
             ),
           ),
@@ -833,7 +854,10 @@ class _RecentBooksRow extends StatelessWidget {
                           child: CachedImage(
                             url: book.coverUrl,
                             fit: BoxFit.cover,
-                            errorWidget: _coverFallback(book.titleAr, brightness),
+                            errorWidget: _coverFallback(
+                              book.titleAr,
+                              brightness,
+                            ),
                           ),
                         ),
                       ),
@@ -889,11 +913,90 @@ class _RecentBooksRow extends StatelessWidget {
   }
 }
 
+// ── Calendar Tile Content ─────────────────────────────────────────────────────
+
+class _CalendarTileContent extends StatelessWidget {
+  const _CalendarTileContent({required this.bgColor});
+  final Color bgColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final coptic = CopticCalendarService.fromGregorian(DateTime.now());
+    final isGreek = context.select<SettingsCubit, bool>(
+      (c) => c.state.language == AppLanguage.greek,
+    );
+    final monthName = isGreek
+        ? CopticCalendarService.monthNameEl(coptic.month)
+        : CopticCalendarService.monthNameAr(coptic.month);
+    final yearSuffix = isGreek ? 'Α.D.' : 'م';
+
+    return Container(
+      color: bgColor,
+      child: Stack(
+        children: [
+          // Faint cross ornament in background
+          Center(
+            child: Text(
+              '☩',
+              style: TextStyle(
+                fontSize: 72,
+                color: _kGold.withValues(alpha: 0.08),
+                height: 1,
+              ),
+            ),
+          ),
+          // Date content
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${coptic.day}',
+                  style: const TextStyle(
+                    color: _kGold,
+                    fontSize: 38,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  monthName,
+                  textDirection: isGreek
+                      ? TextDirection.ltr
+                      : TextDirection.rtl,
+                  style: TextStyle(
+                    color: _kGold,
+                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${coptic.year} $yearSuffix',
+                  style: TextStyle(
+                    color: _kGold.withValues(alpha: 0.65),
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Games End Drawer ──────────────────────────────────────────────────────────
 
 class _GamesEndDrawer extends StatelessWidget {
-  const _GamesEndDrawer({required this.isGreek});
+  const _GamesEndDrawer({required this.isGreek, required this.isAdmin});
   final bool isGreek;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -973,6 +1076,21 @@ class _GamesEndDrawer extends StatelessWidget {
 
             // ── Menu items ───────────────────────────────────────────────
             _DrawerItem(
+              icon: Icons.auto_stories_outlined,
+              labelAr: 'القديسون',
+              labelEl: 'Άγιοι',
+              isGreek: isGreek,
+              accentColor: const Color(0xFFC9A84C),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SaintsListScreen()),
+                );
+              },
+            ),
+
+            _DrawerItem(
               icon: Icons.gamepad_outlined,
               labelAr: 'الألعاب',
               labelEl: 'Παιχνίδια',
@@ -986,6 +1104,20 @@ class _GamesEndDrawer extends StatelessWidget {
                 );
               },
             ),
+
+            if (isAdmin) ...[
+              _DrawerItem(
+                icon: Icons.admin_panel_settings_outlined,
+                labelAr: 'لوحة التحكم',
+                labelEl: 'Πίνακας Διαχείρισης',
+                isGreek: isGreek,
+                accentColor: const Color(0xFF7EB8C9),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/admin/dashboard');
+                },
+              ),
+            ],
 
             const Spacer(),
 
@@ -1011,6 +1143,45 @@ class _GamesEndDrawer extends StatelessWidget {
                     child: Divider(color: _kGold.withValues(alpha: 0.2)),
                   ),
                 ],
+              ),
+            ),
+
+            // ── Clockfly copyright ───────────────────────────────────────
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                final uri = Uri.parse('https://www.clockfly.net');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Developed by ',
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          fontSize: 10,
+                        ),
+                      ),
+                      Image.asset('assets/images/clockfly.png', height: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Clockfly Technologies',
+                        style: TextStyle(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

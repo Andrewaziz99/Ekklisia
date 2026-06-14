@@ -39,12 +39,12 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
           children: [
             // ── Welcome header ──────────────────────────────────────────────
             Text(
-              'CMS Dashboard',
+              'Πίνακας CMS',
               style: EkklisiaTheme.bodyMedium(Theme.of(context).brightness),
             ),
             const SizedBox(height: 8),
             Text(
-              'Manage content across all modules',
+              'Διαχείριση περιεχομένου σε όλες τις ενότητες',
               style: EkklisiaTheme.bodySmall(Theme.of(context).brightness),
             ),
             const SizedBox(height: 32),
@@ -58,37 +58,37 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _StatCard(
-                  title: 'Bibles',
+                  title: 'Βίβλοι',
                   icon: Icons.book_outlined,
                   collection: AppConstants.biblesCollection,
                   onTap: () => context.go(CMSRouter.bibles),
                 ),
                 _StatCard(
-                  title: 'Hymns',
+                  title: 'Ύμνοι',
                   icon: Icons.music_note_outlined,
                   collection: AppConstants.hymnsCollection,
                   onTap: () => context.go(CMSRouter.hymns),
                 ),
                 _StatCard(
-                  title: 'Prayers',
+                  title: 'Προσευχές',
                   icon: Icons.favorite_outline,
                   collection: AppConstants.prayersCollection,
                   onTap: () => context.go(CMSRouter.prayers),
                 ),
                 _StatCard(
-                  title: 'Liturgies',
+                  title: 'Λειτουργίες',
                   icon: Icons.church_outlined,
                   collection: AppConstants.liturgiesCollection,
                   onTap: () => context.go(CMSRouter.liturgies),
                 ),
                 _StatCard(
-                  title: 'Saints',
+                  title: 'Άγιοι',
                   icon: Icons.person_outline,
                   collection: AppConstants.saintsCollection,
                   onTap: () => context.go(CMSRouter.saints),
                 ),
                 _StatCard(
-                  title: 'Users',
+                  title: 'Χρήστες',
                   icon: Icons.people_outline,
                   collection: AppConstants.usersCollection,
                   onTap: () => context.go('/admin/users'),
@@ -123,7 +123,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          'Γρήγορες Ενέργειες',
           style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
         ),
         const SizedBox(height: 16),
@@ -132,25 +132,25 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
           runSpacing: 12,
           children: [
             _QuickActionButton(
-              label: 'Add Bible',
+              label: 'Προσθήκη Βίβλου',
               icon: Icons.menu_book_outlined,
               color: EkklisiaColors.tealMid,
               onPressed: () => context.go(CMSRouter.bibles),
             ),
             _QuickActionButton(
-              label: 'Add Hymn',
+              label: 'Προσθήκη Ύμνου',
               icon: Icons.add_box_outlined,
               color: EkklisiaColors.plum,
               onPressed: () => context.go(CMSRouter.hymns),
             ),
             _QuickActionButton(
-              label: 'Add Prayer',
+              label: 'Προσθήκη Προσευχής',
               icon: Icons.add_location_outlined,
               color: EkklisiaColors.maroon,
               onPressed: () => context.go(CMSRouter.prayers),
             ),
             _QuickActionButton(
-              label: 'Add Saint',
+              label: 'Προσθήκη Αγίου',
               icon: Icons.person_add_outlined,
               color: EkklisiaColors.bronze,
               onPressed: () => context.go(CMSRouter.saints),
@@ -166,7 +166,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'System Status',
+          'Κατάσταση Συστήματος',
           style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
         ),
         const SizedBox(height: 16),
@@ -196,7 +196,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Database Connection',
+                      'Σύνδεση Βάσης Δεδομένων',
                       style: TextStyle(
                         color: EkklisiaColors.textPrimary,
                         fontSize: 13,
@@ -205,7 +205,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Firestore is online and synced',
+                      'Το Firestore είναι συνδεδεμένο και συγχρονισμένο',
                       style: TextStyle(
                         color: EkklisiaColors.textSecondary,
                         fontSize: 12,
@@ -226,7 +226,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                   ),
                 ),
                 child: const Text(
-                  'Healthy',
+                  'Ενεργό',
                   style: TextStyle(
                     color: EkklisiaColors.tealMid,
                     fontSize: 11,
@@ -307,7 +307,7 @@ class _StatCard extends StatelessWidget {
               builder: (context, snap) {
                 if (snap.hasData) {
                   return Text(
-                    '${snap.data} items',
+                    '${snap.data} στοιχεία',
                     style: const TextStyle(
                       color: EkklisiaColors.gold,
                       fontSize: 18,
@@ -332,7 +332,7 @@ class _StatCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Manage',
+                  'Διαχείριση',
                   style: TextStyle(
                     color: EkklisiaColors.textSecondary,
                     fontSize: 11,

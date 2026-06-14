@@ -178,7 +178,7 @@ class _BibleSliverAppBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'HOLY BIBLE',
+                    isGreek ? 'ΑΓΙΑ ΒΙΒΛΟΣ' : 'HOLY BIBLE',
                     style: TextStyle(
                       color: goldDim,
                       fontSize: 9,

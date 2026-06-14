@@ -7,9 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/theme/brightness_colors.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
+import '../../features/settings/cubit/settings_cubit.dart';
+import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 import 'saint_detail.dart';
 import 'saints_cubit.dart';
@@ -38,8 +41,13 @@ class _SaintsListViewState extends State<_SaintsListView> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isGreek = context.select<SettingsCubit, bool>(
+      (c) => c.state.language == AppLanguage.greek,
+    );
+
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgDeep,
+      backgroundColor: BrightnessColors.bgDeep(brightness),
       body: SafeArea(
         child: Column(children: [
           // ── Header ───────────────────────────────────────────────────────
@@ -49,17 +57,19 @@ class _SaintsListViewState extends State<_SaintsListView> {
           Expanded(
             child: BlocBuilder<SaintsCubit, SaintsState>(
               builder: (context, state) {
+                final br = Theme.of(context).brightness;
+
                 if (state is SaintsLoading) {
-                  return const Center(
+                  return Center(
                     child: CircularProgressIndicator(
-                        color: EkklisiaColors.gold, strokeWidth: 2),
+                        color: BrightnessColors.gold(br), strokeWidth: 2),
                   );
                 }
                 if (state is SaintsError) {
                   return Center(
                     child: Text(state.message,
-                        style: const TextStyle(
-                            color: EkklisiaColors.maroonMid, fontSize: 13)),
+                        style: TextStyle(
+                            color: BrightnessColors.maroon(br), fontSize: 13)),
                   );
                 }
                 if (state is SaintsLoaded) {
@@ -69,17 +79,19 @@ class _SaintsListViewState extends State<_SaintsListView> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('✦',
+                          Text('✦',
                               style: TextStyle(
-                                  color: EkklisiaColors.goldBorder,
+                                  color: BrightnessColors.goldBorder(br),
                                   fontSize: 36)),
                           const SizedBox(height: 12),
                           Text(
                             _query.isEmpty
-                                ? 'لا يوجد قديسون'
-                                : 'No results for "$_query"',
-                            style: const TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                                ? (isGreek ? 'Δεν βρέθηκαν αγίοι' : 'لا يوجد قديسون')
+                                : (isGreek
+                                    ? 'Δεν βρέθηκαν αποτελέσματα για "$_query"'
+                                    : 'لا توجد نتائج لـ "$_query"'),
+                            style: TextStyle(
+                                color: BrightnessColors.textSecondary(br),
                                 fontSize: 14),
                           ),
                         ],
@@ -140,18 +152,27 @@ class _HeaderState extends State<_Header> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness  = Theme.of(context).brightness;
+    final bgDeep      = BrightnessColors.bgDeep(brightness);
+    final bgMid       = BrightnessColors.bgMid(brightness);
+    final gold        = BrightnessColors.gold(brightness);
+    final goldBorder  = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final isGreek = context.select<SettingsCubit, bool>(
+      (c) => c.state.language == AppLanguage.greek,
+    );
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: bgDeep,
         border: Border(
-            bottom: BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5)),
+            bottom: BorderSide(color: goldBorder, width: 0.5)),
       ),
       child: Row(children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: EkklisiaColors.gold, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new, color: gold, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
         const SizedBox(width: 4),
@@ -160,47 +181,45 @@ class _HeaderState extends State<_Header> {
               ? TextField(
                   controller: _ctrl,
                   autofocus: true,
-                  style: const TextStyle(
-                      color: EkklisiaColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: textPrimary, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'Search saints…',
-                    hintStyle: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 13),
+                    hintText: isGreek ? 'Αναζήτηση...' : 'بحث...',
+                    hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                     filled: true,
-                    fillColor: EkklisiaColors.bgMid,
+                    fillColor: bgMid,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: EkklisiaColors.goldBorder, width: 0.5),
+                      borderSide: BorderSide(color: goldBorder, width: 0.5),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: EkklisiaColors.goldBorder, width: 0.5),
+                      borderSide: BorderSide(color: goldBorder, width: 0.5),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: EkklisiaColors.gold, width: 1),
+                      borderSide: BorderSide(color: gold, width: 1),
                     ),
                   ),
                   onChanged: widget.onSearch,
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('Saints',
+                  children: [
+                    Text(
+                        isGreek ? 'Άγιοι' : 'القديسون',
                         style: TextStyle(
-                          color: EkklisiaColors.textPrimary,
+                          color: textPrimary,
+                          fontFamily: isGreek ? null : 'Scheherazade',
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                         )),
-                    Text('القديسون',
+                    Text(
+                        isGreek ? 'القديسون' : 'Άγιοι',
                         style: TextStyle(
-                          color: EkklisiaColors.textSecondary,
-                          fontFamily: 'Scheherazade',
+                          color: textSecondary,
+                          fontFamily: isGreek ? 'Scheherazade' : null,
                           fontSize: 14,
                         )),
                   ],
@@ -209,7 +228,7 @@ class _HeaderState extends State<_Header> {
         IconButton(
           icon: Icon(
             _searching ? Icons.close : Icons.search,
-            color: EkklisiaColors.gold,
+            color: gold,
           ),
           onPressed: () {
             setState(() => _searching = !_searching);
@@ -232,16 +251,23 @@ class _SaintCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness  = Theme.of(context).brightness;
+    final bgElevated  = BrightnessColors.bgElevated(brightness);
+    final bgMid       = BrightnessColors.bgMid(brightness);
+    final gold        = BrightnessColors.gold(brightness);
+    final goldBorder  = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+
     return GestureDetector(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => SaintDetailScreen(saint: saint),
       )),
       child: Container(
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgElevated,
+          color: bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: EkklisiaColors.goldBorder, width: 0.5),
+          border: Border.all(color: goldBorder, width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -255,9 +281,9 @@ class _SaintCard extends StatelessWidget {
                     ? CachedImage(
                         url: saint.imageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: _placeholder(),
+                        errorWidget: _placeholder(bgMid, goldBorder),
                       )
-                    : _placeholder(),
+                    : _placeholder(bgMid, goldBorder),
               ),
             ),
 
@@ -270,8 +296,8 @@ class _SaintCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: EkklisiaColors.textPrimary,
+                style: TextStyle(
+                  color: textPrimary,
                   fontFamily: 'Scheherazade',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -285,10 +311,7 @@ class _SaintCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: textSecondary, fontSize: 10),
               ),
             ),
 
@@ -301,18 +324,15 @@ class _SaintCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color:
-                          EkklisiaColors.gold.withValues(alpha: 0.1),
+                      color: gold.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                          color: EkklisiaColors.gold
-                              .withValues(alpha: 0.3),
-                          width: 0.5),
+                          color: gold.withValues(alpha: 0.3), width: 0.5),
                     ),
                     child: Text(
                       saint.feastDate!,
-                      style: const TextStyle(
-                        color: EkklisiaColors.gold,
+                      style: TextStyle(
+                        color: gold,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
@@ -334,14 +354,14 @@ class _SaintCard extends StatelessWidget {
                   if (saint.hasAudio) ...[
                     if (saint.hasPdf) const SizedBox(width: 4),
                     _MediaDot(
-                        color: EkklisiaColors.tealMid,
+                        color: BrightnessColors.tealMid(brightness),
                         icon: Icons.headphones_outlined),
                   ],
                   if (saint.hasVideo) ...[
                     if (saint.hasPdf || saint.hasAudio)
                       const SizedBox(width: 4),
                     _MediaDot(
-                        color: EkklisiaColors.plum,
+                        color: BrightnessColors.plum(brightness),
                         icon: Icons.play_circle_outline),
                   ],
                 ],
@@ -353,12 +373,11 @@ class _SaintCard extends StatelessWidget {
     );
   }
 
-  Widget _placeholder() => Container(
-    color: EkklisiaColors.bgMid,
-    child: const Center(
+  Widget _placeholder(Color bg, Color border) => Container(
+    color: bg,
+    child: Center(
       child: Text('✦',
-          style: TextStyle(
-              color: EkklisiaColors.goldBorder, fontSize: 28)),
+          style: TextStyle(color: border, fontSize: 28)),
     ),
   );
 }

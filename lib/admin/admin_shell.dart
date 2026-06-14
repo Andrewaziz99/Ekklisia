@@ -15,8 +15,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../core/theme/colors.dart';
+
 import '../core/router/app_router.dart';
+import '../core/theme/colors.dart';
 import '../features/auth/auth_cubit.dart';
 import '../features/auth/auth_state.dart';
 
@@ -32,11 +33,11 @@ class _NavItem {
     required this.labelAr,
     required this.labelEn,
   });
-  final String   path;
+  final String path;
   final IconData icon;
   final IconData activeIcon;
-  final String   labelAr;
-  final String   labelEn;
+  final String labelAr;
+  final String labelEn;
 }
 
 // Quick Actions — appear in bottom nav on mobile
@@ -84,7 +85,7 @@ const _cmsItems = <_NavItem>[
     path: Routes.adminCmsPsalmody,
     icon: Icons.queue_music_outlined,
     activeIcon: Icons.queue_music,
-    labelAr: 'التسابيح',
+    labelAr: 'الترانيم',
     labelEn: 'Psalmody',
   ),
   _NavItem(
@@ -164,11 +165,7 @@ const _cmsItems = <_NavItem>[
 // ════════════════════════════════════════════════════════════════════════════
 
 class AdminShell extends StatelessWidget {
-  const AdminShell({
-    super.key,
-    required this.child,
-    required this.currentPath,
-  });
+  const AdminShell({super.key, required this.child, required this.currentPath});
 
   final Widget child;
   final String currentPath;
@@ -184,18 +181,22 @@ class AdminShell extends StatelessWidget {
   }
 
   Widget _wideLayout() {
-    return Row(children: [
-      _WideSidebar(currentPath: currentPath),
-      Expanded(child: child),
-    ]);
+    return Row(
+      children: [
+        _WideSidebar(currentPath: currentPath),
+        Expanded(child: child),
+      ],
+    );
   }
 
   Widget _narrowLayout(BuildContext context) {
-    return Column(children: [
-      _MobileTopBar(currentPath: currentPath),
-      Expanded(child: child),
-      _MobileBottomNav(currentPath: currentPath),
-    ]);
+    return Column(
+      children: [
+        _MobileTopBar(currentPath: currentPath),
+        Expanded(child: child),
+        _MobileBottomNav(currentPath: currentPath),
+      ],
+    );
   }
 }
 
@@ -217,60 +218,93 @@ class _WideSidebar extends StatelessWidget {
           right: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
         ),
       ),
-      child: Column(children: [
-        // ── Logo ──────────────────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 52, 16, 16),
-          decoration: const BoxDecoration(
-            border: Border(
-                bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+      child: Column(
+        children: [
+          // ── Logo ──────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 52, 16, 16),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: EkklisiaColors.goldBorder,
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                _CrossCircle(size: 36),
+                const SizedBox(width: 10),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ekklisia',
+                      style: TextStyle(
+                        color: EkklisiaColors.goldLight,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    Text(
+                      'ADMIN',
+                      style: TextStyle(
+                        color: EkklisiaColors.goldDim,
+                        fontSize: 9,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          child: Row(children: [
-            _CrossCircle(size: 36),
-            const SizedBox(width: 10),
-            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Ekklisia', style: TextStyle(
-                  color: EkklisiaColors.goldLight,
-                  fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2)),
-              Text('ADMIN', style: TextStyle(
-                  color: EkklisiaColors.goldDim, fontSize: 9, letterSpacing: 3)),
-            ]),
-          ]),
-        ),
 
-        // ── Nav items ─────────────────────────────────────────────────
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            children: [
-              // Dashboard
-              ..._quickActions.take(1).map((item) => _SidebarTile(
+          // ── Nav items ─────────────────────────────────────────────────
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              children: [
+                // Dashboard
+                ..._quickActions
+                    .take(1)
+                    .map(
+                      (item) => _SidebarTile(
+                        item: item,
+                        active: currentPath.startsWith(item.path),
+                        onTap: () => context.go(item.path),
+                      ),
+                    ),
+
+                // Quick Actions section
+                _SectionLabel(label: 'QUICK ACTIONS'),
+                ..._quickActions
+                    .skip(1)
+                    .map(
+                      (item) => _SidebarTile(
+                        item: item,
+                        active: currentPath.startsWith(item.path),
+                        onTap: () => context.go(item.path),
+                      ),
+                    ),
+
+                // CMS section
+                _SectionLabel(label: 'CONTENT'),
+                ..._cmsItems.map(
+                  (item) => _SidebarTile(
                     item: item,
                     active: currentPath.startsWith(item.path),
                     onTap: () => context.go(item.path),
-                  )),
-
-              // Quick Actions section
-              _SectionLabel(label: 'QUICK ACTIONS'),
-              ..._quickActions.skip(1).map((item) => _SidebarTile(
-                    item: item,
-                    active: currentPath.startsWith(item.path),
-                    onTap: () => context.go(item.path),
-                  )),
-
-              // CMS section
-              _SectionLabel(label: 'CONTENT'),
-              ..._cmsItems.map((item) => _SidebarTile(
-                    item: item,
-                    active: currentPath.startsWith(item.path),
-                    onTap: () => context.go(item.path),
-                  )),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
 
-        _SidebarFooter(),
-      ]),
+          _SidebarFooter(),
+        ],
+      ),
     );
   }
 }
@@ -287,54 +321,80 @@ class _CmsDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: EkklisiaColors.bgDeep,
-      child: Column(children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 52, 16, 16),
-          decoration: const BoxDecoration(
-            border: Border(
-                bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
-          ),
-          child: Row(children: [
-            _CrossCircle(size: 32),
-            const SizedBox(width: 10),
-            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Content', style: TextStyle(
-                  color: EkklisiaColors.goldLight,
-                  fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-              Text('CMS MANAGER', style: TextStyle(
-                  color: EkklisiaColors.goldDim, fontSize: 8, letterSpacing: 3)),
-            ]),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.close,
-                  color: EkklisiaColors.textSecondary, size: 20),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 52, 16, 16),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: EkklisiaColors.goldBorder,
+                  width: 0.5,
+                ),
+              ),
             ),
-          ]),
-        ),
-
-        // CMS items
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            children: _cmsItems.map((item) {
-              final active = currentPath.startsWith(item.path);
-              return _SidebarTile(
-                item: item,
-                active: active,
-                onTap: () {
-                  Navigator.pop(context);
-                  context.go(item.path);
-                },
-              );
-            }).toList(),
+            child: Row(
+              children: [
+                _CrossCircle(size: 32),
+                const SizedBox(width: 10),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Content',
+                      style: TextStyle(
+                        color: EkklisiaColors.goldLight,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Text(
+                      'CMS MANAGER',
+                      style: TextStyle(
+                        color: EkklisiaColors.goldDim,
+                        fontSize: 8,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(
+                    Icons.close,
+                    color: EkklisiaColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
 
-        // Footer
-        _SidebarFooter(),
-      ]),
+          // CMS items
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              children: _cmsItems.map((item) {
+                final active = currentPath.startsWith(item.path);
+                return _SidebarTile(
+                  item: item,
+                  active: active,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go(item.path);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+
+          // Footer
+          _SidebarFooter(),
+        ],
+      ),
     );
   }
 }
@@ -373,61 +433,84 @@ class _MobileTopBar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: EkklisiaColors.bgDeep,
         border: Border(
-            bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+          bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+        ),
       ),
-      child: Row(children: [
-        // Menu button — opens CMS drawer
-        IconButton(
-          icon: Icon(
-            isCms ? Icons.menu_book_outlined : Icons.menu,
-            color: isCms ? EkklisiaColors.gold : EkklisiaColors.gold,
-          ),
-          tooltip: 'CMS',
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-        _CrossCircle(size: 26),
-        const SizedBox(width: 8),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_titleFor(currentPath),
-                style: const TextStyle(
-                    color: EkklisiaColors.goldLight,
-                    fontSize: 14, fontWeight: FontWeight.w700)),
-            Text(_subtitleFor(currentPath),
-                style: const TextStyle(
-                    fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textSecondary, fontSize: 11)),
-          ],
-        ),
-        const Spacer(),
-        // CMS badge when on a CMS screen
-        if (isCms)
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: EkklisiaColors.goldSubtle,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+      child: Row(
+        children: [
+          // Menu button — opens CMS drawer
+          IconButton(
+            icon: Icon(
+              isCms ? Icons.menu_book_outlined : Icons.menu,
+              color: isCms ? EkklisiaColors.gold : EkklisiaColors.gold,
             ),
-            child: const Text('CMS', style: TextStyle(
-                color: EkklisiaColors.gold,
-                fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+            tooltip: 'CMS',
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: GestureDetector(
-            onTap: () {
-              context.read<AuthCubit>().signOut();
-              context.go(Routes.login);
-            },
-            child: const Icon(Icons.logout_outlined,
-                size: 20, color: EkklisiaColors.textSecondary),
+          _CrossCircle(size: 26),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _titleFor(currentPath),
+                style: const TextStyle(
+                  color: EkklisiaColors.goldLight,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                _subtitleFor(currentPath),
+                style: const TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: EkklisiaColors.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
-        ),
-      ]),
+          const Spacer(),
+          // CMS badge when on a CMS screen
+          if (isCms)
+            Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: EkklisiaColors.goldSubtle,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: EkklisiaColors.goldBorder,
+                  width: 0.5,
+                ),
+              ),
+              child: const Text(
+                'CMS',
+                style: TextStyle(
+                  color: EkklisiaColors.gold,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () {
+                context.read<AuthCubit>().signOut();
+                context.go(Routes.login);
+              },
+              child: const Icon(
+                Icons.logout_outlined,
+                size: 20,
+                color: EkklisiaColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -446,7 +529,8 @@ class _MobileBottomNav extends StatelessWidget {
       decoration: const BoxDecoration(
         color: EkklisiaColors.bgDeep,
         border: Border(
-            top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+          top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Color(0x1F000000),
@@ -536,8 +620,8 @@ class _SidebarTile extends StatelessWidget {
     required this.active,
     required this.onTap,
   });
-  final _NavItem     item;
-  final bool         active;
+  final _NavItem item;
+  final bool active;
   final VoidCallback onTap;
 
   @override
@@ -561,38 +645,45 @@ class _SidebarTile extends StatelessWidget {
                 ),
               ),
             ),
-            child: Row(children: [
-              Icon(
-                active ? item.activeIcon : item.icon,
-                size: 18,
-                color: active
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.textSecondary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.labelEn,
+            child: Row(
+              children: [
+                Icon(
+                  active ? item.activeIcon : item.icon,
+                  size: 18,
+                  color: active
+                      ? EkklisiaColors.gold
+                      : EkklisiaColors.textSecondary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.labelEn,
                         style: TextStyle(
                           color: active
                               ? EkklisiaColors.goldLight
                               : EkklisiaColors.textSecondary,
                           fontSize: 13,
-                          fontWeight:
-                              active ? FontWeight.w600 : FontWeight.w400,
-                        )),
-                    Text(item.labelAr,
+                          fontWeight: active
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                      Text(
+                        item.labelAr,
                         style: const TextStyle(
                           fontFamily: 'Scheherazade',
                           color: EkklisiaColors.textSecondary,
                           fontSize: 11,
-                        )),
-                  ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ),
       ),
@@ -610,50 +701,62 @@ class _SidebarFooter extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: const BoxDecoration(
             border: Border(
-                top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+              top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+            ),
           ),
-          child: Row(children: [
-            _Avatar(initials: user?.initials ?? 'A', size: 34),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user?.displayName.isNotEmpty == true
-                        ? user!.displayName
-                        : 'Admin',
-                    style: const TextStyle(
+          child: Row(
+            children: [
+              _Avatar(initials: user?.initials ?? 'A', size: 34),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName.isNotEmpty == true
+                          ? user!.displayName
+                          : 'Admin',
+                      style: const TextStyle(
                         color: EkklisiaColors.textPrimary,
-                        fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    user?.email ?? '',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                context.read<AuthCubit>().signOut();
-                context.go(Routes.login);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: EkklisiaColors.bgElevated,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                      color: EkklisiaColors.goldBorder, width: 0.5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      user?.email ?? '',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: EkklisiaColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.logout_outlined,
-                    size: 14, color: EkklisiaColors.textSecondary),
               ),
-            ),
-          ]),
+              GestureDetector(
+                onTap: () {
+                  context.read<AuthCubit>().signOut();
+                  context.go(Routes.login);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: EkklisiaColors.bgElevated,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: EkklisiaColors.goldBorder,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.logout_outlined,
+                    size: 14,
+                    color: EkklisiaColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -672,13 +775,18 @@ class _CrossCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const RadialGradient(
-            colors: [EkklisiaColors.bronze, EkklisiaColors.maroon]),
+          colors: [EkklisiaColors.bronze, EkklisiaColors.maroon],
+        ),
         border: Border.all(color: EkklisiaColors.goldBorder, width: 1),
       ),
       child: Center(
-        child: Text('✦',
-            style: TextStyle(
-                color: EkklisiaColors.goldLight, fontSize: size * 0.42)),
+        child: Text(
+          '✦',
+          style: TextStyle(
+            color: EkklisiaColors.goldLight,
+            fontSize: size * 0.42,
+          ),
+        ),
       ),
     );
   }
@@ -700,11 +808,14 @@ class _Avatar extends StatelessWidget {
         border: Border.all(color: EkklisiaColors.goldBorder, width: 1),
       ),
       child: Center(
-        child: Text(initials,
-            style: TextStyle(
-                color: EkklisiaColors.gold,
-                fontSize: size * 0.36,
-                fontWeight: FontWeight.w700)),
+        child: Text(
+          initials,
+          style: TextStyle(
+            color: EkklisiaColors.gold,
+            fontSize: size * 0.36,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

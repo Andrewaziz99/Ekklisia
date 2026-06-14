@@ -388,7 +388,7 @@ class _SectionCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      title.isNotEmpty ? title : (langCode == 'el' ? 'Section' : 'قسم'),
+                      title.isNotEmpty ? title : (langCode == 'el' ? 'Ενότητα' : 'قسم'),
                       textDirection:
                           isRtl ? TextDirection.rtl : TextDirection.ltr,
                       style: TextStyle(
@@ -430,7 +430,7 @@ class _SectionCard extends StatelessWidget {
                     text.isNotEmpty
                         ? text
                         : (langCode == 'el'
-                            ? 'Text not yet available.'
+                            ? 'Το κείμενο δεν είναι διαθέσιμο ακόμα.'
                             : 'النص غير متوفر بعد.'),
                     textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
                     textAlign: isRtl ? TextAlign.right : TextAlign.left,
