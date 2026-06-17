@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 
@@ -109,11 +110,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen>
                     children: [
                       const Spacer(flex: 2),
 
-                      // Cross motif
-                      Text(
-                        '✦',
-                        style: TextStyle(color: goldDim, fontSize: 22),
-                      ),
+                      // App logo
+                      const AppLogo(size: 90, contained: true),
                       const SizedBox(height: 24),
 
                       // Heading (Arabic + Greek together)

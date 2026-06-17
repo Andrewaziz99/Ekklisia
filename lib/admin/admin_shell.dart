@@ -19,6 +19,7 @@ import 'package:go_router/go_router.dart';
 import '../core/router/app_router.dart';
 import '../core/theme/brightness_colors.dart';
 import '../core/theme/colors.dart';
+import '../core/widgets/app_logo.dart';
 import '../features/auth/auth_cubit.dart';
 import '../features/auth/auth_state.dart';
 import '../features/settings/cubit/settings_cubit.dart';
@@ -219,7 +220,7 @@ class _WideSidebar extends StatelessWidget {
             ),
           ),
           child: Row(children: [
-            _CrossCircle(size: 36),
+            const AppLogo(size: 36),
             const SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Ekklisia', style: TextStyle(
@@ -296,7 +297,7 @@ class _CmsDrawer extends StatelessWidget {
             ),
           ),
           child: Row(children: [
-            _CrossCircle(size: 32),
+            const AppLogo(size: 32),
             const SizedBox(width: 10),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(l.sectionContent, style: TextStyle(
@@ -384,7 +385,7 @@ class _MobileTopBar extends StatelessWidget {
           tooltip: 'CMS',
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
-        _CrossCircle(size: 26),
+        const AppLogo(size: 26),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -749,28 +750,6 @@ class _SidebarFooter extends StatelessWidget {
           ]),
         );
       },
-    );
-  }
-}
-
-class _CrossCircle extends StatelessWidget {
-  const _CrossCircle({required this.size});
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const RadialGradient(
-          colors: [EkklisiaColors.darkBronze, EkklisiaColors.darkMaroon],
-        ),
-        border: Border.all(color: EkklisiaColors.darkGoldBorder, width: 1),
-      ),
-      child: Center(child: Text('✦', style: TextStyle(
-        color: EkklisiaColors.darkGoldLight, fontSize: size * 0.42,
-      ))),
     );
   }
 }

@@ -8,6 +8,7 @@
 //   • Content Library — 3-col icon grid (10 categories)
 //   • Recently Added  — horizontal book scroll
 // ─────────────────────────────────────────────────────────────────────────────
+import 'package:ekklicia/core/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -309,17 +310,9 @@ class _DailyVerseBanner extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Cross icon thumbnail ──────────────────────────────
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.transparent, width: 0.8),
-                ),
-                child: Image.asset('assets/images/icons/001.png'),
-              ),
+              // ── App logo thumbnail ────────────────────────────────
+              // const AppLogo(size: 80),
+              Image.asset('assets/images/icons/001.png', width: 80, height: 80),
               const SizedBox(width: 14),
 
               // ── Verse info ────────────────────────────────────────
@@ -1034,12 +1027,7 @@ class _GamesEndDrawer extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: const Center(
-                      child: Text(
-                        '✦',
-                        style: TextStyle(color: _kGold, fontSize: 18),
-                      ),
-                    ),
+                    child: const Center(child: AppLogo()),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

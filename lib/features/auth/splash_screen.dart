@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/widgets/app_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -156,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                   scale: _crossScale,
                   child: FadeTransition(
                     opacity: _crossFade,
-                    child: const _CopticCross(),
+                    child: const AppLogo(size: 120, contained: true),
                   ),
                 ),
 
@@ -221,94 +222,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     ];
   }
-}
-
-// ── Coptic Cross SVG-style using Flutter Canvas ───────────────────────────────
-
-class _CopticCross extends StatelessWidget {
-  const _CopticCross();
-
-  @override
-  Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final bgDeep = BrightnessColors.bgDeep(brightness);
-    final gold = Theme.of(context).primaryColor;
-    final goldBorder = BrightnessColors.goldBorder(brightness);
-
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: goldBorder, width: 1),
-        color: bgDeep.withOpacity(0.6),
-        boxShadow: [
-          BoxShadow(
-            color: gold.withOpacity(0.15),
-            blurRadius: 24,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
-      child: CustomPaint(
-        painter: _CopticCrossPainter(gold: gold, goldBorder: goldBorder),
-      ),
-    );
-  }
-}
-
-class _CopticCrossPainter extends CustomPainter {
-  _CopticCrossPainter({required this.gold, required this.goldBorder});
-
-  final Color gold;
-  final Color goldBorder;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = gold
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    const arm = 30.0;
-    const dot = 5.0;
-
-    // Vertical bar
-    canvas.drawLine(Offset(cx, cy - arm), Offset(cx, cy + arm), paint);
-    // Horizontal bar
-    canvas.drawLine(Offset(cx - arm, cy), Offset(cx + arm, cy), paint);
-
-    // Small dots at the 4 ends (Coptic cross style)
-    final dotPaint = Paint()
-      ..color = gold
-      ..style = PaintingStyle.fill;
-
-    for (final p in [
-      Offset(cx, cy - arm),
-      Offset(cx, cy + arm),
-      Offset(cx - arm, cy),
-      Offset(cx + arm, cy),
-    ]) {
-      canvas.drawCircle(p, dot / 2, dotPaint);
-    }
-
-    // Centre circle
-    canvas.drawCircle(Offset(cx, cy), 5, dotPaint);
-    canvas.drawCircle(
-      Offset(cx, cy),
-      10,
-      Paint()
-        ..color = goldBorder
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
 }
 
 // ── App Title ─────────────────────────────────────────────────────────────────

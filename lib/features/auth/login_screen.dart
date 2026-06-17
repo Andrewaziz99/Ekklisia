@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/widgets/app_logo.dart';
 import 'auth_cubit.dart';
 import 'auth_state.dart';
 
@@ -171,32 +172,9 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Logo ──────────────────────────────────────────────────────────────
 
   Widget _buildLogo() {
-    final brightness = Theme.of(context).brightness;
-    final gold = Theme.of(context).primaryColor;
-    final goldBorder = BrightnessColors.goldBorder(brightness);
-    final bgDeep = BrightnessColors.bgDeep(brightness);
-
     return Column(
       children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(colors: [
-              bgDeep,
-              bgDeep,
-            ]),
-            border: Border.all(color: goldBorder, width: 1),
-            boxShadow: [
-              BoxShadow(
-                  color: gold.withOpacity(0.12),
-                  blurRadius: 24,
-                  spreadRadius: 4),
-            ],
-          ),
-          child: CustomPaint(painter: _CrossPainter(gold: gold, goldBorder: goldBorder)),
-        ),
+        const AppLogo(size: 80, contained: true),
         const SizedBox(height: 20),
         Text('إكليسيا',
             style: TextStyle(
@@ -558,39 +536,3 @@ class _Label extends StatelessWidget {
       ));
 }
 
-class _CrossPainter extends CustomPainter {
-  _CrossPainter({required this.gold, required this.goldBorder});
-
-  final Color gold;
-  final Color goldBorder;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color       = gold
-      ..style       = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap   = StrokeCap.round;
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    const arm = 22.0;
-    canvas.drawLine(Offset(cx, cy - arm), Offset(cx, cy + arm), paint);
-    canvas.drawLine(Offset(cx - arm, cy), Offset(cx + arm, cy), paint);
-    for (final p in [
-      Offset(cx, cy - arm), Offset(cx, cy + arm),
-      Offset(cx - arm, cy), Offset(cx + arm, cy),
-    ]) {
-      canvas.drawCircle(p, 3,
-          Paint()..color = gold..style = PaintingStyle.fill);
-    }
-    canvas.drawCircle(Offset(cx, cy), 4,
-        Paint()..color = gold..style = PaintingStyle.fill);
-    canvas.drawCircle(Offset(cx, cy), 9,
-        Paint()
-          ..color       = goldBorder
-          ..style       = PaintingStyle.stroke
-          ..strokeWidth = 0.8);
-  }
-  @override
-  bool shouldRepaint(_) => false;
-}

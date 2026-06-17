@@ -8,14 +8,10 @@
 // Run with:
 //   flutter test
 // ─────────────────────────────────────────────────────────────────────────────
-import 'package:ekklisia/services/notification_service.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:ekklicia/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
-
 
 // Generated mocks — run `flutter pub run build_runner build` to regenerate
 // @GenerateMocks([BooksRepository, AuthService, NotificationService])
@@ -58,12 +54,12 @@ void main() {
     });
 
     testWidgets('MaterialApp with dark theme renders', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: ThemeData.dark(),
-        home: const Scaffold(
-          body: Center(child: Text('OK')),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: const Scaffold(body: Center(child: Text('OK'))),
         ),
-      ));
+      );
       expect(find.text('OK'), findsOneWidget);
     });
   });

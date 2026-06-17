@@ -1,24 +1,22 @@
 // lib/app.dart — ALTERNATIVE VERSION using BlocBuilder
 // Use this if context.select() isn't reliably picking up font scale changes
-import 'package:ekklisia/services/session_service.dart';
-import 'package:ekklisia/services/settings_service.dart';
+import 'package:ekklicia/services/session_service.dart';
+import 'package:ekklicia/services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:go_router/go_router.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/theme.dart';
 import 'data/repositories/books_repository.dart';
+import 'data/repositories/daily_verse_repository.dart';
 import 'features/agbeya/cubit/audio_player_cubit.dart';
 import 'features/auth/auth_cubit.dart';
-import 'features/auth/auth_state.dart';
 import 'features/books/cubit/books_cubit.dart';
 import 'features/daily_verse/daily_verse_cubit.dart';
-import 'data/repositories/daily_verse_repository.dart';
 import 'features/settings/cubit/settings_cubit.dart';
 import 'features/settings/cubit/settings_state.dart';
 import 'services/auth_service.dart';
@@ -33,7 +31,7 @@ class EkklisiaApp extends StatefulWidget {
 
 class _EkklisiaAppState extends State<EkklisiaApp> {
   final _notificationService = sl<NotificationService>();
-  final _booksRepository     = sl<BooksRepository>();
+  final _booksRepository = sl<BooksRepository>();
 
   @override
   void initState() {
@@ -64,12 +62,13 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
 
     if (!mounted) return;
 
-    final platform =
-    Theme.of(context).platform == TargetPlatform.iOS ? 'ios' : 'android';
+    final platform = Theme.of(context).platform == TargetPlatform.iOS
+        ? 'ios'
+        : 'android';
 
     await _booksRepository.saveOrUpdateFcmToken(
-      userId:   userId,
-      token:    token,
+      userId: userId,
+      token: token,
       platform: platform,
     );
 
@@ -93,7 +92,8 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
           lazy: false,
         ),
         BlocProvider<DailyVerseCubit>(
-          create: (_) => DailyVerseCubit(sl<DailyVerseRepository>())..loadTodayVerse(),
+          create: (_) =>
+              DailyVerseCubit(sl<DailyVerseRepository>())..loadTodayVerse(),
           lazy: false,
         ),
         // Global audio player — singleton so state persists across all screens
@@ -115,21 +115,17 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
           final textDir = _textDirFromLanguage(settings.language);
 
           return MaterialApp.router(
-            title:                    'إكليسيا',
+            title: 'إكليسيا',
             debugShowCheckedModeBanner: false,
             routerConfig: AppRouter.router,
 
             // Use dynamic theme builders
-            theme:     EkklisiaTheme.buildTheme(Brightness.light),
+            theme: EkklisiaTheme.buildTheme(Brightness.light),
             darkTheme: EkklisiaTheme.buildTheme(Brightness.dark),
             themeMode: themeMode,
 
             locale: locale,
-            supportedLocales: const [
-              Locale('ar'),
-              Locale('el'),
-              Locale('en'),
-            ],
+            supportedLocales: const [Locale('ar'), Locale('el'), Locale('en')],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
@@ -145,8 +141,9 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
               return Directionality(
                 textDirection: textDir,
                 child: Container(
-                  decoration:
-                      isLight ? EkklisiaTheme.lightBackgroundDecoration : null,
+                  decoration: isLight
+                      ? EkklisiaTheme.lightBackgroundDecoration
+                      : null,
                   child: MediaQuery(
                     data: MediaQuery.of(context).copyWith(
                       textScaler: TextScaler.linear(settings.fontScale.scale),
@@ -165,8 +162,10 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
   /// Returns the [Locale] for the given [AppLanguage].
   static Locale _localeFromLanguage(AppLanguage lang) {
     switch (lang) {
-      case AppLanguage.greek:   return const Locale('el');
-      case AppLanguage.arabic:  return const Locale('ar');
+      case AppLanguage.greek:
+        return const Locale('el');
+      case AppLanguage.arabic:
+        return const Locale('ar');
     }
   }
 
@@ -187,13 +186,15 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: isDark
-            ? const Color(0xFF08111C)  // Dark: bgDeep
+            ? const Color(0xFF08111C) // Dark: bgDeep
             : const Color(0xFFFAF8F4), // Light: lightBgDeep
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarColor: isDark
-            ? const Color(0xFF08111C)  // Dark: bgDeep
+            ? const Color(0xFF08111C) // Dark: bgDeep
             : const Color(0xFFFAF8F4), // Light: lightBgDeep
-        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
   }
