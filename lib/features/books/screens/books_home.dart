@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/book_category_model.dart';
+import '../../../data/models/book_model.dart';
 import '../../../data/repositories/book_category_repository.dart';
 import '../../../features/daily_verse/widgets/daily_verse_card.dart';
 import '../../../shared/widgets/cached_image.dart';
@@ -33,17 +34,37 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
   late final TabController _tabCtrl;
   bool _isListView = false;
 
+  // ── Category lookup ────────────────────────────────────────────────────
+  final _catRepo = sl<BookCategoryRepository>();
+  StreamSubscription<List<BookCategory>>? _catSub;
+  Map<String, BookCategory> _catMap = {};   // id → BookCategory
+
+  String _catName(BookModel book, bool isGreek) {
+    final cat = _catMap[book.category];
+    if (cat == null) return book.category;
+    return isGreek && cat.nameEl.isNotEmpty ? cat.nameEl : cat.nameAr;
+  }
+
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
     context.read<BooksCubit>().watchBooks();
+    _catSub = _catRepo.watchVisibleCategories().listen(
+      (cats) {
+        if (mounted) {
+          setState(() => _catMap = {for (final c in cats) c.id: c});
+        }
+      },
+      onError: (_) {},
+    );
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     _tabCtrl.dispose();
+    _catSub?.cancel();
     super.dispose();
   }
 
@@ -88,11 +109,9 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
               child: TabBarView(
                 controller: _tabCtrl,
                 children: [
-                  _BooksContent(isListView: _isListView, filter: _AllFilter()),
-                  _BooksContent(
-                      isListView: _isListView,
-                      filter: _DownloadedFilter()),
-                  _BooksContent(isListView: _isListView, filter: _RecentFilter()),
+                  _BooksContent(isListView: _isListView, filter: _AllFilter(), catName: _catName),
+                  _BooksContent(isListView: _isListView, filter: _DownloadedFilter(), catName: _catName),
+                  _BooksContent(isListView: _isListView, filter: _RecentFilter(), catName: _catName),
                 ],
               ),
             ),
@@ -255,9 +274,11 @@ class _BooksContent extends StatelessWidget {
   const _BooksContent({
     required this.isListView,
     required this.filter,
+    required this.catName,
   });
   final bool isListView;
   final _BookFilter filter;
+  final String Function(BookModel, bool) catName;
 
   @override
   Widget build(BuildContext context) {
@@ -289,8 +310,8 @@ class _BooksContent extends StatelessWidget {
               .read<BooksCubit>()
               .watchBooks(category: state.selectedCategory),
           child: isListView
-              ? _ListView(books: books, lang: langCode)
-              : _GridView(books: books, lang: langCode),
+              ? _ListView(books: books, lang: langCode, catName: catName)
+              : _GridView(books: books, lang: langCode, catName: catName),
         );
       },
     );
@@ -300,9 +321,10 @@ class _BooksContent extends StatelessWidget {
 // ── Grid view ─────────────────────────────────────────────────────────────────
 
 class _GridView extends StatelessWidget {
-  const _GridView({required this.books, required this.lang});
+  const _GridView({required this.books, required this.lang, required this.catName});
   final List books;
   final String lang;
+  final String Function(BookModel, bool) catName;
 
   @override
   Widget build(BuildContext context) {
@@ -317,13 +339,20 @@ class _GridView extends StatelessWidget {
       itemCount: books.length,
       itemBuilder: (context, i) {
         final book = books[i];
+        final isGreek = lang == 'el';
+        final resolvedName = catName(book, isGreek);
         return BookCard(
           book: book,
           currentLang: lang,
+          categoryName: resolvedName,
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => BookDetailScreen(book: book)),
+              builder: (_) => BookDetailScreen(
+                book: book,
+                categoryName: resolvedName,
+              ),
+            ),
           ),
         );
       },
@@ -334,9 +363,10 @@ class _GridView extends StatelessWidget {
 // ── List view ─────────────────────────────────────────────────────────────────
 
 class _ListView extends StatelessWidget {
-  const _ListView({required this.books, required this.lang});
+  const _ListView({required this.books, required this.lang, required this.catName});
   final List books;
   final String lang;
+  final String Function(BookModel, bool) catName;
 
   @override
   Widget build(BuildContext context) {
@@ -362,11 +392,16 @@ class _ListView extends StatelessWidget {
             ? book.descriptionEl
             : book.descriptionAr;
 
+        final resolvedName = catName(book, isGreek);
         return GestureDetector(
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => BookDetailScreen(book: book)),
+              builder: (_) => BookDetailScreen(
+                book: book,
+                categoryName: resolvedName,
+              ),
+            ),
           ),
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -449,7 +484,7 @@ class _ListView extends StatelessWidget {
                                   color: goldBorder, width: 0.5),
                             ),
                             child: Text(
-                              book.category,
+                              resolvedName,
                               style: TextStyle(
                                 color: gold,
                                 fontSize: 9,
@@ -623,14 +658,14 @@ class _CategoryFilterState extends State<_CategoryFilter> {
               ..._categories.map((cat) {
                 final label = isGreek
                     ? (cat.nameEl.isNotEmpty ? cat.nameEl : cat.nameAr)
-                    : (cat.nameAr.isNotEmpty ? cat.nameAr : cat.slug);
+                    : cat.nameAr;
                 return _chip(
                   context,
                   label: label,
-                  isSelected: state.selectedCategory == cat.slug,
+                  isSelected: state.selectedCategory == cat.id,
                   isGreek: isGreek,
                   onTap: () =>
-                      context.read<BooksCubit>().filterByCategory(cat.slug),
+                      context.read<BooksCubit>().filterByCategory(cat.id),
                 );
               }),
             ],

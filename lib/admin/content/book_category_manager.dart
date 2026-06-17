@@ -10,7 +10,6 @@
 //   • "Add Category" FAB
 //
 // Edit/Add form:
-//   • Slug (stable key, e.g. 'bible')
 //   • Name AR / Cop / El
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
@@ -22,9 +21,9 @@ import '../../data/models/book_category_model.dart';
 import '../../data/repositories/book_category_repository.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-const _kNavy    = EkklisiaColors.bgDeep;
-const _kGold    = EkklisiaColors.gold;
-const _kBorder  = EkklisiaColors.goldBorder;
+const _kNavy = EkklisiaColors.bgDeep;
+const _kGold = EkklisiaColors.gold;
+const _kBorder = EkklisiaColors.goldBorder;
 
 // ════════════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -40,21 +39,19 @@ class BookCategoryManagerScreen extends StatefulWidget {
 
 enum _Mode { list, edit }
 
-class _BookCategoryManagerScreenState
-    extends State<BookCategoryManagerScreen> {
+class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
   final _repo = sl<BookCategoryRepository>();
 
   _Mode _mode = _Mode.list;
   BookCategory? _editing; // null → adding new
 
   // ── Edit-form state ─────────────────────────────────────────────────────────
-  final _slugCtrl   = TextEditingController();
   final _nameArCtrl = TextEditingController();
-  final _nameCopCtrl= TextEditingController();
+  final _nameCopCtrl = TextEditingController();
   final _nameElCtrl = TextEditingController();
-  final _formKey    = GlobalKey<FormState>();
-  bool _saving      = false;
-  bool _isVisible   = true;
+  final _formKey = GlobalKey<FormState>();
+  bool _saving = false;
+  bool _isVisible = true;
 
   // ── Reorder buffer ──────────────────────────────────────────────────────────
   List<BookCategory>? _reorderBuffer;
@@ -62,7 +59,6 @@ class _BookCategoryManagerScreenState
 
   @override
   void dispose() {
-    _slugCtrl.dispose();
     _nameArCtrl.dispose();
     _nameCopCtrl.dispose();
     _nameElCtrl.dispose();
@@ -73,7 +69,6 @@ class _BookCategoryManagerScreenState
 
   void _openAdd() {
     _editing = null;
-    _slugCtrl.clear();
     _nameArCtrl.clear();
     _nameCopCtrl.clear();
     _nameElCtrl.clear();
@@ -83,15 +78,17 @@ class _BookCategoryManagerScreenState
 
   void _openEdit(BookCategory cat) {
     _editing = cat;
-    _slugCtrl.text   = cat.slug;
     _nameArCtrl.text = cat.nameAr;
-    _nameCopCtrl.text= cat.nameCop;
+    _nameCopCtrl.text = cat.nameCop;
     _nameElCtrl.text = cat.nameEl;
-    _isVisible       = cat.isVisible;
+    _isVisible = cat.isVisible;
     setState(() => _mode = _Mode.edit);
   }
 
-  void _backToList() => setState(() { _mode = _Mode.list; _editing = null; });
+  void _backToList() => setState(() {
+    _mode = _Mode.list;
+    _editing = null;
+  });
 
   // ── Save ────────────────────────────────────────────────────────────────────
 
@@ -99,39 +96,42 @@ class _BookCategoryManagerScreenState
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
-      final slug    = _slugCtrl.text.trim().toLowerCase();
-      final nameAr  = _nameArCtrl.text.trim();
+      final nameAr = _nameArCtrl.text.trim();
       final nameCop = _nameCopCtrl.text.trim();
-      final nameEl  = _nameElCtrl.text.trim();
+      final nameEl = _nameElCtrl.text.trim();
 
       if (_editing == null) {
         // Add — put it at the end (sortOrder = current count)
         final existing = await _repo.fetchCategories();
-        await _repo.addCategory(BookCategory(
-          id:        '',
-          slug:      slug,
-          nameAr:    nameAr,
-          nameCop:   nameCop,
-          nameEl:    nameEl,
-          sortOrder: existing.length,
-          isVisible: _isVisible,
-          createdAt: DateTime.now(),
-        ));
+        await _repo.addCategory(
+          BookCategory(
+            id: '',
+            nameAr: nameAr,
+            nameCop: nameCop,
+            nameEl: nameEl,
+            sortOrder: existing.length,
+            isVisible: _isVisible,
+            createdAt: DateTime.now(),
+          ),
+        );
       } else {
-        await _repo.updateCategory(_editing!.copyWith(
-          slug:      slug,
-          nameAr:    nameAr,
-          nameCop:   nameCop,
-          nameEl:    nameEl,
-          isVisible: _isVisible,
-        ));
+        await _repo.updateCategory(
+          _editing!.copyWith(
+            nameAr: nameAr,
+            nameCop: nameCop,
+            nameEl: nameEl,
+            isVisible: _isVisible,
+          ),
+        );
       }
       if (mounted) _backToList();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'),
-              backgroundColor: Colors.red.shade800),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red.shade800,
+          ),
         );
       }
     } finally {
@@ -152,8 +152,10 @@ class _BookCategoryManagerScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e'),
-              backgroundColor: Colors.red.shade800),
+          SnackBar(
+            content: Text('Delete failed: $e'),
+            backgroundColor: Colors.red.shade800,
+          ),
         );
       }
     }
@@ -164,10 +166,12 @@ class _BookCategoryManagerScreenState
   Future<void> _seed() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         backgroundColor: EkklisiaColors.bgElevated,
-        title: const Text('Seed Default Categories',
-            style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15)),
+        title: const Text(
+          'Seed Default Categories',
+          style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15),
+        ),
         content: const Text(
           'This will add the 9 default Coptic book categories to Firestore.\n\n'
           'It only runs if the collection is empty.',
@@ -175,14 +179,18 @@ class _BookCategoryManagerScreenState
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: EkklisiaColors.textSecondary)),
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: EkklisiaColors.textSecondary),
+            ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Seed',
-                style: TextStyle(color: EkklisiaColors.gold)),
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text(
+              'Seed',
+              style: TextStyle(color: EkklisiaColors.gold),
+            ),
           ),
         ],
       ),
@@ -190,12 +198,16 @@ class _BookCategoryManagerScreenState
     if (confirm != true || !mounted) return;
     final count = await _repo.seedDefaults();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(count > 0
-            ? 'Seeded $count default categories.'
-            : 'Collection is not empty — nothing seeded.'),
-        backgroundColor: EkklisiaColors.bgElevated,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count > 0
+                ? 'Seeded $count default categories.'
+                : 'Collection is not empty — nothing seeded.',
+          ),
+          backgroundColor: EkklisiaColors.bgElevated,
+        ),
+      );
     }
   }
 
@@ -221,8 +233,10 @@ class _BookCategoryManagerScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reorder failed: $e'),
-              backgroundColor: Colors.red.shade800),
+          SnackBar(
+            content: Text('Reorder failed: $e'),
+            backgroundColor: Colors.red.shade800,
+          ),
         );
       }
     } finally {
@@ -248,9 +262,11 @@ class _BookCategoryManagerScreenState
     return StreamBuilder<List<BookCategory>>(
       stream: _repo.watchCategories(),
       builder: (context, snap) {
-        final categories = _reorderBuffer ??
+        final categories =
+            _reorderBuffer ??
             (snap.hasData ? snap.data! : const <BookCategory>[]);
-        final loading = snap.connectionState == ConnectionState.waiting &&
+        final loading =
+            snap.connectionState == ConnectionState.waiting &&
             categories.isEmpty;
 
         return Column(
@@ -293,27 +309,27 @@ class _BookCategoryManagerScreenState
               child: loading
                   ? const Center(
                       child: CircularProgressIndicator(
-                          color: EkklisiaColors.gold))
+                        color: EkklisiaColors.gold,
+                      ),
+                    )
                   : categories.isEmpty
-                      ? _EmptyState(onSeed: _seed, onAdd: _openAdd)
-                      : ReorderableListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          onReorderStart: (_) =>
-                              _onReorderStart(
-                                  snap.data ?? categories),
-                          onReorder: _onReorder,
-                          onReorderEnd: (_) {},
-                          itemCount: categories.length,
-                          itemBuilder: (_, i) => _CategoryRow(
-                            key: ValueKey(categories[i].id),
-                            cat: categories[i],
-                            index: i,
-                            onEdit:   () => _openEdit(categories[i]),
-                            onDelete: () => _delete(categories[i]),
-                            onToggle: () =>
-                                _repo.toggleVisibility(categories[i]),
-                          ),
-                        ),
+                  ? _EmptyState(onSeed: _seed, onAdd: _openAdd)
+                  : ReorderableListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      onReorderStart: (_) =>
+                          _onReorderStart(snap.data ?? categories),
+                      onReorder: _onReorder,
+                      onReorderEnd: (_) {},
+                      itemCount: categories.length,
+                      itemBuilder: (_, i) => _CategoryRow(
+                        key: ValueKey(categories[i].id),
+                        cat: categories[i],
+                        index: i,
+                        onEdit: () => _openEdit(categories[i]),
+                        onDelete: () => _delete(categories[i]),
+                        onToggle: () => _repo.toggleVisibility(categories[i]),
+                      ),
+                    ),
             ),
           ],
         );
@@ -332,8 +348,11 @@ class _BookCategoryManagerScreenState
           title: isAdd ? 'Add Category' : 'Edit Category',
           titleAr: isAdd ? 'إضافة تصنيف' : 'تعديل التصنيف',
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: EkklisiaColors.textSecondary, size: 18),
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: EkklisiaColors.textSecondary,
+              size: 18,
+            ),
             onPressed: _backToList,
           ),
           trailing: _saving
@@ -341,13 +360,21 @@ class _BookCategoryManagerScreenState
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: EkklisiaColors.gold))
+                    strokeWidth: 2,
+                    color: EkklisiaColors.gold,
+                  ),
+                )
               : TextButton.icon(
                   onPressed: _save,
-                  icon: const Icon(Icons.check,
-                      color: EkklisiaColors.gold, size: 18),
-                  label: const Text('Save',
-                      style: TextStyle(color: EkklisiaColors.gold)),
+                  icon: const Icon(
+                    Icons.check,
+                    color: EkklisiaColors.gold,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'Save',
+                    style: TextStyle(color: EkklisiaColors.gold),
+                  ),
                 ),
         ),
 
@@ -360,44 +387,6 @@ class _BookCategoryManagerScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ── Slug ──────────────────────────────────────────────────
-                  _FormCard(
-                    title: 'Slug (Category Key)',
-                    titleAr: 'المفتاح',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'A short lowercase identifier used internally (e.g. "bible", "hymns"). '
-                          'Books reference this key — changing it after books are linked will break the link.',
-                          style: TextStyle(
-                            color: EkklisiaColors.textSecondary
-                                .withValues(alpha: 0.7),
-                            fontSize: 11,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        _Field(
-                          controller: _slugCtrl,
-                          label: 'Slug *',
-                          hint: 'e.g. bible, prayers, liturgy',
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-z0-9_\-]')),
-                          ],
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty)
-                              return 'Required';
-                            if (!RegExp(r'^[a-z0-9_\-]+$').hasMatch(v.trim()))
-                              return 'Only lowercase letters, digits, _ and -';
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
                   // ── Names ─────────────────────────────────────────────────
                   _FormCard(
                     title: 'Display Names',
@@ -441,18 +430,22 @@ class _BookCategoryManagerScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Visible to readers',
-                                  style: TextStyle(
-                                      color: EkklisiaColors.textPrimary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
+                              const Text(
+                                'Visible to readers',
+                                style: TextStyle(
+                                  color: EkklisiaColors.textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               const SizedBox(height: 2),
                               Text(
                                 'Hidden categories still exist but won\'t appear in the Books Library filter.',
                                 style: TextStyle(
-                                    color: EkklisiaColors.textSecondary
-                                        .withValues(alpha: 0.8),
-                                    fontSize: 11),
+                                  color: EkklisiaColors.textSecondary
+                                      .withValues(alpha: 0.8),
+                                  fontSize: 11,
+                                ),
                               ),
                             ],
                           ),
@@ -475,20 +468,25 @@ class _BookCategoryManagerScreenState
                       style: ElevatedButton.styleFrom(
                         backgroundColor: EkklisiaColors.maroon,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: _saving
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: EkklisiaColors.gold))
+                                strokeWidth: 2.5,
+                                color: EkklisiaColors.gold,
+                              ),
+                            )
                           : Text(
                               isAdd ? 'Add Category' : 'Save Changes',
                               style: const TextStyle(
-                                  color: EkklisiaColors.goldLight,
-                                  fontWeight: FontWeight.w700)),
+                                color: EkklisiaColors.goldLight,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -534,15 +532,18 @@ class _CategoryRow extends StatelessWidget {
         children: [
           // ── Drag handle ────────────────────────────────────────────────
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Icon(Icons.drag_handle,
-                color: EkklisiaColors.textSecondary, size: 20),
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Icon(
+              Icons.drag_handle,
+              color: EkklisiaColors.textSecondary,
+              size: 18,
+            ),
           ),
 
           // ── Order badge ────────────────────────────────────────────────
           Container(
-            width: 26,
-            height: 26,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: _kNavy,
               shape: BoxShape.circle,
@@ -552,85 +553,74 @@ class _CategoryRow extends StatelessWidget {
               child: Text(
                 '${index + 1}',
                 style: const TextStyle(
-                    color: _kGold,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700),
+                  color: _kGold,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
-
-          // ── Slug chip ──────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: _kNavy,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: _kBorder),
-            ),
-            child: Text(
-              cat.slug,
-              style: const TextStyle(
-                  color: _kGold, fontSize: 10, fontFamily: 'monospace'),
-            ),
-          ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
 
           // ── Names ──────────────────────────────────────────────────────
+          // NOTE: the raw Firestore ID is intentionally omitted from this
+          // row — it overflowed on narrow phones. It is visible in the edit
+          // form if needed for debugging.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   cat.nameAr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Scheherazade',
                     color: EkklisiaColors.textPrimary,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (cat.nameEl.isNotEmpty)
                   Text(
                     cat.nameEl,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 11),
+                      color: EkklisiaColors.textSecondary,
+                      fontSize: 11,
+                    ),
                   ),
               ],
             ),
           ),
 
-          // ── Visibility toggle ──────────────────────────────────────────
-          Tooltip(
-            message: cat.isVisible ? 'Visible' : 'Hidden',
-            child: IconButton(
-              icon: Icon(
-                cat.isVisible
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                size: 18,
-                color: cat.isVisible
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.textSecondary,
-              ),
-              onPressed: onToggle,
-            ),
+          // ── Compact action buttons ─────────────────────────────────────
+          // Use SizedBox-wrapped GestureDetectors instead of IconButton to
+          // keep each tap-target at 36 px rather than the default 48 px.
+          _RowAction(
+            icon: cat.isVisible
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: cat.isVisible
+                ? EkklisiaColors.gold
+                : EkklisiaColors.textSecondary,
+            tooltip: cat.isVisible ? 'Visible' : 'Hidden',
+            onTap: onToggle,
           ),
-
-          // ── Edit ───────────────────────────────────────────────────────
-          IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                size: 18, color: EkklisiaColors.textSecondary),
-            onPressed: onEdit,
+          _RowAction(
+            icon: Icons.edit_outlined,
+            color: EkklisiaColors.textSecondary,
+            tooltip: 'Edit',
+            onTap: onEdit,
           ),
-
-          // ── Delete ─────────────────────────────────────────────────────
-          IconButton(
-            icon: Icon(Icons.delete_outline,
-                size: 18, color: Colors.red.shade400),
-            onPressed: onDelete,
+          _RowAction(
+            icon: Icons.delete_outline,
+            color: Colors.red.shade400,
+            tooltip: 'Delete',
+            onTap: onDelete,
           ),
-
           const SizedBox(width: 4),
         ],
       ),
@@ -665,8 +655,7 @@ class _Header extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: _kNavy,
-        border:
-            Border(bottom: BorderSide(color: _kBorder, width: 0.5)),
+        border: Border(bottom: BorderSide(color: _kBorder, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -676,17 +665,22 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        color: EkklisiaColors.goldLight,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700)),
-                Text(titleAr,
-                    style: const TextStyle(
-                      fontFamily: 'Scheherazade',
-                      color: EkklisiaColors.textSecondary,
-                      fontSize: 12,
-                    )),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: EkklisiaColors.goldLight,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  titleAr,
+                  style: const TextStyle(
+                    fontFamily: 'Scheherazade',
+                    color: EkklisiaColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -716,9 +710,7 @@ class _SmallBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: primary
-              ? EkklisiaColors.maroon
-              : EkklisiaColors.bgElevated,
+          color: primary ? EkklisiaColors.maroon : EkklisiaColors.bgElevated,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
         ),
@@ -727,9 +719,14 @@ class _SmallBtn extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: _kGold),
             const SizedBox(width: 4),
-            Text(label,
-                style: const TextStyle(
-                    color: _kGold, fontSize: 11, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: _kGold,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -754,16 +751,24 @@ class _ReorderBanner extends StatelessWidget {
       color: EkklisiaColors.maroon.withValues(alpha: 0.9),
       child: Row(
         children: [
-          const Icon(Icons.swap_vert, color: EkklisiaColors.goldLight, size: 16),
+          const Icon(
+            Icons.swap_vert,
+            color: EkklisiaColors.goldLight,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           const Expanded(
-            child: Text('Drag to reorder — save to apply.',
-                style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 12)),
+            child: Text(
+              'Drag to reorder — save to apply.',
+              style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 12),
+            ),
           ),
           TextButton(
             onPressed: saving ? null : onCancel,
-            child: const Text('Cancel',
-                style: TextStyle(color: EkklisiaColors.textSecondary)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: EkklisiaColors.textSecondary),
+            ),
           ),
           const SizedBox(width: 4),
           ElevatedButton(
@@ -779,13 +784,18 @@ class _ReorderBanner extends StatelessWidget {
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: EkklisiaColors.bgDeep))
-                : const Text('Save Order',
+                      strokeWidth: 2,
+                      color: EkklisiaColors.bgDeep,
+                    ),
+                  )
+                : const Text(
+                    'Save Order',
                     style: TextStyle(
-                        color: EkklisiaColors.bgDeep,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700)),
+                      color: EkklisiaColors.bgDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -804,29 +814,41 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('✦',
-              style:
-                  TextStyle(color: EkklisiaColors.goldDim, fontSize: 40)),
+          const Text(
+            '✦',
+            style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 40),
+          ),
           const SizedBox(height: 12),
-          const Text('No categories yet',
-              style: TextStyle(
-                  color: EkklisiaColors.goldLight,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600)),
+          const Text(
+            'No categories yet',
+            style: TextStyle(
+              color: EkklisiaColors.goldLight,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 6),
-          const Text('Seed the 9 default Coptic categories, or add a custom one.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 12)),
+          const Text(
+            'Seed the 9 default Coptic categories, or add a custom one.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: EkklisiaColors.textSecondary, fontSize: 12),
+          ),
           const SizedBox(height: 20),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _SmallBtn(icon: Icons.auto_fix_high_outlined,
-                  label: 'Seed Defaults', onTap: onSeed),
+              _SmallBtn(
+                icon: Icons.auto_fix_high_outlined,
+                label: 'Seed Defaults',
+                onTap: onSeed,
+              ),
               const SizedBox(width: 10),
-              _SmallBtn(icon: Icons.add, label: 'Add Category',
-                  onTap: onAdd, primary: true),
+              _SmallBtn(
+                icon: Icons.add,
+                label: 'Add Category',
+                onTap: onAdd,
+                primary: true,
+              ),
             ],
           ),
         ],
@@ -843,37 +865,51 @@ class _DeleteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: EkklisiaColors.bgElevated,
-      title: const Text('Delete Category',
-          style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15)),
+      title: const Text(
+        'Delete Category',
+        style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15),
+      ),
       content: RichText(
         text: TextSpan(
           style: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 13, height: 1.5),
+            color: EkklisiaColors.textSecondary,
+            fontSize: 13,
+            height: 1.5,
+          ),
           children: [
             const TextSpan(text: 'Delete '),
             TextSpan(
-              text: '"${cat.nameAr}" (${cat.slug})',
+              text: '"${cat.nameAr}"',
               style: const TextStyle(
-                  color: EkklisiaColors.goldLight,
-                  fontWeight: FontWeight.w700),
+                color: EkklisiaColors.goldLight,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const TextSpan(
-                text: '?\n\nBooks using this category slug will lose their '
-                    'category assignment. This cannot be undone.'),
+              text:
+                  '?\n\nBooks using this category will lose their '
+                  'category assignment. This cannot be undone.',
+            ),
           ],
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: EkklisiaColors.textSecondary),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: Text('Delete',
-              style: TextStyle(color: Colors.red.shade400,
-                  fontWeight: FontWeight.w700)),
+          child: Text(
+            'Delete',
+            style: TextStyle(
+              color: Colors.red.shade400,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ],
     );
@@ -902,20 +938,28 @@ class _FormCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Text(title,
+          Row(
+            children: [
+              Text(
+                title,
                 style: const TextStyle(
-                    color: EkklisiaColors.goldLight,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5)),
-            const SizedBox(width: 6),
-            Text(titleAr,
+                  color: EkklisiaColors.goldLight,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                titleAr,
                 style: const TextStyle(
-                    fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textSecondary,
-                    fontSize: 12)),
-          ]),
+                  fontFamily: 'Scheherazade',
+                  color: EkklisiaColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
           const Divider(height: 14, color: EkklisiaColors.goldBorder),
           child,
         ],
@@ -948,11 +992,14 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: EkklisiaColors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: EkklisiaColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 5),
         TextFormField(
           controller: controller,
@@ -967,31 +1014,70 @@ class _Field extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-                color: EkklisiaColors.textSecondary.withValues(alpha: 0.4),
-                fontSize: 13),
+              color: EkklisiaColors.textSecondary.withValues(alpha: 0.4),
+              fontSize: 13,
+            ),
             filled: true,
             fillColor: EkklisiaColors.bgPrimary,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: EkklisiaColors.goldBorder)),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: EkklisiaColors.goldBorder),
+            ),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: EkklisiaColors.goldBorder)),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: EkklisiaColors.goldBorder),
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: EkklisiaColors.gold, width: 1.5)),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: EkklisiaColors.gold,
+                width: 1.5,
+              ),
+            ),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    BorderSide(color: Colors.red.shade700)),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.red.shade700),
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// _RowAction — compact 36 × 36 icon tap target for _CategoryRow
+// ════════════════════════════════════════════════════════════════════════════
+
+class _RowAction extends StatelessWidget {
+  const _RowAction({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(child: Icon(icon, size: 18, color: color)),
+        ),
+      ),
     );
   }
 }

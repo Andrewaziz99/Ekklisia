@@ -62,11 +62,29 @@ abstract class BrightnessColors {
   static Color maroon(Brightness brightness) =>
     brightness == Brightness.dark ? EkklisiaColors.darkMaroon : EkklisiaColors.lightMaroon;
 
+  static Color maroonMid(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkMaroonMid : EkklisiaColors.lightMaroonMid;
+
+  static Color maroonDark(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkMaroonDark : EkklisiaColors.lightMaroonDark;
+
   static Color plum(Brightness brightness) =>
     brightness == Brightness.dark ? EkklisiaColors.darkPlum : EkklisiaColors.lightPlum;
 
   static Color tealMid(Brightness brightness) =>
     brightness == Brightness.dark ? EkklisiaColors.darkTealMid : EkklisiaColors.lightTealMid;
+
+  static Color tealDark(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkTealDark : EkklisiaColors.lightTealDark;
+
+  static Color bronze(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkBronze : EkklisiaColors.lightBronze;
+
+  static Color ocean(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkOcean : EkklisiaColors.lightOcean;
+
+  static Color forest(Brightness brightness) =>
+    brightness == Brightness.dark ? EkklisiaColors.darkForest : EkklisiaColors.lightForest;
 
   /// Get gradient based on brightness
   static LinearGradient headerGradient(Brightness brightness) =>

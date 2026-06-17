@@ -23,14 +23,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../admin/admin_shell.dart';
 import '../../admin/books/books_manager_screen.dart';
+import '../../admin/books/bulk_upload_screen.dart';
+import '../../admin/books/edit_book_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
 import '../../admin/content/agbeya_manager.dart';
 import '../../admin/content/bible_manager.dart';
 import '../../admin/content/book_category_manager.dart';
 import '../../admin/content/cms_additional_content.dart';
 import '../../admin/content/saints_manager.dart';
+import '../../admin/saints/saints_bulk_upload_screen.dart';
 import '../../admin/content/daily_verse_manager.dart';
 import '../../admin/content/game_manager_screen.dart';
+import '../../admin/gallery/gallery_manager_screen.dart';
+import '../../admin/gallery/gallery_bulk_upload_screen.dart';
+import '../../admin/electronic_library/elib_manager_screen.dart';
+import '../../admin/electronic_library/elib_bulk_upload_screen.dart';
 import '../../admin/content/pdf_content_manager.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
@@ -44,8 +51,10 @@ import '../../features/books/screens/pdf_viewer_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/onboarding/language_selection_screen.dart';
 import '../../core/constants/app_constants.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/di/service_locator.dart';
 import '../../data/repositories/books_repository.dart';
+import '../../features/books/cubit/books_cubit.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../services/settings_service.dart';
 
@@ -63,8 +72,10 @@ abstract class Routes {
   // Admin
   static const String admin           = '/admin';
   static const String adminDashboard  = '/admin/dashboard';
-  static const String adminUpload     = '/admin/upload';
+  static const String adminUpload      = '/admin/upload';
+  static const String adminBulkUpload = '/admin/bulk-upload';
   static const String adminBooks      = '/admin/books';
+  static const String adminEditBook   = '/admin/edit-book';
   static const String adminNotify     = '/admin/notify';
   static const String adminUsers      = '/admin/users';
 
@@ -82,6 +93,11 @@ abstract class Routes {
   static const String adminCmsReadings    = '/admin/cms/readings';
   static const String adminCmsOccasions   = '/admin/cms/occasions';
   static const String adminCmsGames       = '/admin/cms/games';
+  static const String adminCmsSaintsBulk = '/admin/cms/saints-bulk';
+  static const String adminCmsGallery     = '/admin/cms/gallery';
+  static const String adminCmsGalleryBulk = '/admin/cms/gallery-bulk';
+  static const String adminCmsElib        = '/admin/cms/elib';
+  static const String adminCmsElibBulk    = '/admin/cms/elib-bulk';
 
   // User content routes (pushed via Navigator, not go_router shell)
   static const String homeBible       = '/home/bible';
@@ -215,9 +231,14 @@ class AppRouter {
 
       // ── Admin shell (parent for all /admin/* routes) ──────────────────
       ShellRoute(
-        builder: (context, state, child) => AdminShell(
-          child:       child,
-          currentPath: state.matchedLocation,
+        builder: (context, state, child) => BlocProvider<BooksCubit>(
+          // Admin gets its own cubit watching ALL books (published + unpublished)
+          // so file counts and lists are always accurate.
+          create: (_) => BooksCubit(sl<BooksRepository>())..watchAllBooks(),
+          child: AdminShell(
+            child:       child,
+            currentPath: state.matchedLocation,
+          ),
         ),
         routes: [
           GoRoute(
@@ -231,9 +252,22 @@ class AppRouter {
             builder: (_, __) => const UploadBookScreen(),
           ),
           GoRoute(
+            path:    Routes.adminBulkUpload,
+            name:    'adminBulkUpload',
+            builder: (_, __) => const BulkUploadScreen(),
+          ),
+          GoRoute(
             path:    Routes.adminBooks,
             name:    'adminBooks',
             builder: (_, __) => const BooksManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminEditBook,
+            name:    'adminEditBook',
+            builder: (context, state) {
+              final book = state.extra as BookModel;
+              return EditBookScreen(book: book);
+            },
           ),
           GoRoute(
             path:    Routes.adminNotify,
@@ -277,6 +311,11 @@ class AppRouter {
             path:    Routes.adminCmsSaints,
             name:    'adminCmsSaints',
             builder: (_, __) => const SaintsManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsSaintsBulk,
+            name:    'adminCmsSaintsBulk',
+            builder: (_, __) => const SaintsBulkUploadScreen(),
           ),
           GoRoute(
             path:    Routes.adminCmsDailyVerse,
@@ -325,6 +364,28 @@ class AppRouter {
             name:    'adminCmsGames',
             builder: (_, __) => const GameManagerScreen(),
           ),
+          GoRoute(
+            path:    Routes.adminCmsGallery,
+            name:    'adminCmsGallery',
+            builder: (_, __) => const GalleryManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsGalleryBulk,
+            name:    'adminCmsGalleryBulk',
+            builder: (_, __) => const GalleryBulkUploadScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsElib,
+            name:    'adminCmsElib',
+            builder: (_, __) => const ElibManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsElibBulk,
+            name:    'adminCmsElibBulk',
+            builder: (_, state) => ElibBulkUploadScreen(
+              sectionId: (state.extra as String?) ?? '',
+            ),
+          ),
         ],
       ),
 
@@ -362,6 +423,12 @@ class AppRouter {
 
 class _AuthNotifier extends ChangeNotifier {
   _AuthNotifier() {
+    // If offline mode is enabled, mark ready immediately — no need to wait
+    // for Firebase to resolve the auth state before navigating to home.
+    if (sl<SettingsService>().offlineMode) {
+      _isReady = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    }
     FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
   }
 

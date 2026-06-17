@@ -22,6 +22,8 @@ import '../../data/repositories/game_repository.dart';
 import '../../data/repositories/pdf_content_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../data/repositories/daily_verse_repository.dart';
+import '../../data/repositories/elib_repository.dart';
+import '../../data/repositories/gallery_repository.dart';
 import '../../data/repositories/saints_repository.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
@@ -113,6 +115,18 @@ class ServiceLocator {
     );
     sl.registerLazySingleton<SaintsRepository>(
       () => SaintsRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<GalleryRepository>(
+      () => GalleryRepository(
+        firestore: sl<FirebaseFirestore>(),
+        cloudinary: sl<CloudinaryDataSource>(),
+      ),
+    );
+    sl.registerLazySingleton<ElibRepository>(
+      () => ElibRepository(
+        firestore: sl<FirebaseFirestore>(),
+        cloudinary: sl<CloudinaryDataSource>(),
+      ),
     );
 
     // Configure BibleRepository singleton with Firestore + Dio so admin

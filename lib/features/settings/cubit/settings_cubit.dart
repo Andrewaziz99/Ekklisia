@@ -13,6 +13,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     prayerReminder:       _service.prayerReminderEnabled,
     keepScreenOn:         _service.keepScreenOn,
     themeMode:            _service.themeMode,
+    offlineMode:          _service.offlineMode,
   ));
 
   final SettingsService _service;
@@ -55,6 +56,12 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setThemeMode(AppThemeMode mode) async {
     await _service.setThemeMode(mode);
     emit(state.copyWith(themeMode: mode));
+  }
+
+  Future<void> toggleOfflineMode() async {
+    final val = !state.offlineMode;
+    await _service.setOfflineMode(val);
+    emit(state.copyWith(offlineMode: val));
   }
 
   Future<void> resetAll() async {

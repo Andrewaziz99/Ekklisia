@@ -46,22 +46,12 @@ class BookCategoryRepository {
 
   // ── Write ───────────────────────────────────────────────────────────────────
 
-  /// Adds a category, throwing [StateError] if a document with the same slug
-  /// already exists (prevents duplicate-value crashes in dropdowns).
   Future<void> addCategory(BookCategory cat) async {
-    final existing = await _col
-        .where('slug', isEqualTo: cat.slug)
-        .limit(1)
-        .get();
-    if (existing.docs.isNotEmpty) {
-      throw StateError('A category with slug "${cat.slug}" already exists.');
-    }
     await _col.doc().set(cat.toFirestore());
   }
 
   Future<void> updateCategory(BookCategory cat) =>
       _col.doc(cat.id).update({
-        'slug':       cat.slug,
         'name_ar':    cat.nameAr,
         'name_cop':   cat.nameCop,
         'name_el':    cat.nameEl,
@@ -96,7 +86,6 @@ class BookCategoryRepository {
       final doc = _col.doc();
       batch.set(doc, BookCategory(
         id:        doc.id,
-        slug:      c.slug,
         nameAr:    c.nameAr,
         nameCop:   c.nameCop,
         nameEl:    c.nameEl,

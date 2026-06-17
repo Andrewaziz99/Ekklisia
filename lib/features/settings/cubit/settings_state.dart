@@ -11,6 +11,7 @@ class SettingsState extends Equatable {
     this.prayerReminder       = false,
     this.keepScreenOn         = true,
     this.themeMode            = AppThemeMode.dark,
+    this.offlineMode          = false,
   });
 
   final AppLanguage  language;
@@ -20,6 +21,7 @@ class SettingsState extends Equatable {
   final bool         prayerReminder;
   final bool         keepScreenOn;
   final AppThemeMode themeMode;
+  final bool         offlineMode;
 
   SettingsState copyWith({
     AppLanguage?  language,
@@ -29,6 +31,7 @@ class SettingsState extends Equatable {
     bool?         prayerReminder,
     bool?         keepScreenOn,
     AppThemeMode? themeMode,
+    bool?         offlineMode,
   }) => SettingsState(
     language:             language             ?? this.language,
     isLanguageSelected:   isLanguageSelected   ?? this.isLanguageSelected,
@@ -37,11 +40,12 @@ class SettingsState extends Equatable {
     prayerReminder:       prayerReminder       ?? this.prayerReminder,
     keepScreenOn:         keepScreenOn         ?? this.keepScreenOn,
     themeMode:            themeMode            ?? this.themeMode,
+    offlineMode:          offlineMode          ?? this.offlineMode,
   );
 
   @override
   List<Object?> get props => [
     language, isLanguageSelected, fontScale,
-    newBookNotifications, prayerReminder, keepScreenOn, themeMode,
+    newBookNotifications, prayerReminder, keepScreenOn, themeMode, offlineMode,
   ];
 }

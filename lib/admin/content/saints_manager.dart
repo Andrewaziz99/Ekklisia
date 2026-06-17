@@ -18,9 +18,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/router/app_router.dart';
 import '../../core/theme/colors.dart';
+import '../admin_l10n.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
@@ -99,11 +103,11 @@ class _ListViewState extends State<_ListView> {
         return Column(children: [
           // ── Toolbar ───────────────────────────────────────────────────
           _Toolbar(
-            title: 'Άγιοι',
-            titleAr: 'القديسون',
+            title: context.adminL10n.saints,
             count: saints.length,
             onSearch: (q) => setState(() => _search = q),
             onAdd: () => widget.onEdit(null),
+            onBulkUpload: () => context.go(Routes.adminCmsSaintsBulk),
           ),
 
           // ── List ──────────────────────────────────────────────────────
@@ -1395,16 +1399,16 @@ InputDecoration _inputDeco(String hint) => InputDecoration(
 class _Toolbar extends StatefulWidget {
   const _Toolbar({
     required this.title,
-    required this.titleAr,
     required this.count,
     required this.onSearch,
     required this.onAdd,
+    required this.onBulkUpload,
   });
   final String title;
-  final String titleAr;
   final int    count;
   final void Function(String) onSearch;
   final VoidCallback onAdd;
+  final VoidCallback onBulkUpload;
 
   @override
   State<_Toolbar> createState() => _ToolbarState();
@@ -1433,24 +1437,26 @@ class _ToolbarState extends State<_Toolbar> {
                   autofocus: true,
                   style: const TextStyle(
                       color: EkklisiaColors.textPrimary, fontSize: 13),
-                  decoration: _inputDeco('Αναζήτηση αγίων…'),
+                  decoration: _inputDeco(
+                      '${context.adminL10n.search} ${context.adminL10n.saints}…'),
                   onChanged: widget.onSearch,
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(widget.title,
-                        style: const TextStyle(
+                        textDirection: context.adminL10n.dir,
+                        style: TextStyle(
+                          fontFamily: context.adminL10n.fontFam,
                           color: EkklisiaColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         )),
                     Text(
-                      '${widget.count} ${widget.titleAr}',
+                      '${widget.count}',
                       style: const TextStyle(
                         color: EkklisiaColors.textSecondary,
                         fontSize: 11,
-                        fontFamily: 'Scheherazade',
                       ),
                     ),
                   ],
@@ -1469,6 +1475,28 @@ class _ToolbarState extends State<_Toolbar> {
           },
         ),
         const SizedBox(width: 4),
+        // Bulk upload button
+        GestureDetector(
+          onTap: widget.onBulkUpload,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                  color: EkklisiaColors.goldBorder, width: 0.5),
+            ),
+            child: Row(children: [
+              const Icon(Icons.upload_file_outlined,
+                  color: EkklisiaColors.textSecondary, size: 14),
+              const SizedBox(width: 4),
+              Text(context.adminL10n.bulk,
+                  style: const TextStyle(
+                      color: EkklisiaColors.textSecondary, fontSize: 12)),
+            ]),
+          ),
+        ),
+        const SizedBox(width: 6),
         GestureDetector(
           onTap: widget.onAdd,
           child: Container(
@@ -1480,11 +1508,13 @@ class _ToolbarState extends State<_Toolbar> {
                   color: EkklisiaColors.gold.withValues(alpha: 0.4),
                   width: 0.5),
             ),
-            child: const Row(children: [
-              Icon(Icons.add, color: EkklisiaColors.gold, size: 14),
-              SizedBox(width: 4),
-              Text('Προσθήκη',
+            child: Row(children: [
+              const Icon(Icons.add, color: EkklisiaColors.gold, size: 14),
+              const SizedBox(width: 4),
+              Text(context.adminL10n.add,
+                  textDirection: context.adminL10n.dir,
                   style: TextStyle(
+                      fontFamily: context.adminL10n.fontFam,
                       color: EkklisiaColors.gold, fontSize: 12)),
             ]),
           ),

@@ -25,6 +25,8 @@ import '../../features/books/screens/book_detail_screen.dart';
 import '../../features/coptic_calendar/coptic_calendar_screen.dart';
 import '../../features/daily_verse/daily_verse_cubit.dart';
 import '../../features/daily_verse/daily_verse_state.dart';
+import '../../features/electronic_library/electronic_library_screen.dart';
+import '../../features/gallery/gallery_screen.dart';
 import '../../features/games/screens/games_home_screen.dart';
 import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/saints/saints_list.dart';
@@ -854,6 +856,10 @@ class _RecentBooksRow extends StatelessWidget {
                           child: CachedImage(
                             url: book.coverUrl,
                             fit: BoxFit.cover,
+                            placeholder: _coverFallback(
+                              book.titleAr,
+                              brightness,
+                            ),
                             errorWidget: _coverFallback(
                               book.titleAr,
                               brightness,
@@ -1105,6 +1111,38 @@ class _GamesEndDrawer extends StatelessWidget {
               },
             ),
 
+            _DrawerItem(
+              icon: Icons.photo_library_outlined,
+              labelAr: 'معرض الصور',
+              labelEl: 'στοά',
+              isGreek: isGreek,
+              accentColor: const Color(0xFF7EB8C9),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GalleryScreen()),
+                );
+              },
+            ),
+
+            _DrawerItem(
+              icon: Icons.video_library_outlined,
+              labelAr: 'المكتبة الالكترونية',
+              labelEl: 'Ηλεκτρονική Βιβλιοθήκη',
+              isGreek: isGreek,
+              accentColor: const Color(0xFFC9A84C),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ElectronicLibraryScreen(),
+                  ),
+                );
+              },
+            ),
+
             if (isAdmin) ...[
               _DrawerItem(
                 icon: Icons.admin_panel_settings_outlined,
@@ -1165,7 +1203,9 @@ class _GamesEndDrawer extends StatelessWidget {
                       Text(
                         'Developed by ',
                         style: TextStyle(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          color: brightness == Brightness.light
+                              ? Colors.black.withValues(alpha: 0.40)
+                              : Colors.white.withValues(alpha: 0.35),
                           fontSize: 10,
                         ),
                       ),
@@ -1174,7 +1214,9 @@ class _GamesEndDrawer extends StatelessWidget {
                       Text(
                         'Clockfly Technologies',
                         style: TextStyle(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          color: brightness == Brightness.light
+                              ? Colors.black.withValues(alpha: 0.40)
+                              : Colors.white.withValues(alpha: 0.35),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),

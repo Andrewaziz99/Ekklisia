@@ -1,8 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
-/// Represents a PDF book stored in Firestore.
-/// PDF files are hosted on Cloudinary; metadata lives in Firestore.
+/// Media type for library items.
+enum BookMediaType { pdf, video, audio }
+
+extension BookMediaTypeX on BookMediaType {
+  String get value => name; // 'pdf', 'video', 'audio'
+  static BookMediaType fromString(String? s) {
+    switch (s) {
+      case 'video': return BookMediaType.video;
+      case 'audio': return BookMediaType.audio;
+      default:      return BookMediaType.pdf;
+    }
+  }
+}
+
+/// Represents a library item (PDF book, video, or audio) stored in Firestore.
+/// Files are hosted on Cloudinary; metadata lives in Firestore.
 class BookModel extends Equatable {
   final String id;
   final String titleAr; // Arabic title
@@ -11,9 +25,9 @@ class BookModel extends Equatable {
   final String descriptionAr;
   final String descriptionEl;
   final String category; // See AppConstants.bookCategories
-  final String pdfUrl; // Cloudinary raw URL
+  final String pdfUrl; // Cloudinary file URL (PDF, video, or audio)
   final String coverUrl; // Cloudinary image URL (thumbnail)
-  final String cloudinaryPdfId; // Cloudinary public_id for the PDF asset
+  final String cloudinaryPdfId; // Cloudinary public_id for the asset
   final int pageCount;
   final double fileSizeMb;
   final bool isPublished;
@@ -22,6 +36,7 @@ class BookModel extends Equatable {
   final DateTime updatedAt;
   final List<String> tags;
   final Map<String, dynamic> metadata; // flexible extra fields
+  final BookMediaType mediaType; // 'pdf', 'video', or 'audio'
 
   const BookModel({
     required this.id,
@@ -42,6 +57,7 @@ class BookModel extends Equatable {
     required this.updatedAt,
     this.tags = const [],
     this.metadata = const {},
+    this.mediaType = BookMediaType.pdf,
   });
 
   // ── Display helpers ─────────────────────────────────────────────────────
@@ -95,6 +111,7 @@ class BookModel extends Equatable {
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       tags: List<String>.from(data['tags'] ?? []),
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
+      mediaType: BookMediaTypeX.fromString(data['media_type'] as String?),
     );
   }
 
@@ -116,6 +133,7 @@ class BookModel extends Equatable {
     'updated_at': Timestamp.fromDate(updatedAt),
     'tags': tags,
     'metadata': metadata,
+    'media_type': mediaType.value,
   };
 
   BookModel copyWith({
@@ -137,6 +155,7 @@ class BookModel extends Equatable {
     DateTime? updatedAt,
     List<String>? tags,
     Map<String, dynamic>? metadata,
+    BookMediaType? mediaType,
   }) => BookModel(
     id: id ?? this.id,
     titleAr: titleAr ?? this.titleAr,
@@ -156,6 +175,7 @@ class BookModel extends Equatable {
     updatedAt: updatedAt ?? this.updatedAt,
     tags: tags ?? this.tags,
     metadata: metadata ?? this.metadata,
+    mediaType: mediaType ?? this.mediaType,
   );
 
   @override

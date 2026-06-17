@@ -1,17 +1,18 @@
 import 'dart:io';
-import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/foundation.dart';
-import '../../core/theme/colors.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/router/app_router.dart';
+import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/repositories/book_category_repository.dart';
-import '../../core/router/app_router.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../services/notification_service.dart';
@@ -34,6 +35,39 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   String? _pdfName;
   String? _coverName;
   double? _pdfSizeMb;
+
+  // ── Google Drive URL (alternative to file upload) ────────────────────────
+  bool _useDriveUrl = false;
+  final _driveUrlCtrl = TextEditingController();
+  String? _driveUrlError;
+
+  /// Converts a Google Drive sharing link to a direct-download URL.
+  /// Returns null if the URL is not a recognisable Drive link.
+  static String? _toDriveDownloadUrl(String raw) {
+    final trimmed = raw.trim();
+    // Pattern: https://drive.google.com/file/d/<ID>/view...
+    final fileMatch =
+        RegExp(r'drive\.google\.com/file/d/([^/?]+)').firstMatch(trimmed);
+    if (fileMatch != null) {
+      return 'https://drive.google.com/uc?export=download&id=${fileMatch.group(1)}';
+    }
+    // Pattern: https://drive.google.com/open?id=<ID>
+    final openMatch =
+        RegExp(r'drive\.google\.com/open\?id=([^&]+)').firstMatch(trimmed);
+    if (openMatch != null) {
+      return 'https://drive.google.com/uc?export=download&id=${openMatch.group(1)}';
+    }
+    // Already a direct uc?export=download link
+    if (trimmed.contains('drive.google.com/uc') &&
+        trimmed.contains('export=download')) {
+      return trimmed;
+    }
+    return null;
+  }
+
+  bool get _hasPdf =>
+      _pdfFile != null || _pdfBytes != null ||
+      (_useDriveUrl && _toDriveDownloadUrl(_driveUrlCtrl.text) != null);
 
   // ── Metadata form ────────────────────────────────────────────────────────
   final _formKey  = GlobalKey<FormState>();
@@ -83,7 +117,6 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
               .entries
               .map((e) => BookCategory(
                     id: e.value,
-                    slug: e.value,
                     nameAr: e.value,
                     sortOrder: e.key,
                     createdAt: DateTime.now(),
@@ -98,7 +131,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   @override
   void dispose() {
     _titleAr.dispose(); _titleCop.dispose(); _titleEl.dispose();
-    _descAr.dispose();  _tags.dispose();
+    _descAr.dispose();  _tags.dispose();     _driveUrlCtrl.dispose();
     super.dispose();
   }
 
@@ -112,9 +145,22 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
     );
     if (result == null || result.files.isEmpty) return;
     final f = result.files.first;
+    final sizeMb = f.size / (1024 * 1024);
+    if (sizeMb > AppConstants.maxPdfSizeMb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            'File is ${sizeMb.toStringAsFixed(1)} MB — '
+            'maximum allowed size is ${AppConstants.maxPdfSizeMb.toInt()} MB.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
+      return;
+    }
     setState(() {
       _pdfName   = f.name;
-      _pdfSizeMb = (f.size) / (1024 * 1024);
+      _pdfSizeMb = sizeMb;
       if (kIsWeb) {
         _pdfBytes = f.bytes;
         _pdfFile  = null;
@@ -134,6 +180,19 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
       imageQuality: 85,
     );
     if (img == null) return;
+    final sizeMb = (await img.length()) / (1024 * 1024);
+    if (sizeMb > AppConstants.maxImageSizeMb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            'Image is ${sizeMb.toStringAsFixed(1)} MB — '
+            'maximum allowed size is ${AppConstants.maxImageSizeMb.toInt()} MB.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
+      return;
+    }
     if (kIsWeb) {
       final bytes = await img.readAsBytes();
       setState(() {
@@ -160,9 +219,12 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
     final notifSvc  = sl<NotificationService>();
 
     try {
+      final catObj     = _categories.where((c) => c.id == _category).firstOrNull;
+      final driveUrl   = _useDriveUrl ? _toDriveDownloadUrl(_driveUrlCtrl.text) : null;
       final book = await repo.addBook(
-        pdfFile:        _pdfFile,
-        pdfBytes:       _pdfBytes,
+        pdfFile:        _useDriveUrl ? null : _pdfFile,
+        pdfBytes:       _useDriveUrl ? null : _pdfBytes,
+        pdfDirectUrl:   driveUrl,
         pdfName:        _pdfName ?? 'book.pdf',
         coverImageFile: _coverFile,
         coverImageBytes: _coverBytes,
@@ -172,6 +234,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         titleEl:       _titleEl.text.trim(),
         descriptionAr: _descAr.text.trim(),
         category:      _category,
+        categoryFolder: catObj?.nameAr,
         addedByUid:    authState.user?.uid ?? '',
         tags: _tags.text.isNotEmpty
             ? _tags.text.split(',').map((t) => t.trim()).toList()
@@ -231,31 +294,196 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // STEP 0 — FILES
   // ════════════════════════════════════════════════════════════════════════
   Widget _filesStep() {
+    final hasDriveUrl =
+        _useDriveUrl && _toDriveDownloadUrl(_driveUrlCtrl.text) != null;
+
     return Column(children: [
-      // PDF drop zone
-      _DropZone(
-        icon: Icons.picture_as_pdf_outlined,
-        title: 'Select PDF Book',
-        titleAr: 'اختر ملف PDF',
-        subtitle: 'Tap to browse — Max 100MB',
-        hasFile: _pdfFile != null || _pdfBytes != null,
-        fileName: _pdfName,
-        fileInfo: _pdfSizeMb != null
-            ? '${_pdfSizeMb!.toStringAsFixed(2)} MB'
-            : null,
-        borderColor: (_pdfFile != null || _pdfBytes != null)
-            ? EkklisiaColors.tealMid
-            : EkklisiaColors.goldBorder,
-        onTap: _pickPdf,
+      // ── PDF source toggle ────────────────────────────────────────────────
+      Container(
+        decoration: BoxDecoration(
+          color: EkklisiaColors.bgElevated,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        ),
+        child: Row(children: [
+          Expanded(child: _ToggleTab(
+            label: 'Upload File',
+            labelAr: 'رفع ملف',
+            icon: Icons.upload_file_outlined,
+            selected: !_useDriveUrl,
+            onTap: () => setState(() {
+              _useDriveUrl = false;
+              _driveUrlError = null;
+            }),
+          )),
+          Container(width: 0.5, height: 44, color: EkklisiaColors.goldBorder),
+          Expanded(child: _ToggleTab(
+            label: 'Google Drive',
+            labelAr: 'Google Drive',
+            icon: Icons.link_outlined,
+            selected: _useDriveUrl,
+            onTap: () => setState(() {
+              _useDriveUrl = true;
+              // clear any picked file
+              _pdfFile = null; _pdfBytes = null;
+              _pdfName = null; _pdfSizeMb = null;
+            }),
+          )),
+        ]),
       ),
+      const SizedBox(height: 14),
+
+      // ── PDF input ─────────────────────────────────────────────────────────
+      if (!_useDriveUrl) ...[
+        _DropZone(
+          icon: Icons.picture_as_pdf_outlined,
+          title: 'Select PDF Book',
+          titleAr: 'اختر ملف PDF',
+          subtitle:
+              'Max ${AppConstants.maxPdfSizeMb.toInt()} MB\n'
+              'For larger files use Google Drive link above',
+          hasFile: _pdfFile != null || _pdfBytes != null,
+          fileName: _pdfName,
+          fileInfo: _pdfSizeMb != null
+              ? '${_pdfSizeMb!.toStringAsFixed(2)} MB'
+              : null,
+          borderColor: (_pdfFile != null || _pdfBytes != null)
+              ? EkklisiaColors.tealMid
+              : EkklisiaColors.goldBorder,
+          onTap: _pickPdf,
+        ),
+      ] else ...[
+        // Drive URL input card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: EkklisiaColors.bgElevated,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: hasDriveUrl
+                  ? EkklisiaColors.tealMid
+                  : EkklisiaColors.goldBorder,
+              width: hasDriveUrl ? 1.5 : 0.5,
+            ),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.drive_folder_upload_outlined,
+                  color: EkklisiaColors.gold, size: 18),
+              const SizedBox(width: 8),
+              const Text('Google Drive Link',
+                  style: TextStyle(
+                      color: EkklisiaColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13)),
+              const Spacer(),
+              if (hasDriveUrl)
+                const Icon(Icons.check_circle_outline,
+                    color: EkklisiaColors.tealMid, size: 16),
+            ]),
+            const SizedBox(height: 4),
+            const Text(
+              'Paste a "Anyone with link" sharing URL — no size limit',
+              style: TextStyle(
+                  color: EkklisiaColors.textSecondary, fontSize: 11),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _driveUrlCtrl,
+              style: const TextStyle(
+                  color: EkklisiaColors.textPrimary, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'https://drive.google.com/file/d/…/view',
+                hintStyle: const TextStyle(
+                    color: EkklisiaColors.textSecondary, fontSize: 12),
+                errorText: _driveUrlError,
+                prefixIcon: const Icon(Icons.link,
+                    color: EkklisiaColors.goldDim, size: 18),
+                suffixIcon: _driveUrlCtrl.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close,
+                            size: 16,
+                            color: EkklisiaColors.textSecondary),
+                        onPressed: () => setState(() {
+                          _driveUrlCtrl.clear();
+                          _driveUrlError = null;
+                        }),
+                      )
+                    : null,
+                filled: true,
+                fillColor: EkklisiaColors.bgMid,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                      color: EkklisiaColors.goldBorder, width: 0.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                      color: EkklisiaColors.gold, width: 1.2),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Colors.redAccent, width: 1),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Colors.redAccent, width: 1.2),
+                ),
+              ),
+              onChanged: (v) {
+                setState(() {
+                  _driveUrlError = v.trim().isEmpty
+                      ? null
+                      : _toDriveDownloadUrl(v) == null
+                          ? 'Not a valid Google Drive sharing link'
+                          : null;
+                });
+              },
+            ),
+            if (hasDriveUrl) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: EkklisiaColors.tealDark.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.check,
+                      color: EkklisiaColors.tealMid, size: 13),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _toDriveDownloadUrl(_driveUrlCtrl.text)!,
+                      style: const TextStyle(
+                          color: EkklisiaColors.tealMid,
+                          fontSize: 10),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ]),
+              ),
+            ],
+          ]),
+        ),
+      ],
+
       const SizedBox(height: 16),
 
-      // Cover image
+      // ── Cover image ───────────────────────────────────────────────────────
       _DropZone(
         icon: Icons.image_outlined,
         title: 'Cover Image',
         titleAr: 'صورة الغلاف (اختياري)',
-        subtitle: 'JPEG / PNG — 280×400 px recommended',
+        subtitle:
+            'JPEG / PNG — 280×400 px recommended — Max ${AppConstants.maxImageSizeMb.toInt()} MB',
         hasFile: _coverFile != null || _coverBytes != null,
         fileName: (_coverFile != null || _coverBytes != null)
             ? 'Cover selected'
@@ -265,19 +493,19 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             : EkklisiaColors.goldBorder,
         leadingWidget: (_coverFile != null || _coverBytes != null)
             ? ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: kIsWeb
-                ? Image.memory(_coverBytes!,
-                    width: 40, height: 56, fit: BoxFit.cover)
-                : Image.file(_coverFile!,
-                    width: 40, height: 56, fit: BoxFit.cover))
+                borderRadius: BorderRadius.circular(6),
+                child: kIsWeb
+                    ? Image.memory(_coverBytes!,
+                        width: 40, height: 56, fit: BoxFit.cover)
+                    : Image.file(_coverFile!,
+                        width: 40, height: 56, fit: BoxFit.cover))
             : null,
         onTap: _pickCover,
       ),
       const SizedBox(height: 28),
 
       _StepNavRow(
-        onNext: (_pdfFile != null || _pdfBytes != null)
+        onNext: _hasPdf && _driveUrlError == null
             ? () => setState(() => _step = 1)
             : null,
         nextLabel: 'Continue',
@@ -340,19 +568,19 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                   )
                 : DropdownButtonFormField<String>(
                     value: _category.isNotEmpty &&
-                            _categories.any((c) => c.slug == _category)
+                            _categories.any((c) => c.id == _category)
                         ? _category
                         : null,
                     dropdownColor: EkklisiaColors.bgElevated,
                     style: const TextStyle(
                         color: EkklisiaColors.textPrimary, fontSize: 14),
                     decoration: _inputDec(hint: 'Select a category'),
-                    items: {for (final c in _categories) c.slug: c}
+                    items: {for (final c in _categories) c.id: c}
                         .values
                         .map((c) => DropdownMenuItem(
-                              value: c.slug,
+                              value: c.id,
                               child: Text(
-                                c.nameAr.isNotEmpty ? c.nameAr : c.slug,
+                                c.nameAr,
                                 style: const TextStyle(
                                     fontFamily: 'Scheherazade',
                                     color: EkklisiaColors.textPrimary),
@@ -634,6 +862,62 @@ class _Stepper extends StatelessWidget {
     }));
   }
 }
+
+// ── Source toggle tab ─────────────────────────────────────────────────────────
+
+class _ToggleTab extends StatelessWidget {
+  const _ToggleTab({
+    required this.label,
+    required this.labelAr,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String   label;
+  final String   labelAr;
+  final IconData icon;
+  final bool     selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 44,
+        decoration: BoxDecoration(
+          color: selected
+              ? EkklisiaColors.goldSubtle
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icon,
+              size: 15,
+              color: selected
+                  ? EkklisiaColors.gold
+                  : EkklisiaColors.textSecondary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? EkklisiaColors.goldLight
+                  : EkklisiaColors.textSecondary,
+              fontSize: 12,
+              fontWeight:
+                  selected ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _DropZone extends StatelessWidget {
   const _DropZone({

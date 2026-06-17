@@ -380,7 +380,7 @@ class _QuestionTile extends StatelessWidget {
       BuildContext context, GameRepository repo) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         backgroundColor: _kBgDeep,
         title: const Text('Delete Question?',
             style: TextStyle(color: _kText, fontSize: 14)),
@@ -390,12 +390,12 @@ class _QuestionTile extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogCtx, false),
             child: const Text('Cancel',
                 style: TextStyle(color: _kTextSub)),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete',
                 style: TextStyle(color: Color(0xFFB03535))),
           ),

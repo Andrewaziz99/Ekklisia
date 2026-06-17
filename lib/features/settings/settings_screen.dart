@@ -88,6 +88,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const _StorageCard(),
               const SizedBox(height: 28),
 
+              const _SectionLabel('الاتصال', 'Σύνδεση'),
+              const SizedBox(height: 10),
+              const _OfflineModeCard(),
+              const SizedBox(height: 28),
+
               const _SectionLabel('الحساب', 'Λογαριασμός'),
               const SizedBox(height: 10),
               const _SignOutCard(),
@@ -890,6 +895,106 @@ class _StorageCardState extends State<_StorageCard> {
 // SIGN-OUT CARD
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// OFFLINE MODE CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _OfflineModeCard extends StatelessWidget {
+  const _OfflineModeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness    = Theme.of(context).brightness;
+    final gold          = BrightnessColors.gold(brightness);
+    final goldBorder    = BrightnessColors.goldBorder(brightness);
+    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final textSecondary = BrightnessColors.textSecondary(brightness);
+    final isAr = context.watch<SettingsCubit>().state.language == AppLanguage.arabic;
+    final isOn = context.watch<SettingsCubit>().state.offlineMode;
+
+    return _Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () => context.read<SettingsCubit>().toggleOfflineMode(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: gold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: goldBorder, width: 0.5),
+                ),
+                child: Icon(
+                  isOn ? Icons.wifi_off_rounded : Icons.wifi_rounded,
+                  color: gold,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Labels
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr ? 'وضع عدم الاتصال' : 'Λειτουργία εκτός σύνδεσης',
+                      style: TextStyle(
+                        fontFamily: isAr ? 'Scheherazade' : null,
+                        color: textPrimary,
+                        fontSize: isAr ? 16 : 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isAr
+                          ? 'تشغيل التطبيق بدون الاتصال بالإنترنت'
+                          : 'Εκκίνηση χωρίς σύνδεση στο διαδίκτυο',
+                      style: TextStyle(
+                        fontFamily: isAr ? 'Scheherazade' : null,
+                        color: textSecondary,
+                        fontSize: isAr ? 13 : 11,
+                      ),
+                    ),
+                    if (isOn) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        isAr
+                            ? 'يسري عند إعادة تشغيل التطبيق'
+                            : 'Takes effect on next app start',
+                        style: TextStyle(
+                          fontFamily: isAr ? 'Scheherazade' : null,
+                          color: gold.withValues(alpha: 0.7),
+                          fontSize: isAr ? 12 : 10,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Toggle
+              Switch(
+                value: isOn,
+                onChanged: (_) =>
+                    context.read<SettingsCubit>().toggleOfflineMode(),
+                activeColor: gold,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGN OUT CARD
+// ═══════════════════════════════════════════════════════════════════════════
 class _SignOutCard extends StatefulWidget {
   const _SignOutCard();
 

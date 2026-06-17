@@ -82,9 +82,10 @@ dependencies:
   http: ^1.2.2
 
 
-  # ── PDF Viewer ────────────────────────────
+  # ── PDF Viewer + programmatic PDF ────────────────────────────
   # Community free license — no registration needed for basic usage
   syncfusion_flutter_pdfviewer: ^29.1.38
+  syncfusion_flutter_pdf: ^29.1.38       # page counting without a UI widget
   syncfusion_flutter_core: ^29.2.11
 
 
@@ -115,6 +116,9 @@ dependencies:
   chewie: ^1.8.5               # UI controls wrapper for video_player
   youtube_player_iframe: ^6.0.2 # In-app YouTube IFrame player (no navigator hijack)
   url_launcher: ^6.3.1         # Open external URLs
+
+  # ── Drag & Drop ─────────────────────────────────────────
+  desktop_drop: ^0.4.4         # Drag-and-drop file upload (web + desktop)
 
   # ── XML Parsing ───────────────────────────────────────
   xml: ^6.5.0                  # Parse Bible XML files from assets

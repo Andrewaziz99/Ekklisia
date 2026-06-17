@@ -6,8 +6,14 @@ import '../../../data/models/book_model.dart';
 import 'pdf_viewer_screen.dart';
 
 class BookDetailScreen extends StatelessWidget {
-  const BookDetailScreen({super.key, required this.book});
+  const BookDetailScreen({
+    super.key,
+    required this.book,
+    this.categoryName,
+  });
   final BookModel book;
+  /// Human-readable category name. Falls back to [book.category] if absent.
+  final String? categoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +121,10 @@ class BookDetailScreen extends StatelessWidget {
             runSpacing: 8,
             alignment: WrapAlignment.end,
             children: [
-              _MetaChip(icon: Icons.category_outlined, label: book.category),
+              _MetaChip(
+                icon: Icons.category_outlined,
+                label: categoryName ?? book.category,
+              ),
               if (book.pageCount > 0)
                 _MetaChip(
                   icon: Icons.format_list_numbered,

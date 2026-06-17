@@ -15,6 +15,26 @@ class BooksCubit extends Cubit<BooksState> {
 
   // ── Subscribe ──────────────────────────────────────────────────────────
 
+  /// Watches ALL books (published + unpublished). Use in admin screens.
+  void watchAllBooks() {
+    emit(state.copyWith(status: BooksStatus.loading));
+    _booksSubscription?.cancel();
+    _booksSubscription = _repository.watchAllBooks().listen(
+      (books) {
+        final filtered = _applyFilters(books, state.searchQuery, state.selectedCategory);
+        emit(state.copyWith(
+          status: BooksStatus.loaded,
+          books: books,
+          filteredBooks: filtered,
+        ));
+      },
+      onError: (e) => emit(state.copyWith(
+        status: BooksStatus.error,
+        errorMessage: e.toString(),
+      )),
+    );
+  }
+
   void watchBooks({String? category}) {
     emit(
       state.copyWith(status: BooksStatus.loading, selectedCategory: category),

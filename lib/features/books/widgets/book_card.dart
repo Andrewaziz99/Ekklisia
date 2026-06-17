@@ -14,12 +14,16 @@ class BookCard extends StatelessWidget {
     required this.onTap,
     this.currentLang = 'ar',
     this.showCategory = true,
+    this.categoryName,
   });
 
   final BookModel book;
   final VoidCallback onTap;
   final String currentLang;
   final bool showCategory;
+  /// Human-readable category name to display. Falls back to [book.category]
+  /// (the raw Firestore ID) if not supplied.
+  final String? categoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +66,10 @@ class BookCard extends StatelessWidget {
                       Positioned(
                         top: 8,
                         left: 8,
-                        child: _CategoryBadge(category: book.category),
+                        child: _CategoryBadge(
+                          category: book.category,
+                          displayName: categoryName,
+                        ),
                       ),
                   ],
                 ),
@@ -145,7 +152,7 @@ class BookCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              book.category,
+              categoryName ?? book.category,
               style: const TextStyle(
                 color: EkklisiaColors.textSecondary,
                 fontSize: 11,
@@ -191,8 +198,9 @@ class _CoverGradientOverlay extends StatelessWidget {
 }
 
 class _CategoryBadge extends StatelessWidget {
-  const _CategoryBadge({required this.category});
+  const _CategoryBadge({required this.category, this.displayName});
   final String category;
+  final String? displayName;
 
   Color get _color {
     const map = {
@@ -218,7 +226,7 @@ class _CategoryBadge extends StatelessWidget {
         border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
       ),
       child: Text(
-        category,
+        displayName ?? category,
         style: const TextStyle(
           color: EkklisiaColors.textCream,
           fontSize: 9,

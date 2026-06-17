@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/router/app_router.dart';
 
@@ -396,7 +397,7 @@ class _BottomBand extends StatelessWidget {
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
@@ -421,6 +422,42 @@ class _BottomBand extends StatelessWidget {
               fontFamily: 'Scheherazade',
               color: textSecondary,
               fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Clockfly copyright
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              final uri = Uri.parse('https://www.clockfly.net');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Developed by ',
+                    style: TextStyle(
+                      color: textSecondary.withValues(alpha: 0.5),
+                      fontSize: 10,
+                    ),
+                  ),
+                  Image.asset('assets/images/clockfly.png', height: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Clockfly Technologies',
+                    style: TextStyle(
+                      color: textSecondary.withValues(alpha: 0.5),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
