@@ -9,7 +9,7 @@
 
 
     <application
-        android:label="ekklisia"
+        android:label="ekklicia"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"

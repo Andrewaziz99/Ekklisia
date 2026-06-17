@@ -1,7 +1,7 @@
 // lib/app.dart — ALTERNATIVE VERSION using BlocBuilder
 // Use this if context.select() isn't reliably picking up font scale changes
-import 'package:ekklicia/services/session_service.dart';
-import 'package:ekklicia/services/settings_service.dart';
+import 'package:ekklisia/services/session_service.dart';
+import 'package:ekklisia/services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

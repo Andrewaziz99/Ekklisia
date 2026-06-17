@@ -8,7 +8,7 @@
 //   • Content Library — 3-col icon grid (10 categories)
 //   • Recently Added  — horizontal book scroll
 // ─────────────────────────────────────────────────────────────────────────────
-import 'package:ekklicia/core/widgets/app_logo.dart';
+import 'package:ekklisia/core/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
