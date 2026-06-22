@@ -19,11 +19,11 @@ import '../../core/di/service_locator.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/repositories/book_category_repository.dart';
+import '../utils/admin_colors.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-const _kNavy = EkklisiaColors.bgDeep;
-const _kGold = EkklisiaColors.gold;
-const _kBorder = EkklisiaColors.goldBorder;
+const _kNavy = EkklisiaColors.darkBgDeep;
+const _kGold = EkklisiaColors.darkGold;
 
 // ════════════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -164,32 +164,34 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
   // ── Seed ────────────────────────────────────────────────────────────────────
 
   Future<void> _seed() async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: EkklisiaColors.bgElevated,
-        title: const Text(
+        backgroundColor: ac.bgElevated,
+        title: Text(
           'Seed Default Categories',
-          style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15),
+          style: TextStyle(color: ac.goldLight, fontSize: 15),
         ),
-        content: const Text(
+        content: Text(
           'This will add the 9 default Coptic book categories to Firestore.\n\n'
           'It only runs if the collection is empty.',
-          style: TextStyle(color: EkklisiaColors.textSecondary, fontSize: 13),
+          style: TextStyle(color: ac.textSecondary, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary),
+              style: TextStyle(color: ac.textSecondary),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text(
+            child: Text(
               'Seed',
-              style: TextStyle(color: EkklisiaColors.gold),
+              style: TextStyle(color: ac.gold),
             ),
           ),
         ],
@@ -205,7 +207,7 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
                 ? 'Seeded $count default categories.'
                 : 'Collection is not empty — nothing seeded.',
           ),
-          backgroundColor: EkklisiaColors.bgElevated,
+          backgroundColor: ac.bgElevated,
         ),
       );
     }
@@ -250,6 +252,7 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
       backgroundColor: EkklisiaColors.bgPrimary,
       body: _mode == _Mode.list ? _buildList() : _buildForm(),
@@ -259,6 +262,8 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
   // ── List view ──────────────────────────────────────────────────────────────
 
   Widget _buildList() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<List<BookCategory>>(
       stream: _repo.watchCategories(),
       builder: (context, snap) {
@@ -307,9 +312,9 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
             // ── List ─────────────────────────────────────────────────────────
             Expanded(
               child: loading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: EkklisiaColors.gold,
+                        color: ac.gold,
                       ),
                     )
                   : categories.isEmpty
@@ -340,6 +345,8 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
   // ── Edit/Add form ──────────────────────────────────────────────────────────
 
   Widget _buildForm() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final isAdd = _editing == null;
     return Column(
       children: [
@@ -348,32 +355,32 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
           title: isAdd ? 'Add Category' : 'Edit Category',
           titleAr: isAdd ? 'إضافة تصنيف' : 'تعديل التصنيف',
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new,
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               size: 18,
             ),
             onPressed: _backToList,
           ),
           trailing: _saving
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: EkklisiaColors.gold,
+                    color: ac.gold,
                   ),
                 )
               : TextButton.icon(
                   onPressed: _save,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.check,
-                    color: EkklisiaColors.gold,
+                    color: ac.gold,
                     size: 18,
                   ),
-                  label: const Text(
+                  label: Text(
                     'Save',
-                    style: TextStyle(color: EkklisiaColors.gold),
+                    style: TextStyle(color: ac.gold),
                   ),
                 ),
         ),
@@ -430,19 +437,19 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Visible to readers',
                                 style: TextStyle(
-                                  color: EkklisiaColors.textPrimary,
+                                  color: ac.textPrimary,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 'Hidden categories still exist but won\'t appear in the Books Library filter.',
                                 style: TextStyle(
-                                  color: EkklisiaColors.textSecondary
+                                  color: ac.textSecondary
                                       .withValues(alpha: 0.8),
                                   fontSize: 11,
                                 ),
@@ -453,7 +460,7 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
                         Switch(
                           value: _isVisible,
                           onChanged: (v) => setState(() => _isVisible = v),
-                          activeColor: EkklisiaColors.gold,
+                          activeColor: ac.gold,
                         ),
                       ],
                     ),
@@ -466,24 +473,24 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
                     child: ElevatedButton(
                       onPressed: _saving ? null : _save,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: EkklisiaColors.maroon,
+                        backgroundColor: ac.maroon,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child: _saving
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                color: EkklisiaColors.gold,
+                                color: ac.gold,
                               ),
                             )
                           : Text(
                               isAdd ? 'Add Category' : 'Save Changes',
-                              style: const TextStyle(
-                                color: EkklisiaColors.goldLight,
+                              style: TextStyle(
+                                color: ac.goldLight,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -521,21 +528,22 @@ class _CategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder, width: 0.8),
+        border: Border.all(color: ac.goldBorder, width: 0.8),
       ),
       child: Row(
         children: [
           // ── Drag handle ────────────────────────────────────────────────
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Icon(
               Icons.drag_handle,
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               size: 18,
             ),
           ),
@@ -547,12 +555,12 @@ class _CategoryRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: _kNavy,
               shape: BoxShape.circle,
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: ac.goldBorder),
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: _kGold,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -575,9 +583,9 @@ class _CategoryRow extends StatelessWidget {
                   cat.nameAr,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textPrimary,
+                    color: ac.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -587,8 +595,8 @@ class _CategoryRow extends StatelessWidget {
                     cat.nameEl,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: EkklisiaColors.textSecondary,
+                    style: TextStyle(
+                      color: ac.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -604,14 +612,14 @@ class _CategoryRow extends StatelessWidget {
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
             color: cat.isVisible
-                ? EkklisiaColors.gold
-                : EkklisiaColors.textSecondary,
+                ? ac.gold
+                : ac.textSecondary,
             tooltip: cat.isVisible ? 'Visible' : 'Hidden',
             onTap: onToggle,
           ),
           _RowAction(
             icon: Icons.edit_outlined,
-            color: EkklisiaColors.textSecondary,
+            color: ac.textSecondary,
             tooltip: 'Edit',
             onTap: onEdit,
           ),
@@ -646,6 +654,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 12,
@@ -653,9 +662,9 @@ class _Header extends StatelessWidget {
         right: 16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kNavy,
-        border: Border(bottom: BorderSide(color: _kBorder, width: 0.5)),
+        border: Border(bottom: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -667,17 +676,17 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: EkklisiaColors.goldLight,
+                  style: TextStyle(
+                    color: ac.goldLight,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   titleAr,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -705,14 +714,15 @@ class _SmallBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: primary ? EkklisiaColors.maroon : EkklisiaColors.bgElevated,
+          color: primary ? ac.maroon : ac.bgElevated,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _kBorder),
+          border: Border.all(color: ac.goldBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -721,7 +731,7 @@ class _SmallBtn extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: _kGold,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -746,52 +756,53 @@ class _ReorderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: EkklisiaColors.maroon.withValues(alpha: 0.9),
+      color: ac.maroon.withValues(alpha: 0.9),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.swap_vert,
-            color: EkklisiaColors.goldLight,
+            color: ac.goldLight,
             size: 16,
           ),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Text(
               'Drag to reorder — save to apply.',
-              style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 12),
+              style: TextStyle(color: ac.goldLight, fontSize: 12),
             ),
           ),
           TextButton(
             onPressed: saving ? null : onCancel,
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary),
+              style: TextStyle(color: ac.textSecondary),
             ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           ElevatedButton(
             onPressed: saving ? null : onSave,
             style: ElevatedButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: saving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 14,
                     height: 14,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: EkklisiaColors.bgDeep,
+                      color: ac.bgDeep,
                     ),
                   )
-                : const Text(
+                : Text(
                     'Save Order',
                     style: TextStyle(
-                      color: EkklisiaColors.bgDeep,
+                      color: ac.bgDeep,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
@@ -810,28 +821,29 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             '✦',
-            style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 40),
+            style: TextStyle(color: ac.goldDim, fontSize: 40),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'No categories yet',
             style: TextStyle(
-              color: EkklisiaColors.goldLight,
+              color: ac.goldLight,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
+          SizedBox(height: 6),
+          Text(
             'Seed the 9 default Coptic categories, or add a custom one.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: EkklisiaColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: ac.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 20),
           Row(
@@ -863,16 +875,17 @@ class _DeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return AlertDialog(
-      backgroundColor: EkklisiaColors.bgElevated,
-      title: const Text(
+      backgroundColor: ac.bgElevated,
+      title: Text(
         'Delete Category',
-        style: TextStyle(color: EkklisiaColors.goldLight, fontSize: 15),
+        style: TextStyle(color: ac.goldLight, fontSize: 15),
       ),
       content: RichText(
         text: TextSpan(
-          style: const TextStyle(
-            color: EkklisiaColors.textSecondary,
+          style: TextStyle(
+            color: ac.textSecondary,
             fontSize: 13,
             height: 1.5,
           ),
@@ -880,8 +893,8 @@ class _DeleteDialog extends StatelessWidget {
             const TextSpan(text: 'Delete '),
             TextSpan(
               text: '"${cat.nameAr}"',
-              style: const TextStyle(
-                color: EkklisiaColors.goldLight,
+              style: TextStyle(
+                color: ac.goldLight,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -896,9 +909,9 @@ class _DeleteDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text(
+          child: Text(
             'Cancel',
-            style: TextStyle(color: EkklisiaColors.textSecondary),
+            style: TextStyle(color: ac.textSecondary),
           ),
         ),
         TextButton(
@@ -928,12 +941,13 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kBorder, width: 0.8),
+        border: Border.all(color: ac.goldBorder, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -942,25 +956,25 @@ class _FormCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: EkklisiaColors.goldLight,
+                style: TextStyle(
+                  color: ac.goldLight,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 titleAr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary,
+                  color: ac.textSecondary,
                   fontSize: 12,
                 ),
               ),
             ],
           ),
-          const Divider(height: 14, color: EkklisiaColors.goldBorder),
+          Divider(height: 14, color: ac.goldBorder),
           child,
         ],
       ),
@@ -989,13 +1003,14 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: EkklisiaColors.textSecondary,
+          style: TextStyle(
+            color: ac.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -1007,14 +1022,14 @@ class _Field extends StatelessWidget {
           inputFormatters: inputFormatters,
           validator: validator,
           style: TextStyle(
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
             fontSize: 14,
             fontFamily: fontFamily,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: EkklisiaColors.textSecondary.withValues(alpha: 0.4),
+              color: ac.textSecondary.withValues(alpha: 0.4),
               fontSize: 13,
             ),
             filled: true,
@@ -1025,16 +1040,16 @@ class _Field extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: EkklisiaColors.goldBorder),
+              borderSide: BorderSide(color: ac.goldBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: EkklisiaColors.goldBorder),
+              borderSide: BorderSide(color: ac.goldBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: EkklisiaColors.gold,
+              borderSide: BorderSide(
+                color: ac.gold,
                 width: 1.5,
               ),
             ),
@@ -1067,6 +1082,7 @@ class _RowAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Tooltip(
       message: tooltip,
       child: GestureDetector(

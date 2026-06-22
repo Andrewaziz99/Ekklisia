@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/bible_model.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
@@ -66,10 +67,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     final bgDeep = BrightnessColors.bgDeep(brightness);
     final gold = BrightnessColors.gold(brightness);
@@ -145,7 +144,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                               .withValues(alpha: 0.3),
                     ),
                     onPressed: _hasPrev ? () => _goTo(_chapterIndex - 1) : null,
-                    tooltip: isGreek ? 'Προηγούμενο' : 'السابق',
+                    tooltip: l.previous,
                   ),
                   // Next chapter
                   IconButton(
@@ -157,7 +156,7 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                               .withValues(alpha: 0.3),
                     ),
                     onPressed: _hasNext ? () => _goTo(_chapterIndex + 1) : null,
-                    tooltip: isGreek ? 'Επόμενο' : 'التالي',
+                    tooltip: l.next,
                   ),
                 ],
               ),

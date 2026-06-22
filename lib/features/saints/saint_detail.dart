@@ -10,12 +10,11 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/saint_model.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
-import '../../features/settings/cubit/settings_cubit.dart';
-import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 import '../../shared/widgets/cached_pdf_viewer.dart';
 import '../../shared/widgets/video_player_widget.dart';
@@ -63,9 +62,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
+    final l = context.l10n;
     final s = widget.saint;
     final hasBothBios =
         (s.biographyEn?.isNotEmpty ?? false) &&
@@ -181,17 +178,13 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                           if (s.feastDate != null)
                             _InfoChip(
                               icon: Icons.calendar_today_outlined,
-                              label: isGreek
-                                  ? 'Εορτή: ${s.feastDate!}'
-                                  : 'العيد: ${s.feastDate!}',
+                              label: '${l.feastPrefix}${s.feastDate!}',
                               color: gold,
                             ),
                           if (s.patronOfEn != null)
                             _InfoChip(
                               icon: Icons.shield_outlined,
-                              label: isGreek
-                                  ? 'Προστάτης ${s.patronOfEn}'
-                                  : 'شفيع ${s.patronOfEn}',
+                              label: '${l.patronPrefix}${s.patronOfEn}',
                               color: teal,
                             ),
                           if (s.patronOfAr != null)
@@ -207,7 +200,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
 
                   // ── Media action buttons ─────────────────────────────
                   if (s.hasPdf || s.hasAudio || s.hasVideo) ...[
-                    _SectionDivider(label: isGreek ? 'Μέσα' : 'وسائط', gold: gold),
+                    _SectionDivider(label: l.mediaSection, gold: gold),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
@@ -216,7 +209,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                         if (s.hasPdf)
                           _MediaButton(
                             icon: Icons.picture_as_pdf_outlined,
-                            label: isGreek ? 'Ανάγνωση PDF' : 'قراءة PDF',
+                            label: l.readPdf,
                             color: EkklisiaColors.bronze,
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
@@ -227,14 +220,14 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                         if (s.hasAudio)
                           _MediaButton(
                             icon: Icons.headphones_outlined,
-                            label: isGreek ? 'Αναπαραγωγή Ήχου' : 'تشغيل الصوت',
+                            label: l.playAudio,
                             color: teal,
                             onTap: _playAudio,
                           ),
                         if (s.hasVideo)
                           _MediaButton(
                             icon: Icons.play_circle_outline,
-                            label: isGreek ? 'Παρακολούθηση Βίντεο' : 'مشاهدة الفيديو',
+                            label: l.watchVideo,
                             color: plum,
                             onTap: () => showVideoSheet(
                               context,
@@ -250,7 +243,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                   // ── Biography ────────────────────────────────────────
                   if (s.biographyEn != null || s.biographyAr != null) ...[
                     _SectionDivider(
-                      label: isGreek ? 'Βιογραφία  السيرة' : 'السيرة  Βιογραφία',
+                      label: l.biography,
                       gold: gold,
                     ),
                     const SizedBox(height: 10),
@@ -272,7 +265,7 @@ class _SaintDetailScreenState extends State<SaintDetailScreen>
                             fontWeight: FontWeight.w600,
                           ),
                           tabs: [
-                            Tab(text: isGreek ? 'Αγγλικά' : 'إنجليزي'),
+                            Tab(text: l.english),
                             const Tab(text: 'عربي'),
                           ],
                         ),

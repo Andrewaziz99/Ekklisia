@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/bible_model.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
@@ -27,10 +28,8 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     final bgDeep = BrightnessColors.bgDeep(brightness);
     final gold = BrightnessColors.gold(brightness);
@@ -101,10 +100,10 @@ class _BibleChapterScreenState extends State<BibleChapterScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                isGreek ? 'Επιλέξτε κεφάλαιο' : 'اختر الأصحاح',
-                textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
+                l.selectChapter,
+                textDirection: l.dir,
                 style: TextStyle(
-                  fontFamily: isGreek ? null : 'Scheherazade',
+                  fontFamily: l.bodyFont,
                   color: BrightnessColors.textSecondary(brightness),
                   fontSize: isGreek ? 12 : 14,
                   letterSpacing: 0.5,

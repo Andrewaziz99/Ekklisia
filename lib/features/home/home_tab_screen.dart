@@ -14,6 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/services/coptic_calendar_service.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/pdf_content_model.dart';
@@ -23,6 +24,7 @@ import '../../features/bible/bible_home_screen.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../features/books/screens/book_detail_screen.dart';
+import '../../features/churches/churches_screen.dart';
 import '../../features/coptic_calendar/coptic_calendar_screen.dart';
 import '../../features/daily_verse/daily_verse_cubit.dart';
 import '../../features/daily_verse/daily_verse_state.dart';
@@ -31,8 +33,6 @@ import '../../features/gallery/gallery_screen.dart';
 import '../../features/games/screens/games_home_screen.dart';
 import '../../features/pdf_content/pdf_content_list_screen.dart';
 import '../../features/saints/saints_list.dart';
-import '../../features/settings/cubit/settings_cubit.dart';
-import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 
 // ── Palette constants ─────────────────────────────────────────────────────────
@@ -60,16 +60,12 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
         ? _kParchment
         : BrightnessColors.bgDeep(brightness);
 
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
     final isAdmin = context.select<AuthCubit, bool>((c) => c.state.isAdmin);
 
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bodyBg,
-      endDrawer: _GamesEndDrawer(isGreek: isGreek, isAdmin: isAdmin),
+      endDrawer: _GamesEndDrawer(isAdmin: isAdmin),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -88,8 +84,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
 
                 // ── Content Library ───────────────────────────────────
                 _SectionHeader(
-                  arLabel: 'مكتبة المحتوى',
-                  enLabel: 'Βιβλιοθήκη Περιεχομένου',
+                  label: context.l10n.contentLibrary,
                   onAction: widget.onGoToLibrary,
                   actionIsSearch: true,
                 ),
@@ -100,8 +95,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
 
                 // ── Recently Added ────────────────────────────────────
                 _SectionHeader(
-                  arLabel: 'أحدث الإضافات',
-                  enLabel: 'Πρόσφατα προστέθηκε',
+                  label: context.l10n.recentlyAdded,
                   onAction: widget.onGoToLibrary,
                   actionIsSearch: false,
                 ),
@@ -284,10 +278,7 @@ class _DailyVerseBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
 
     return BlocBuilder<DailyVerseCubit, DailyVerseState>(
       builder: (context, state) {
@@ -295,12 +286,12 @@ class _DailyVerseBanner extends StatelessWidget {
 
         final verseText = verse == null
             ? ''
-            : (isGreek && verse.verseEl.isNotEmpty
+            : (!l.isAr && verse.verseEl.isNotEmpty
                   ? verse.verseEl
                   : verse.verseAr);
         final reference = verse == null
             ? ''
-            : (isGreek && verse.referenceEl.isNotEmpty
+            : (!l.isAr && verse.referenceEl.isNotEmpty
                   ? verse.referenceEl
                   : verse.referenceAr);
 
@@ -308,11 +299,18 @@ class _DailyVerseBanner extends StatelessWidget {
           color: _kCrimson,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── App logo thumbnail ────────────────────────────────
               // const AppLogo(size: 80),
-              Image.asset('assets/images/icons/001.png', width: 80, height: 80),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Image.asset(
+                  'assets/images/icons/001.png',
+                  width: 80,
+                  height: 80,
+                ),
+              ),
               const SizedBox(width: 14),
 
               // ── Verse info ────────────────────────────────────────
@@ -331,16 +329,14 @@ class _DailyVerseBanner extends StatelessWidget {
                             ),
                             padding: const EdgeInsets.only(bottom: 3),
                             child: Text(
-                              isGreek ? 'Ο ΣΤΙΧΟΣ ΤΗΣ ΗΜΕΡΑΣ' : 'آية اليوم',
-                              textDirection: isGreek
-                                  ? TextDirection.ltr
-                                  : TextDirection.rtl,
+                              l.dailyVerseTitleUpper,
+                              textDirection: l.dir,
                               style: TextStyle(
-                                fontFamily: isGreek ? null : 'Scheherazade',
+                                fontFamily: l.bodyFont,
                                 color: _kGold,
-                                fontSize: isGreek ? 9 : 11,
+                                fontSize: l.isAr ? 11 : 9,
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: isGreek ? 1.5 : 0.5,
+                                letterSpacing: l.isAr ? 0.5 : 1.5,
                               ),
                             ),
                           ),
@@ -348,16 +344,12 @@ class _DailyVerseBanner extends StatelessWidget {
                           if (verse != null) ...[
                             Text(
                               verseText,
-                              textDirection: isGreek
-                                  ? TextDirection.ltr
-                                  : TextDirection.rtl,
+                              textDirection: l.dir,
                               textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontFamily: isGreek ? null : 'Scheherazade',
+                                fontFamily: l.greekLanguage,
                                 color: Colors.white,
-                                fontSize: isGreek ? 13 : 15,
+                                fontSize: l.isAr ? 15 : 13,
                                 fontWeight: FontWeight.w700,
                                 height: 1.4,
                               ),
@@ -365,28 +357,22 @@ class _DailyVerseBanner extends StatelessWidget {
                             const SizedBox(height: 5),
                             Text(
                               reference,
-                              textDirection: isGreek
-                                  ? TextDirection.ltr
-                                  : TextDirection.rtl,
+                              textDirection: l.dir,
                               style: TextStyle(
-                                fontFamily: isGreek ? null : 'Scheherazade',
+                                fontFamily: l.bodyFont,
                                 color: const Color(0xFFE8C8A0),
-                                fontSize: isGreek ? 11 : 13,
+                                fontSize: l.isAr ? 13 : 11,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ] else ...[
                             Text(
-                              isGreek
-                                  ? 'Καθημερινός Στίχος'
-                                  : 'القراءة اليومية',
-                              textDirection: isGreek
-                                  ? TextDirection.ltr
-                                  : TextDirection.rtl,
+                              l.dailyVerseEmpty,
+                              textDirection: l.dir,
                               style: TextStyle(
-                                fontFamily: isGreek ? null : 'Scheherazade',
+                                fontFamily: l.bodyFont,
                                 color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: isGreek ? 13 : 15,
+                                fontSize: l.isAr ? 15 : 13,
                               ),
                             ),
                           ],
@@ -437,14 +423,12 @@ class _BannerShimmer extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
-    required this.arLabel,
-    required this.enLabel,
+    required this.label,
     this.onAction,
     this.actionIsSearch = false,
   });
 
-  final String arLabel;
-  final String enLabel;
+  final String label;
   final VoidCallback? onAction;
   final bool actionIsSearch;
 
@@ -454,11 +438,7 @@ class _SectionHeader extends StatelessWidget {
     final titleColor = brightness == Brightness.light
         ? const Color(0xFF2C1A0E)
         : BrightnessColors.goldLight(brightness);
-
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -477,11 +457,11 @@ class _SectionHeader extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                isGreek ? enLabel : arLabel,
+                label,
                 style: TextStyle(
-                  fontFamily: isGreek ? null : 'Scheherazade',
+                  fontFamily: l.bodyFont,
                   color: titleColor,
-                  fontSize: isGreek ? 14 : 18,
+                  fontSize: l.isAr ? 18 : 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.3,
                 ),
@@ -510,11 +490,11 @@ class _SectionHeader extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      isGreek ? 'Δείτε Όλα' : 'عرض الكل',
+                      context.l10n.seeAll,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: _kGold,
-                        fontSize: isGreek ? 11 : 13,
+                        fontSize: l.isAr ? 13 : 11,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -530,67 +510,57 @@ class _SectionHeader extends StatelessWidget {
 class _CategoryGrid extends StatelessWidget {
   const _CategoryGrid();
 
-  static const _categories = [
+  static List<_CategoryItem> _buildCategories(AppL10n l) => [
     _CategoryItem(
-      arLabel: 'الأجبية',
-      enLabel: 'Αγπέγια',
+      label: l.categoryAgbeya,
       icon: 'assets/images/icons/agbeya.jpg',
-      bgColor: Color(0xFF1B2A4A),
+      bgColor: const Color(0xFF1B2A4A),
     ),
     _CategoryItem(
-      arLabel: 'الترانيم',
-      enLabel: 'Ψαλμωδία',
+      label: l.categoryPsalmody,
       icon: 'assets/images/icons/psalmody.jpg',
-      bgColor: Color(0xFF2A1A38),
+      bgColor: const Color(0xFF2A1A38),
     ),
     _CategoryItem(
-      arLabel: 'الكتاب المقدس',
-      enLabel: 'άγια γραφή',
+      label: l.categoryBible,
       icon: 'assets/images/icons/bible.jpg',
-      bgColor: Color(0xFF1A2C1A),
+      bgColor: const Color(0xFF1A2C1A),
     ),
     _CategoryItem(
-      arLabel: 'القداسات',
-      enLabel: 'Λειτουργία',
+      label: l.categoryLiturgies,
       icon: 'assets/images/icons/liturgies.jpg',
-      bgColor: Color(0xFF2C1A0E),
+      bgColor: const Color(0xFF2C1A0E),
     ),
     _CategoryItem(
-      arLabel: 'القراءات',
-      enLabel: 'Αναγνώσεις',
+      label: l.categoryReadings,
       icon: 'assets/images/icons/readings.jpg',
-      bgColor: Color(0xFF1B2A4A),
+      bgColor: const Color(0xFF1B2A4A),
     ),
     _CategoryItem(
-      arLabel: 'الألحان',
-      enLabel: 'ύμνοι',
+      label: l.categoryHymns,
       icon: 'assets/images/icons/hymns.jpg',
-      bgColor: Color(0xFF2A1A38),
+      bgColor: const Color(0xFF2A1A38),
     ),
     _CategoryItem(
-      arLabel: 'مناسبات',
-      enLabel: 'περιστάσεις',
+      label: l.categoryOccasions,
       icon: 'assets/images/icons/special.jpg',
-      bgColor: Color(0xFF6B1A1A),
+      bgColor: const Color(0xFF6B1A1A),
     ),
     _CategoryItem(
-      arLabel: 'التقويم القبطي',
-      enLabel: 'Κοπτικό Ημερολόγιο',
+      label: l.categoryCopticCalendar,
       icon: '',
-      bgColor: Color(0xFF1A3A2A),
+      bgColor: const Color(0xFF1A3A2A),
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final labelColor = brightness == Brightness.light
         ? const Color(0xFF2C1A0E)
         : Colors.white.withValues(alpha: 0.9);
+    final categories = _buildCategories(l);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -603,11 +573,11 @@ class _CategoryGrid extends StatelessWidget {
           mainAxisSpacing: 10,
           childAspectRatio: 0.9,
         ),
-        itemCount: _categories.length,
+        itemCount: categories.length,
         itemBuilder: (context, i) => _CategoryTile(
-          item: _categories[i],
+          item: categories[i],
           index: i,
-          isGreek: isGreek,
+          l: l,
           labelColor: labelColor,
         ),
       ),
@@ -617,13 +587,11 @@ class _CategoryGrid extends StatelessWidget {
 
 class _CategoryItem {
   const _CategoryItem({
-    required this.arLabel,
-    required this.enLabel,
+    required this.label,
     required this.icon,
     required this.bgColor,
   });
-  final String arLabel;
-  final String enLabel;
+  final String label;
   final String icon;
   final Color bgColor;
 }
@@ -632,12 +600,12 @@ class _CategoryTile extends StatelessWidget {
   const _CategoryTile({
     required this.item,
     required this.index,
-    required this.isGreek,
+    required this.l,
     required this.labelColor,
   });
   final _CategoryItem item;
   final int index;
-  final bool isGreek;
+  final AppL10n l;
   final Color labelColor;
 
   void _onTap(BuildContext context) {
@@ -767,14 +735,14 @@ class _CategoryTile extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            isGreek ? item.enLabel : item.arLabel,
+            item.label,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: isGreek ? null : 'Scheherazade',
+              fontFamily: l.bodyFont,
               color: labelColor,
-              fontSize: isGreek ? 10 : 12,
+              fontSize: l.isAr ? 12 : 10,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -805,10 +773,7 @@ class _RecentBooksRow extends StatelessWidget {
             ? const Color(0xFF2C1A0E)
             : BrightnessColors.textPrimary(brightness);
 
-        final lang = context.select<SettingsCubit, AppLanguage>(
-          (c) => c.state.language,
-        );
-        final isGreek = lang == AppLanguage.greek;
+        final l = context.l10n;
 
         return SizedBox(
           height: 180,
@@ -818,7 +783,7 @@ class _RecentBooksRow extends StatelessWidget {
             itemCount: books.length,
             itemBuilder: (context, i) {
               final book = books[i];
-              final title = isGreek && book.titleEl.isNotEmpty
+              final title = !l.isAr && book.titleEl.isNotEmpty
                   ? book.titleEl
                   : book.titleAr;
 
@@ -864,15 +829,13 @@ class _RecentBooksRow extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(7, 6, 7, 7),
                         child: Text(
                           title,
-                          textDirection: isGreek
-                              ? TextDirection.ltr
-                              : TextDirection.rtl,
+                          textDirection: l.dir,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontFamily: isGreek ? null : 'Scheherazade',
+                            fontFamily: l.bodyFont,
                             color: textPrimary,
-                            fontSize: isGreek ? 10 : 12,
+                            fontSize: l.isAr ? 12 : 10,
                             height: 1.3,
                             fontWeight: FontWeight.w600,
                           ),
@@ -921,13 +884,11 @@ class _CalendarTileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coptic = CopticCalendarService.fromGregorian(DateTime.now());
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
-    final monthName = isGreek
-        ? CopticCalendarService.monthNameEl(coptic.month)
-        : CopticCalendarService.monthNameAr(coptic.month);
-    final yearSuffix = isGreek ? 'Α.D.' : 'م';
+    final l = context.l10n;
+    final monthName = l.isAr
+        ? CopticCalendarService.monthNameAr(coptic.month)
+        : CopticCalendarService.monthNameEl(coptic.month);
+    final yearSuffix = context.l10n.yearSuffix;
 
     return Container(
       color: bgColor,
@@ -961,12 +922,10 @@ class _CalendarTileContent extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   monthName,
-                  textDirection: isGreek
-                      ? TextDirection.ltr
-                      : TextDirection.rtl,
+                  textDirection: l.dir,
                   style: TextStyle(
                     color: _kGold,
-                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontFamily: l.bodyFont,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     height: 1,
@@ -993,12 +952,12 @@ class _CalendarTileContent extends StatelessWidget {
 // ── Games End Drawer ──────────────────────────────────────────────────────────
 
 class _GamesEndDrawer extends StatelessWidget {
-  const _GamesEndDrawer({required this.isGreek, required this.isAdmin});
-  final bool isGreek;
+  const _GamesEndDrawer({required this.isAdmin});
   final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bg = brightness == Brightness.light
         ? const Color(0xFFF5F0E8)
@@ -1035,20 +994,20 @@ class _GamesEndDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isGreek ? 'Εκκλησία' : 'إكليسيا',
+                          l.ekklisiaApp,
                           style: TextStyle(
-                            fontFamily: isGreek ? null : 'Scheherazade',
+                            fontFamily: l.bodyFont,
                             color: _kGold,
-                            fontSize: isGreek ? 15 : 18,
+                            fontSize: l.isAr ? 18 : 15,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         Text(
-                          isGreek ? 'Εφαρμογή' : 'التطبيق',
+                          l.appLabel,
                           style: TextStyle(
-                            fontFamily: isGreek ? null : 'Scheherazade',
+                            fontFamily: l.bodyFont,
                             color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: isGreek ? 10 : 12,
+                            fontSize: l.isAr ? 12 : 10,
                           ),
                         ),
                       ],
@@ -1071,9 +1030,8 @@ class _GamesEndDrawer extends StatelessWidget {
             // ── Menu items ───────────────────────────────────────────────
             _DrawerItem(
               icon: Icons.auto_stories_outlined,
-              labelAr: 'القديسون',
-              labelEl: 'Άγιοι',
-              isGreek: isGreek,
+              label: l.saints,
+              labelAlt: l.other.saints,
               accentColor: const Color(0xFFC9A84C),
               onTap: () {
                 Navigator.pop(context);
@@ -1085,10 +1043,23 @@ class _GamesEndDrawer extends StatelessWidget {
             ),
 
             _DrawerItem(
+              icon: Icons.church_outlined,
+              label: l.churches,
+              labelAlt: l.other.churches,
+              accentColor: const Color(0xFF7EB8C9),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChurchesScreen()),
+                );
+              },
+            ),
+
+            _DrawerItem(
               icon: Icons.gamepad_outlined,
-              labelAr: 'الألعاب',
-              labelEl: 'Παιχνίδια',
-              isGreek: isGreek,
+              label: l.games,
+              labelAlt: l.other.games,
               accentColor: const Color(0xFFC9A84C),
               onTap: () {
                 Navigator.pop(context);
@@ -1101,9 +1072,8 @@ class _GamesEndDrawer extends StatelessWidget {
 
             _DrawerItem(
               icon: Icons.photo_library_outlined,
-              labelAr: 'معرض الصور',
-              labelEl: 'στοά',
-              isGreek: isGreek,
+              label: l.gallery,
+              labelAlt: l.other.gallery,
               accentColor: const Color(0xFF7EB8C9),
               onTap: () {
                 Navigator.pop(context);
@@ -1116,9 +1086,8 @@ class _GamesEndDrawer extends StatelessWidget {
 
             _DrawerItem(
               icon: Icons.video_library_outlined,
-              labelAr: 'المكتبة الالكترونية',
-              labelEl: 'Ηλεκτρονική Βιβλιοθήκη',
-              isGreek: isGreek,
+              label: l.elib,
+              labelAlt: l.other.elib,
               accentColor: const Color(0xFFC9A84C),
               onTap: () {
                 Navigator.pop(context);
@@ -1134,9 +1103,8 @@ class _GamesEndDrawer extends StatelessWidget {
             if (isAdmin) ...[
               _DrawerItem(
                 icon: Icons.admin_panel_settings_outlined,
-                labelAr: 'لوحة التحكم',
-                labelEl: 'Πίνακας Διαχείρισης',
-                isGreek: isGreek,
+                label: l.adminDashboard,
+                labelAlt: l.other.adminDashboard,
                 accentColor: const Color(0xFF7EB8C9),
                 onTap: () {
                   Navigator.pop(context);
@@ -1224,23 +1192,26 @@ class _GamesEndDrawer extends StatelessWidget {
 class _DrawerItem extends StatelessWidget {
   const _DrawerItem({
     required this.icon,
-    required this.labelAr,
-    required this.labelEl,
-    required this.isGreek,
+    required this.label,
+    required this.labelAlt,
     required this.accentColor,
     required this.onTap,
   });
 
   final IconData icon;
-  final String labelAr;
-  final String labelEl;
-  final bool isGreek;
+
+  /// Primary label — already resolved to the active language.
+  final String label;
+
+  /// Secondary label — the opposite language (bilingual display).
+  final String labelAlt;
   final Color accentColor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final l = context.l10n;
     final bg = brightness == Brightness.light
         ? Colors.white
         : const Color(0xFF162535);
@@ -1286,24 +1257,24 @@ class _DrawerItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isGreek ? labelEl : labelAr,
+                      label,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: brightness == Brightness.light
                             ? const Color(0xFF1B2A4A)
                             : Colors.white.withValues(alpha: 0.9),
-                        fontSize: isGreek ? 15 : 18,
+                        fontSize: l.isAr ? 18 : 15,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      isGreek ? labelAr : labelEl,
+                      labelAlt,
                       style: TextStyle(
-                        fontFamily: isGreek ? 'Scheherazade' : null,
+                        fontFamily: l.other.bodyFont,
                         color: brightness == Brightness.light
                             ? const Color(0xFF6B7280)
                             : Colors.white.withValues(alpha: 0.45),
-                        fontSize: isGreek ? 13 : 11,
+                        fontSize: l.isAr ? 11 : 13,
                       ),
                     ),
                   ],

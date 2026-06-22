@@ -9,6 +9,7 @@ import '../../data/repositories/books_repository.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../../services/notification_service.dart';
+import '../utils/admin_colors.dart';
 
 class AdminNotificationScreen extends StatefulWidget {
   const AdminNotificationScreen({super.key});
@@ -95,6 +96,7 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -125,6 +127,8 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
   // ── Composer ────────────────────────────────────────────────────────────
 
   Widget _buildComposer() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Form(
       key: _formKey,
       child: _AdminCard(
@@ -133,12 +137,12 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
         children: [
           // Title field
           _FieldLabel('Notification Title', 'عنوان الإشعار *'),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextFormField(
             controller:  _titleCtrl,
             maxLength:   65,
-            style: const TextStyle(
-                color: EkklisiaColors.textPrimary, fontSize: 14),
+            style: TextStyle(
+                color: ac.textPrimary, fontSize: 14),
             onChanged: (_) => setState(() {}),
             decoration: _inputDec(hint: 'New book added…', counter: true),
             validator: (v) =>
@@ -153,8 +157,8 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             controller: _bodyCtrl,
             maxLines:   3,
             maxLength:  150,
-            style: const TextStyle(
-                color: EkklisiaColors.textPrimary, fontSize: 14),
+            style: TextStyle(
+                color: ac.textPrimary, fontSize: 14),
             onChanged: (_) => setState(() {}),
             decoration: _inputDec(hint: 'A new book has been added…', counter: true),
             validator: (v) =>
@@ -171,23 +175,23 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
                   state.books.where((b) => b.isPublished).toList();
               return DropdownButtonFormField<BookModel?>(
                 initialValue: _linkedBook,
-                dropdownColor: EkklisiaColors.bgElevated,
-                style: const TextStyle(
-                    color: EkklisiaColors.textPrimary, fontSize: 13),
+                dropdownColor: ac.bgElevated,
+                style: TextStyle(
+                    color: ac.textPrimary, fontSize: 13),
                 decoration: _inputDec(hint: 'No deep-link'),
                 items: [
-                  const DropdownMenuItem(value: null,
+                  DropdownMenuItem(value: null,
                       child: Text('No deep-link',
                           style: TextStyle(
-                              color: EkklisiaColors.textSecondary))),
+                              color: ac.textSecondary))),
                   ...published.map((b) => DropdownMenuItem(
                       value: b,
                       child: Text(b.titleAr,
                           overflow: TextOverflow.ellipsis,
                           textDirection: TextDirection.rtl,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontFamily: 'Scheherazade',
-                              color: EkklisiaColors.textPrimary,
+                              color: ac.textPrimary,
                               fontSize: 14)))),
                 ],
                 onChanged: (v) => setState(() => _linkedBook = v),
@@ -201,18 +205,18 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: EkklisiaColors.goldSubtle,
+                color: ac.goldSubtle,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: EkklisiaColors.goldBorder, width: 0.5),
+                    color: ac.goldBorder, width: 0.5),
               ),
               child: Row(children: [
-                const Icon(Icons.link, size: 12,
-                    color: EkklisiaColors.gold),
-                const SizedBox(width: 6),
+                Icon(Icons.link, size: 12,
+                    color: ac.gold),
+                SizedBox(width: 6),
                 Text('Ekklisia://book/${_linkedBook!.id}',
-                    style: const TextStyle(
-                        color: EkklisiaColors.gold, fontSize: 11)),
+                    style: TextStyle(
+                        color: ac.gold, fontSize: 11)),
               ]),
             ),
           ],
@@ -224,18 +228,18 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: EkklisiaColors.maroon.withValues(alpha: 0.2),
+                color: ac.maroon.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: EkklisiaColors.maroon, width: 0.5),
+                    color: ac.maroon, width: 0.5),
               ),
               child: Row(children: [
-                const Icon(Icons.error_outline,
-                    color: EkklisiaColors.maroonMid, size: 16),
-                const SizedBox(width: 8),
+                Icon(Icons.error_outline,
+                    color: ac.maroonMid, size: 16),
+                SizedBox(width: 8),
                 Expanded(child: Text(_errorMsg!,
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                    style: TextStyle(
+                        color: ac.textSecondary,
                         fontSize: 12))),
               ]),
             ),
@@ -248,30 +252,30 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
             child: ElevatedButton.icon(
               onPressed: (_sending || _sent) ? null : _send,
               icon: _sending
-                  ? const SizedBox(width: 16, height: 16,
+                  ? SizedBox(width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation(
-                              EkklisiaColors.bgDeep)))
+                              ac.bgDeep)))
                   : Icon(
                       _sent ? Icons.check_circle_outline
                             : Icons.send_outlined,
                       size: 18,
-                      color: EkklisiaColors.bgDeep),
+                      color: ac.bgDeep),
               label: Text(
                 _sending ? 'Sending…'
                     : _sent    ? 'Sent!'
                     : 'Send Push Notification',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w700,
-                    color: EkklisiaColors.bgDeep),
+                    color: ac.bgDeep),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _sent
-                    ? EkklisiaColors.tealMid
-                    : EkklisiaColors.gold,
+                    ? ac.tealMid
+                    : ac.gold,
                 disabledBackgroundColor: _sent
-                    ? EkklisiaColors.tealMid
-                    : EkklisiaColors.goldDim.withValues(alpha: 0.5),
+                    ? ac.tealMid
+                    : ac.goldDim.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -286,6 +290,8 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
   // ── Preview + History ────────────────────────────────────────────────────
 
   Widget _buildPreviewAndHistory() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final previewTitle = _titleCtrl.text.isNotEmpty
         ? _titleCtrl.text
         : 'Notification Title';
@@ -321,19 +327,19 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
         titleAr: 'السجل',
         children: [
           if (_history.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Center(child: Text('No notifications sent yet',
                   style: TextStyle(
-                      color: EkklisiaColors.textSecondary,
+                      color: ac.textSecondary,
                       fontSize: 12))),
             )
           else
             ..._history.asMap().entries.map((e) => Column(children: [
               _HistoryRow(notif: e.value),
               if (e.key < _history.length - 1)
-                const Divider(height: 16,
-                    color: EkklisiaColors.goldBorder,
+                Divider(height: 16,
+                    color: ac.goldBorder,
                     indent: 4, endIndent: 4),
             ])),
         ],
@@ -341,36 +347,38 @@ class _AdminNotificationScreenState extends State<AdminNotificationScreen> {
     ]);
   }
 
-  InputDecoration _inputDec({String hint = '', bool counter = false}) =>
-      InputDecoration(
+  InputDecoration _inputDec({required String hint, bool counter = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return InputDecoration(
         hintText:  hint,
         counterText: counter ? null : '',
-        hintStyle: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 13),
+        hintStyle: TextStyle(
+            color: ac.textSecondary, fontSize: 13),
         filled:    true,
-        fillColor: EkklisiaColors.bgElevated,
+        fillColor: ac.bgElevated,
         contentPadding: const EdgeInsets.symmetric(
             horizontal: 14, vertical: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
+          borderSide: BorderSide(
+              color: ac.goldBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.gold, width: 1.5),
+          borderSide: BorderSide(
+              color: ac.gold, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.redAccent),
+          borderSide: BorderSide(color: Colors.redAccent),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
+          borderSide: BorderSide(
               color: Colors.redAccent, width: 1.5),
         ),
       );
+  }
 }
 
 // ── Supporting widgets ────────────────────────────────────────────────────────
@@ -395,13 +403,14 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: EkklisiaColors.goldBorder, width: 0.5),
+            color: ac.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,16 +418,16 @@ class _AdminCard extends StatelessWidget {
           Row(children: [
             Container(width: 3, height: 16,
                 decoration: BoxDecoration(
-                    color: EkklisiaColors.gold,
+                    color: ac.gold,
                     borderRadius: BorderRadius.circular(2))),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(
-                color: EkklisiaColors.textPrimary,
+            SizedBox(width: 8),
+            Text(title, style: TextStyle(
+                color: ac.textPrimary,
                 fontSize: 13, fontWeight: FontWeight.w700)),
-            const SizedBox(width: 6),
-            Text(titleAr, style: const TextStyle(
+            SizedBox(width: 6),
+            Text(titleAr, style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkklisiaColors.textSecondary, fontSize: 12)),
+                color: ac.textSecondary, fontSize: 12)),
           ]),
           const SizedBox(height: 16),
           ...children,
@@ -433,24 +442,30 @@ class _FieldLabel extends StatelessWidget {
   final String label;
   final String labelAr;
   @override
-  Widget build(BuildContext context) => Row(children: [
-    Text(label, style: const TextStyle(
-        color: EkklisiaColors.textSecondary,
-        fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-    const SizedBox(width: 6),
-    Text(labelAr, style: const TextStyle(
-        fontFamily: 'Scheherazade',
-        color: EkklisiaColors.textSecondary, fontSize: 11)),
-  ]);
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Row(children: [
+      Text(label, style: TextStyle(
+          color: ac.textSecondary,
+          fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+      SizedBox(width: 6),
+      Text(labelAr, style: TextStyle(
+          fontFamily: 'Scheherazade',
+          color: ac.textSecondary, fontSize: 11)),
+    ]);
+  }
 }
 
 class _PreviewLabel extends StatelessWidget {
-  const _PreviewLabel(this.label);
+  _PreviewLabel(this.label);
   final String label;
   @override
-  Widget build(BuildContext context) => Text(label, style: const TextStyle(
-      color: EkklisiaColors.textSecondary,
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Text(label, style: TextStyle(
+      color: ac.textSecondary,
       fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.w600));
+  }
 }
 
 class _AndroidPreview extends StatelessWidget {
@@ -459,23 +474,24 @@ class _AndroidPreview extends StatelessWidget {
   final String body;
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: EkklisiaColors.goldBorder, width: 0.3),
+            color: ac.goldBorder, width: 0.3),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           width: 32, height: 32,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: RadialGradient(colors: [
-              EkklisiaColors.bronze, EkklisiaColors.maroon]),
+              ac.bronze, ac.maroon]),
           ),
-          child: const Center(child: Text('✦', style: TextStyle(
-              color: EkklisiaColors.goldLight, fontSize: 14))),
+          child: Center(child: Text('✦', style: TextStyle(
+              color: ac.goldLight, fontSize: 14))),
         ),
         const SizedBox(width: 10),
         Expanded(child: Column(
@@ -483,19 +499,19 @@ class _AndroidPreview extends StatelessWidget {
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-              const Text('Ekklisia', style: TextStyle(
-                  color: EkklisiaColors.textSecondary,
+              Text('Ekklisia', style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 10, fontWeight: FontWeight.w600)),
-              const Text('now', style: TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 10)),
+              Text('now', style: TextStyle(
+                  color: ac.textSecondary, fontSize: 10)),
             ]),
-            const SizedBox(height: 2),
-            Text(title, style: const TextStyle(
-                color: EkklisiaColors.textPrimary,
+            SizedBox(height: 2),
+            Text(title, style: TextStyle(
+                color: ac.textPrimary,
                 fontSize: 12, fontWeight: FontWeight.w700)),
             Text(body, maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: EkklisiaColors.textSecondary, fontSize: 11)),
+                style: TextStyle(
+                    color: ac.textSecondary, fontSize: 11)),
           ],
         )),
       ]),
@@ -509,25 +525,26 @@ class _IosPreview extends StatelessWidget {
   final String body;
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
+        color: Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: EkklisiaColors.goldBorder, width: 0.3),
+            color: ac.goldBorder, width: 0.3),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Row(children: [
             Container(
               width: 18, height: 18,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: RadialGradient(colors: [
-                  EkklisiaColors.bronze, EkklisiaColors.maroon]),
+                  ac.bronze, ac.maroon]),
               ),
-              child: const Center(child: Text('✦', style: TextStyle(
-                  color: EkklisiaColors.goldLight, fontSize: 8))),
+              child: Center(child: Text('✦', style: TextStyle(
+                  color: ac.goldLight, fontSize: 8))),
             ),
             const SizedBox(width: 5),
             const Text('Ekklisia', style: TextStyle(
@@ -538,11 +555,11 @@ class _IosPreview extends StatelessWidget {
               color: Color(0x66FFFFFF), fontSize: 10)),
         ]),
         const SizedBox(height: 5),
-        Text(title, style: const TextStyle(
+        Text(title, style: TextStyle(
             color: Colors.white,
             fontSize: 12, fontWeight: FontWeight.w700)),
         Text(body, maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
                 color: Color(0xCCFFFFFF), fontSize: 11)),
       ]),
     );
@@ -553,41 +570,44 @@ class _HistoryRow extends StatelessWidget {
   const _HistoryRow({required this.notif});
   final _SentNotif notif;
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Container(
         width: 32, height: 32,
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgElevated,
+          color: ac.bgElevated,
           shape: BoxShape.circle,
           border: Border.all(
-              color: EkklisiaColors.goldBorder, width: 0.5),
+              color: ac.goldBorder, width: 0.5),
         ),
-        child: const Icon(Icons.notifications_none,
-            size: 14, color: EkklisiaColors.gold),
+        child: Icon(Icons.notifications_none,
+            size: 14, color: ac.gold),
       ),
-      const SizedBox(width: 10),
+      SizedBox(width: 10),
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(notif.title, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+          Text(notif.title, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 12, fontWeight: FontWeight.w600),
               maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 2),
-          Text(notif.body, style: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 11),
+          SizedBox(height: 2),
+          Text(notif.body, style: TextStyle(
+              color: ac.textSecondary, fontSize: 11),
               maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 3),
-          Text(notif.time, style: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 10)),
+          SizedBox(height: 3),
+          Text(notif.time, style: TextStyle(
+              color: ac.textSecondary, fontSize: 10)),
         ],
       )),
       Text('${notif.count}',
-          style: const TextStyle(
-              color: EkklisiaColors.gold, fontSize: 11,
+          style: TextStyle(
+              color: ac.gold, fontSize: 11,
               fontWeight: FontWeight.w700)),
     ],
   );
+  }
 }

@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
@@ -19,9 +20,7 @@ import '../../features/auth/auth_cubit.dart';
 import '../../features/auth/auth_state.dart';
 import '../../features/bookmarks/bookmarks_screen.dart';
 import '../../features/books/screens/books_home.dart';
-import '../../features/settings/cubit/settings_cubit.dart';
 import '../../features/settings/settings_screen.dart';
-import '../../services/settings_service.dart';
 import '../../shared/widgets/audio_player_bar.dart';
 import 'home_tab_screen.dart';
 
@@ -100,41 +99,34 @@ class _EkklisiaBottomNav extends StatelessWidget {
     final gold = Theme.of(context).primaryColor;
     final goldDim = BrightnessColors.goldDim(brightness);
 
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
 
     final items = [
       _NavItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home,
-        arLabel: 'الرئيسية',
-        elLabel: 'Αρχική',
+        label: l.navHome,
         isActive: selectedIndex == 0,
         onTap: () => onTap(0),
       ),
       _NavItem(
         icon: Icons.library_books_outlined,
         activeIcon: Icons.library_books,
-        arLabel: 'المكتبة',
-        elLabel: 'Βιβλιοθήκη',
+        label: l.navLibrary,
         isActive: selectedIndex == 1,
         onTap: () => onTap(1),
       ),
       _NavItem(
         icon: Icons.bookmarks_outlined,
         activeIcon: Icons.bookmarks,
-        arLabel: 'الإشارات',
-        elLabel: 'Σελιδοδ.',
+        label: l.navBookmarks,
         isActive: selectedIndex == 2,
         onTap: () => onTap(2),
       ),
       _NavItem(
         icon: Icons.settings_outlined,
         activeIcon: Icons.settings,
-        arLabel: 'الإعدادات',
-        elLabel: 'Ρυθμίσεις',
+        label: l.navSettings,
         isActive: selectedIndex == 3,
         onTap: () => onTap(3),
       ),
@@ -177,10 +169,10 @@ class _EkklisiaBottomNav extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        isGreek ? item.elLabel : item.arLabel,
+                        item.label,
                         style: TextStyle(
-                          fontFamily: isGreek ? null : 'Scheherazade',
-                          fontSize: isGreek ? 9 : 10,
+                          fontFamily: l.labelFont,
+                          fontSize: l.isAr ? 10 : 9,
                           color: isActive ? gold : goldDim,
                           fontWeight: isActive
                               ? FontWeight.w700
@@ -203,15 +195,13 @@ class _NavItem {
   const _NavItem({
     required this.icon,
     required this.activeIcon,
-    required this.arLabel,
-    required this.elLabel,
+    required this.label,
     required this.isActive,
     required this.onTap,
   });
   final IconData icon;
   final IconData activeIcon;
-  final String arLabel;
-  final String elLabel;
+  final String label;
   final bool isActive;
   final VoidCallback onTap;
 }

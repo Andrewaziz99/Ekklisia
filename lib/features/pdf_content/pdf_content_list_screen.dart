@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../shared/widgets/cached_image.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../data/repositories/pdf_content_repository.dart';
@@ -45,10 +46,8 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgDeep(brightness),
@@ -64,9 +63,7 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
                 }
                 if (snapshot.hasError) {
                   return _ErrorView(
-                    message: isGreek
-                        ? 'Σφάλμα φόρτωσης'
-                        : 'حدث خطأ في تحميل المحتوى',
+                    message: l.loadingError,
                     onRetry: () => setState(() {}),
                   );
                 }
@@ -92,6 +89,7 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
     Brightness brightness,
     bool isGreek,
   ) {
+    final l = context.l10n;
     final goldLight = BrightnessColors.goldLight(brightness);
     final goldDim = BrightnessColors.goldDim(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
@@ -105,7 +103,7 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back_ios_new, color: goldLight, size: 18),
         onPressed: () => Navigator.pop(context),
-        tooltip: isGreek ? 'Πίσω' : 'رجوع',
+        tooltip: l.back,
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
@@ -137,7 +135,7 @@ class _PdfContentListScreenState extends State<PdfContentListScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isGreek ? 'ΒΙΒΛΙΟΘΗΚΗ' : 'LIBRARY',
+                    l.librarySubtitle,
                     style: TextStyle(
                       color: goldDim,
                       fontSize: 9,
@@ -561,10 +559,7 @@ class _ErrorView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 16),
-                label: const Text(
-                  'إعادة المحاولة',
-                  style: TextStyle(fontFamily: 'Scheherazade'),
-                ),
+                label: Text(context.l10n.retry),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFC8A84B),
                   side: const BorderSide(color: Color(0xFFC8A84B)),

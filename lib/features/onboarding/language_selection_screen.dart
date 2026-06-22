@@ -310,6 +310,10 @@ class _LanguageCard extends StatelessWidget {
               : [],
         ),
         child: Row(
+          // Force LTR layout so both cards are always: [flag] [text] [indicator]
+          // regardless of the device locale. Individual Text widgets keep their
+          // own textDirection for correct character rendering.
+          textDirection: TextDirection.ltr,
           children: [
             // Flag / symbol
             Container(
@@ -334,36 +338,36 @@ class _LanguageCard extends StatelessWidget {
             ),
             const SizedBox(width: 16),
 
-            // Text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: isArabic
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    language.label,
-                    textDirection:
-                        isArabic ? TextDirection.rtl : TextDirection.ltr,
-                    style: TextStyle(
-                      fontFamily: isArabic ? 'Scheherazade' : null,
-                      color: isSelected ? goldLight : textSecondary,
-                      fontSize: isArabic ? 22 : 17,
-                      fontWeight: FontWeight.w700,
-                    ),
+            // Text — sits naturally beside the flag (no Expanded stretch)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  language.label,
+                  textDirection:
+                      isArabic ? TextDirection.rtl : TextDirection.ltr,
+                  style: TextStyle(
+                    fontFamily: isArabic ? 'Scheherazade' : 'GFSDidot',
+                    color: isSelected ? goldLight : textSecondary,
+                    fontSize: isArabic ? 22 : 17,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isArabic ? 'Arabic / العربية' : 'Greek / Ελληνικά',
-                    style: TextStyle(
-                      color: textSecondary.withOpacity(0.6),
-                      fontSize: 11,
-                      letterSpacing: 0.5,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isArabic ? 'Arabic / العربية' : 'Greek / Ελληνικά',
+                  style: TextStyle(
+                    color: textSecondary.withOpacity(0.6),
+                    fontSize: 11,
+                    letterSpacing: 0.5,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+
+            // Push selection indicator to the far right
+            const Spacer(),
 
             // Selection indicator
             AnimatedContainer(

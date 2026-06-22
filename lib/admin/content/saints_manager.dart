@@ -29,9 +29,9 @@ import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
 import '../../features/auth/auth_cubit.dart';
+import '../utils/admin_colors.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const _kBorder = BorderSide(color: EkklisiaColors.goldBorder, width: 0.5);
 const _kRadius = BorderRadius.all(Radius.circular(8));
 
 enum _ScreenMode { list, edit }
@@ -61,6 +61,7 @@ class _SaintsManagerScreenState extends State<SaintsManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     if (_mode == _ScreenMode.edit) {
       return _EditView(repo: _repo, initial: _editing, onDone: _backToList);
     }
@@ -87,6 +88,7 @@ class _ListViewState extends State<_ListView> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return StreamBuilder<List<SaintModel>>(
       stream: widget.repo.watchAll(),
       builder: (context, snap) {
@@ -113,9 +115,9 @@ class _ListViewState extends State<_ListView> {
           // ── List ──────────────────────────────────────────────────────
           Expanded(
             child: loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      color: EkklisiaColors.gold,
+                      color: ac.gold,
                       strokeWidth: 2,
                     ),
                   )
@@ -175,15 +177,16 @@ class _SaintCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: _kRadius,
         border: Border.all(
           color: confirmingDelete
-              ? EkklisiaColors.maroon.withValues(alpha: 0.6)
-              : EkklisiaColors.goldBorder,
+              ? ac.maroon.withValues(alpha: 0.6)
+              : ac.goldBorder,
           width: 0.5,
         ),
       ),
@@ -200,10 +203,10 @@ class _SaintCard extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.bgMid,
+                    color: ac.bgMid,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: EkklisiaColors.goldBorder, width: 0.5),
+                        color: ac.goldBorder, width: 0.5),
                   ),
                   child: saint.hasImage
                       ? ClipRRect(
@@ -226,45 +229,45 @@ class _SaintCard extends StatelessWidget {
                     children: [
                       Text(
                         saint.nameEn,
-                        style: const TextStyle(
-                          color: EkklisiaColors.textPrimary,
+                        style: TextStyle(
+                          color: ac.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         saint.nameAr,
-                        style: const TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                        style: TextStyle(
+                          color: ac.textSecondary,
                           fontSize: 12,
                           fontFamily: 'Scheherazade',
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Row(children: [
                         if (saint.feastDate != null) ...[
                           _Chip(
                             label: saint.feastDate!,
-                            color: EkklisiaColors.gold,
+                            color: ac.gold,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                         ],
                         if (saint.hasPdf)
                           _Chip(
                               label: '📄 pdf',
-                              color: EkklisiaColors.bronze),
+                              color: ac.bronze),
                         if (saint.hasAudio) ...[
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           _Chip(
                               label: '♪ audio',
-                              color: EkklisiaColors.tealMid),
+                              color: ac.tealMid),
                         ],
                         if (saint.hasVideo) ...[
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           _Chip(
                               label: '▶ video',
-                              color: EkklisiaColors.plum),
+                              color: ac.plum),
                         ],
                       ]),
                     ],
@@ -278,18 +281,18 @@ class _SaintCard extends StatelessWidget {
                     GestureDetector(
                       onTap: onToggle,
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: saint.isPublished
-                              ? EkklisiaColors.tealMid.withValues(alpha: 0.15)
-                              : EkklisiaColors.bgMid,
+                              ? ac.tealMid.withValues(alpha: 0.15)
+                              : ac.bgMid,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
                             color: saint.isPublished
-                                ? EkklisiaColors.tealMid
-                                : EkklisiaColors.goldBorder,
+                                ? ac.tealMid
+                                : ac.goldBorder,
                             width: 0.5,
                           ),
                         ),
@@ -297,8 +300,8 @@ class _SaintCard extends StatelessWidget {
                           saint.isPublished ? 'ΕΝΕΡΓΟ' : 'ΠΡΌΧΕΙΡΟ',
                           style: TextStyle(
                             color: saint.isPublished
-                                ? EkklisiaColors.tealMid
-                                : EkklisiaColors.textSecondary,
+                                ? ac.tealMid
+                                : ac.textSecondary,
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
@@ -306,16 +309,16 @@ class _SaintCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Row(mainAxisSize: MainAxisSize.min, children: [
                       _IconBtn(
                           icon: Icons.edit_outlined,
-                          color: EkklisiaColors.gold,
+                          color: ac.gold,
                           onTap: onEdit),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       _IconBtn(
                           icon: Icons.delete_outline,
-                          color: EkklisiaColors.maroonMid,
+                          color: ac.maroonMid,
                           onTap: onDeleteTap),
                     ]),
                   ],
@@ -325,10 +328,10 @@ class _SaintCard extends StatelessWidget {
     );
   }
 
-  Widget _crossIcon() => const Center(
+  Widget _crossIcon() => Center(
     child: Text('✦',
         style: TextStyle(
-            color: EkklisiaColors.goldBorder, fontSize: 18)),
+            color: EkklisiaColors.darkGoldBorder, fontSize: 18)),
   );
 }
 
@@ -680,28 +683,29 @@ class _EditViewState extends State<_EditView> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final isNew = widget.initial == null;
     return Column(children: [
       // ── Header bar ────────────────────────────────────────────────────
       Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-        decoration: const BoxDecoration(
-          color: EkklisiaColors.bgDeep,
-          border: Border(bottom: _kBorder),
+        decoration: BoxDecoration(
+          color: ac.bgDeep,
+          border: Border(bottom: ac.borderSide),
         ),
         child: Row(children: [
           GestureDetector(
             onTap: widget.onDone,
-            child: const Icon(Icons.arrow_back_ios_new,
-                color: EkklisiaColors.gold, size: 16),
+            child: Icon(Icons.arrow_back_ios_new,
+                color: ac.gold, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 isNew ? 'Προσθήκη Αγίου' : 'Επεξεργασία Αγίου',
-                style: const TextStyle(
-                  color: EkklisiaColors.textPrimary,
+                style: TextStyle(
+                  color: ac.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -709,8 +713,8 @@ class _EditViewState extends State<_EditView> {
               if (!isNew)
                 Text(
                   widget.initial!.nameAr,
-                  style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                  style: TextStyle(
+                    color: ac.textSecondary,
                     fontFamily: 'Scheherazade',
                     fontSize: 13,
                   ),
@@ -724,24 +728,24 @@ class _EditViewState extends State<_EditView> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: _saving
-                    ? EkklisiaColors.bgMid
-                    : EkklisiaColors.gold.withValues(alpha: 0.15),
+                    ? ac.bgMid
+                    : ac.gold.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: EkklisiaColors.gold.withValues(alpha: 0.4),
+                    color: ac.gold.withValues(alpha: 0.4),
                     width: 0.5),
               ),
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 14,
                       height: 14,
                       child: CircularProgressIndicator(
-                          color: EkklisiaColors.gold, strokeWidth: 2),
+                          color: ac.gold, strokeWidth: 2),
                     )
                   : Text(
                       isNew ? 'Δημιουργία' : 'Ενημέρωση',
-                      style: const TextStyle(
-                        color: EkklisiaColors.gold,
+                      style: TextStyle(
+                        color: ac.gold,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -756,14 +760,14 @@ class _EditViewState extends State<_EditView> {
           margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: EkklisiaColors.maroon.withValues(alpha: 0.15),
+            color: ac.maroon.withValues(alpha: 0.15),
             borderRadius: _kRadius,
             border: Border.all(
-                color: EkklisiaColors.maroon.withValues(alpha: 0.4)),
+                color: ac.maroon.withValues(alpha: 0.4)),
           ),
           child: Text(_saveError,
-              style: const TextStyle(
-                  color: EkklisiaColors.maroonMid, fontSize: 12)),
+              style: TextStyle(
+                  color: ac.maroonMid, fontSize: 12)),
         ),
 
       // ── Form ──────────────────────────────────────────────────────────
@@ -876,18 +880,18 @@ class _EditViewState extends State<_EditView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Επισυνάψτε PDF ή επικολλήστε URL.',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary, fontSize: 12),
+                          color: ac.textSecondary, fontSize: 12),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     // URL paste field
                     TextFormField(
                       controller: _pdfUrlCtrl,
-                      style: const TextStyle(
-                          color: EkklisiaColors.textPrimary, fontSize: 13),
-                      decoration: _inputDeco('Επικολλήστε URL PDF…'),
+                      style: TextStyle(
+                          color: ac.textPrimary, fontSize: 13),
+                      decoration: ac.inputDeco('Επικολλήστε URL PDF…'),
                       onChanged: (v) {
                         if (v.trim().isNotEmpty) {
                           setState(() {
@@ -898,18 +902,18 @@ class _EditViewState extends State<_EditView> {
                         }
                       },
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     // Divider
                     Row(children: [
-                      const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
-                      const Padding(
+                      Expanded(child: Divider(color: ac.goldBorder)),
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         child: Text('Ή',
                             style: TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                                color: ac.textSecondary,
                                 fontSize: 11)),
                       ),
-                      const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
+                      Expanded(child: Divider(color: ac.goldBorder)),
                     ]),
                     const SizedBox(height: 10),
                     // File section
@@ -938,20 +942,20 @@ class _EditViewState extends State<_EditView> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: EkklisiaColors.bgMid,
+                          color: ac.bgMid,
                           borderRadius: _kRadius,
                           border: Border.all(
-                              color: EkklisiaColors.goldBorder, width: 0.5),
+                              color: ac.goldBorder, width: 0.5),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.upload_file_outlined,
-                                color: EkklisiaColors.gold, size: 16),
+                                color: ac.gold, size: 16),
                             SizedBox(width: 6),
                             Text('Επιλογή αρχείου PDF',
                                 style: TextStyle(
-                                    color: EkklisiaColors.gold,
+                                    color: ac.gold,
                                     fontSize: 13)),
                           ],
                         ),
@@ -969,10 +973,10 @@ class _EditViewState extends State<_EditView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Μεταφορτώστε αρχείο MP3 ή M4A.',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary, fontSize: 12),
+                          color: ac.textSecondary, fontSize: 12),
                     ),
                     const SizedBox(height: 10),
                     if (_audioUploading)
@@ -998,20 +1002,20 @@ class _EditViewState extends State<_EditView> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: EkklisiaColors.bgMid,
+                          color: ac.bgMid,
                           borderRadius: _kRadius,
                           border: Border.all(
-                              color: EkklisiaColors.goldBorder, width: 0.5),
+                              color: ac.goldBorder, width: 0.5),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.audio_file_outlined,
-                                color: EkklisiaColors.tealMid, size: 16),
+                                color: ac.tealMid, size: 16),
                             SizedBox(width: 6),
                             Text('Επιλογή αρχείου ήχου',
                                 style: TextStyle(
-                                    color: EkklisiaColors.tealMid,
+                                    color: ac.tealMid,
                                     fontSize: 13)),
                           ],
                         ),
@@ -1029,29 +1033,29 @@ class _EditViewState extends State<_EditView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Μεταφορτώστε βίντεο ή επικολλήστε URL YouTube/Cloudinary.',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary, fontSize: 12),
+                          color: ac.textSecondary, fontSize: 12),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     TextFormField(
                       controller: _videoUrlCtrl,
-                      style: const TextStyle(
-                          color: EkklisiaColors.textPrimary, fontSize: 13),
-                      decoration: _inputDeco('Επικολλήστε URL YouTube ή βίντεο…'),
+                      style: TextStyle(
+                          color: ac.textPrimary, fontSize: 13),
+                      decoration: ac.inputDeco('Επικολλήστε URL YouTube ή βίντεο…'),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     Row(children: [
-                      const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
-                      const Padding(
+                      Expanded(child: Divider(color: ac.goldBorder)),
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
                         child: Text('Ή',
                             style: TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                                color: ac.textSecondary,
                                 fontSize: 11)),
                       ),
-                      const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
+                      Expanded(child: Divider(color: ac.goldBorder)),
                     ]),
                     const SizedBox(height: 10),
                     if (_videoProgress != null)
@@ -1077,20 +1081,20 @@ class _EditViewState extends State<_EditView> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: EkklisiaColors.bgMid,
+                          color: ac.bgMid,
                           borderRadius: _kRadius,
                           border: Border.all(
-                              color: EkklisiaColors.goldBorder, width: 0.5),
+                              color: ac.goldBorder, width: 0.5),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.video_file_outlined,
-                                color: EkklisiaColors.plum, size: 16),
+                                color: ac.plum, size: 16),
                             SizedBox(width: 6),
                             Text('Επιλογή αρχείου βίντεο',
                                 style: TextStyle(
-                                    color: EkklisiaColors.plum,
+                                    color: ac.plum,
                                     fontSize: 13)),
                           ],
                         ),
@@ -1111,8 +1115,8 @@ class _EditViewState extends State<_EditView> {
                       _published
                           ? 'Δημοσιευμένο — ορατό σε όλους'
                           : 'Πρόχειρο — ορατό μόνο σε διαχειριστές',
-                      style: const TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                      style: TextStyle(
+                        color: ac.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -1120,8 +1124,8 @@ class _EditViewState extends State<_EditView> {
                   Switch(
                     value: _published,
                     onChanged: (v) => setState(() => _published = v),
-                    activeColor: EkklisiaColors.tealMid,
-                    inactiveThumbColor: EkklisiaColors.goldDim,
+                    activeColor: ac.tealMid,
+                    inactiveThumbColor: ac.goldDim,
                   ),
                 ]),
               ),
@@ -1161,6 +1165,7 @@ class _CoverPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return SizedBox(
       height: 140,
       child: Stack(children: [
@@ -1169,9 +1174,9 @@ class _CoverPicker extends StatelessWidget {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: EkklisiaColors.bgMid,
+              color: ac.bgMid,
               borderRadius: _kRadius,
-              border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+              border: Border.all(color: ac.goldBorder, width: 0.5),
             ),
             child: ClipRRect(
               borderRadius: _kRadius,
@@ -1182,8 +1187,8 @@ class _CoverPicker extends StatelessWidget {
                   : url.isNotEmpty
                       ? Image.network(url,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _placeholder())
-                      : _placeholder(),
+                          errorBuilder: (_, __, ___) => _placeholder(ac))
+                      : _placeholder(ac),
             ),
           ),
         ),
@@ -1201,14 +1206,14 @@ class _CoverPicker extends StatelessWidget {
                   children: [
                     CircularProgressIndicator(
                       value: progress,
-                      color: EkklisiaColors.gold,
+                      color: ac.gold,
                       strokeWidth: 2,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       '${(progress * 100).round()}%',
-                      style: const TextStyle(
-                          color: EkklisiaColors.gold, fontSize: 12),
+                      style: TextStyle(
+                          color: ac.gold, fontSize: 12),
                     ),
                   ],
                 ),
@@ -1225,7 +1230,7 @@ class _CoverPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.maroon.withValues(alpha: 0.85),
+                  color: ac.maroon.withValues(alpha: 0.85),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.close,
@@ -1241,27 +1246,27 @@ class _CoverPicker extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: EkklisiaColors.bgElevated,
+                color: ac.bgElevated,
                 shape: BoxShape.circle,
-                border: Border.all(color: EkklisiaColors.goldBorder),
+                border: Border.all(color: ac.goldBorder),
               ),
-              child: const Icon(Icons.add_photo_alternate_outlined,
-                  color: EkklisiaColors.gold, size: 16),
+              child: Icon(Icons.add_photo_alternate_outlined,
+                  color: ac.gold, size: 16),
             ),
           ),
       ]),
     );
   }
 
-  Widget _placeholder() => Column(
+  Widget _placeholder(AdminC ac) => Column(
     mainAxisAlignment: MainAxisAlignment.center,
-    children: const [
+    children: [
       Icon(Icons.image_outlined,
-          color: EkklisiaColors.goldBorder, size: 36),
+          color: ac.goldBorder, size: 36),
       SizedBox(height: 8),
       Text('Πατήστε για προσθήκη εικόνας',
           style: TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 12)),
+              color: ac.textSecondary, fontSize: 12)),
     ],
   );
 }
@@ -1282,11 +1287,12 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: _kRadius,
-        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1297,18 +1303,18 @@ class _FormCard extends StatelessWidget {
             child: Row(children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: EkklisiaColors.gold,
+                style: TextStyle(
+                  color: ac.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 titleAr,
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 11,
                   fontFamily: 'Scheherazade',
                 ),
@@ -1319,7 +1325,7 @@ class _FormCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(0, 6, 0, 0),
             child: Divider(
                 height: 1,
-                color: EkklisiaColors.goldBorder.withValues(alpha: 0.5)),
+                color: ac.goldBorder.withValues(alpha: 0.5)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
@@ -1354,17 +1360,18 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return TextFormField(
       controller: ctrl,
       minLines: multiline ? minLines : null,
       maxLines: multiline ? maxLines : 1,
       textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
       style: TextStyle(
-        color: EkklisiaColors.textPrimary,
+        color: ac.textPrimary,
         fontSize: 13,
         fontFamily: arabic ? 'Scheherazade' : null,
       ),
-      decoration: _inputDeco(hint ?? label),
+      decoration: ac.inputDeco(hint ?? label),
       validator: required
           ? (v) =>
               (v == null || v.trim().isEmpty) ? 'Υποχρεωτικό' : null
@@ -1372,27 +1379,6 @@ class _Field extends StatelessWidget {
     );
   }
 }
-
-InputDecoration _inputDeco(String hint) => InputDecoration(
-  hintText: hint,
-  hintStyle: const TextStyle(
-      color: EkklisiaColors.textSecondary, fontSize: 12),
-  filled: true,
-  fillColor: EkklisiaColors.bgMid,
-  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-  border: OutlineInputBorder(
-    borderRadius: _kRadius,
-    borderSide: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
-  ),
-  enabledBorder: OutlineInputBorder(
-    borderRadius: _kRadius,
-    borderSide: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
-  ),
-  focusedBorder: OutlineInputBorder(
-    borderRadius: _kRadius,
-    borderSide: const BorderSide(color: EkklisiaColors.gold, width: 1),
-  ),
-);
 
 // ── Small reusable widgets ────────────────────────────────────────────────────
 
@@ -1423,11 +1409,12 @@ class _ToolbarState extends State<_Toolbar> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
-        border: Border(bottom: _kBorder),
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
+        border: Border(bottom: ac.borderSide),
       ),
       child: Row(children: [
         Expanded(
@@ -1435,9 +1422,9 @@ class _ToolbarState extends State<_Toolbar> {
               ? TextField(
                   controller: _ctrl,
                   autofocus: true,
-                  style: const TextStyle(
-                      color: EkklisiaColors.textPrimary, fontSize: 13),
-                  decoration: _inputDeco(
+                  style: TextStyle(
+                      color: ac.textPrimary, fontSize: 13),
+                  decoration: ac.inputDeco(
                       '${context.adminL10n.search} ${context.adminL10n.saints}…'),
                   onChanged: widget.onSearch,
                 )
@@ -1448,24 +1435,24 @@ class _ToolbarState extends State<_Toolbar> {
                         textDirection: context.adminL10n.dir,
                         style: TextStyle(
                           fontFamily: context.adminL10n.fontFam,
-                          color: EkklisiaColors.textPrimary,
+                          color: ac.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         )),
                     Text(
                       '${widget.count}',
-                      style: const TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                      style: TextStyle(
+                        color: ac.textSecondary,
                         fontSize: 11,
                       ),
                     ),
                   ],
                 ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         _IconBtn(
           icon: _searching ? Icons.close : Icons.search,
-          color: EkklisiaColors.textSecondary,
+          color: ac.textSecondary,
           onTap: () {
             setState(() => _searching = !_searching);
             if (!_searching) {
@@ -1484,15 +1471,15 @@ class _ToolbarState extends State<_Toolbar> {
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                  color: EkklisiaColors.goldBorder, width: 0.5),
+                  color: ac.goldBorder, width: 0.5),
             ),
             child: Row(children: [
-              const Icon(Icons.upload_file_outlined,
-                  color: EkklisiaColors.textSecondary, size: 14),
-              const SizedBox(width: 4),
+              Icon(Icons.upload_file_outlined,
+                  color: ac.textSecondary, size: 14),
+              SizedBox(width: 4),
               Text(context.adminL10n.bulk,
-                  style: const TextStyle(
-                      color: EkklisiaColors.textSecondary, fontSize: 12)),
+                  style: TextStyle(
+                      color: ac.textSecondary, fontSize: 12)),
             ]),
           ),
         ),
@@ -1502,20 +1489,20 @@ class _ToolbarState extends State<_Toolbar> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: EkklisiaColors.gold.withValues(alpha: 0.12),
+              color: ac.gold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                  color: EkklisiaColors.gold.withValues(alpha: 0.4),
+                  color: ac.gold.withValues(alpha: 0.4),
                   width: 0.5),
             ),
             child: Row(children: [
-              const Icon(Icons.add, color: EkklisiaColors.gold, size: 14),
-              const SizedBox(width: 4),
+              Icon(Icons.add, color: ac.gold, size: 14),
+              SizedBox(width: 4),
               Text(context.adminL10n.add,
                   textDirection: context.adminL10n.dir,
                   style: TextStyle(
                       fontFamily: context.adminL10n.fontFam,
-                      color: EkklisiaColors.gold, fontSize: 12)),
+                      color: ac.gold, fontSize: 12)),
             ]),
           ),
         ),
@@ -1530,7 +1517,9 @@ class _Chip extends StatelessWidget {
   final Color  color;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
       color: color.withValues(alpha: 0.1),
@@ -1540,6 +1529,7 @@ class _Chip extends StatelessWidget {
     child: Text(label,
         style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w600)),
   );
+  }
 }
 
 class _IconBtn extends StatelessWidget {
@@ -1549,7 +1539,9 @@ class _IconBtn extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return GestureDetector(
     onTap: onTap,
     child: Container(
       width: 32, height: 32,
@@ -1561,6 +1553,7 @@ class _IconBtn extends StatelessWidget {
       child: Icon(icon, color: color, size: 15),
     ),
   );
+  }
 }
 
 class _ProgressBar extends StatelessWidget {
@@ -1568,25 +1561,28 @@ class _ProgressBar extends StatelessWidget {
   final double progress;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       LinearProgressIndicator(
         value: progress,
-        backgroundColor: EkklisiaColors.bgMid,
+        backgroundColor: ac.bgMid,
         valueColor:
-            const AlwaysStoppedAnimation<Color>(EkklisiaColors.gold),
+            AlwaysStoppedAnimation<Color>(ac.gold),
         minHeight: 3,
         borderRadius: BorderRadius.circular(2),
       ),
-      const SizedBox(height: 4),
+      SizedBox(height: 4),
       Text(
         'Μεταφόρτωση… ${(progress * 100).round()}%',
-        style: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 10),
+        style: TextStyle(
+            color: ac.textSecondary, fontSize: 10),
       ),
     ],
   );
+  }
 }
 
 class _FileBadge extends StatelessWidget {
@@ -1596,32 +1592,35 @@ class _FileBadge extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: BoxDecoration(
-      color: EkklisiaColors.bgMid,
+      color: ac.bgMid,
       borderRadius: _kRadius,
-      border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+      border: Border.all(color: ac.goldBorder, width: 0.5),
     ),
     child: Row(children: [
-      const Icon(Icons.insert_drive_file_outlined,
-          color: EkklisiaColors.gold, size: 14),
-      const SizedBox(width: 6),
+      Icon(Icons.insert_drive_file_outlined,
+          color: ac.gold, size: 14),
+      SizedBox(width: 6),
       Expanded(
         child: Text(
           sizeMb != null ? '$name  (${sizeMb!.toStringAsFixed(1)} MB)' : name,
-          style: const TextStyle(
-              color: EkklisiaColors.textPrimary, fontSize: 12),
+          style: TextStyle(
+              color: ac.textPrimary, fontSize: 12),
           overflow: TextOverflow.ellipsis,
         ),
       ),
       GestureDetector(
         onTap: onRemove,
-        child: const Icon(Icons.close,
-            color: EkklisiaColors.textSecondary, size: 14),
+        child: Icon(Icons.close,
+            color: ac.textSecondary, size: 14),
       ),
     ]),
   );
+  }
 }
 
 class _UrlBadge extends StatelessWidget {
@@ -1630,32 +1629,35 @@ class _UrlBadge extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     decoration: BoxDecoration(
-      color: EkklisiaColors.tealMid.withValues(alpha: 0.08),
+      color: ac.tealMid.withValues(alpha: 0.08),
       borderRadius: _kRadius,
       border: Border.all(
-          color: EkklisiaColors.tealMid.withValues(alpha: 0.3), width: 0.5),
+          color: ac.tealMid.withValues(alpha: 0.3), width: 0.5),
     ),
     child: Row(children: [
-      const Icon(Icons.link, color: EkklisiaColors.tealMid, size: 14),
-      const SizedBox(width: 6),
+      Icon(Icons.link, color: ac.tealMid, size: 14),
+      SizedBox(width: 6),
       Expanded(
         child: Text(
           url,
-          style: const TextStyle(
-              color: EkklisiaColors.tealMid, fontSize: 11),
+          style: TextStyle(
+              color: ac.tealMid, fontSize: 11),
           overflow: TextOverflow.ellipsis,
         ),
       ),
       GestureDetector(
         onTap: onRemove,
-        child: const Icon(Icons.close,
-            color: EkklisiaColors.textSecondary, size: 14),
+        child: Icon(Icons.close,
+            color: ac.textSecondary, size: 14),
       ),
     ]),
   );
+  }
 }
 
 class _EmptyState extends StatelessWidget {
@@ -1663,21 +1665,23 @@ class _EmptyState extends StatelessWidget {
   final VoidCallback onAdd;
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Center(
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('✦',
+        Text('✦',
             style: TextStyle(
-                color: EkklisiaColors.goldBorder, fontSize: 40)),
-        const SizedBox(height: 12),
-        const Text('Δεν έχουν προστεθεί άγιοι',
+                color: ac.goldBorder, fontSize: 40)),
+        SizedBox(height: 12),
+        Text('Δεν έχουν προστεθεί άγιοι',
             style: TextStyle(
-                color: EkklisiaColors.textSecondary, fontSize: 14)),
-        const SizedBox(height: 4),
-        const Text('لا يوجد قديسون حتى الآن',
+                color: ac.textSecondary, fontSize: 14)),
+        SizedBox(height: 4),
+        Text('لا يوجد قديسون حتى الآن',
             style: TextStyle(
-                color: EkklisiaColors.textSecondary,
+                color: ac.textSecondary,
                 fontFamily: 'Scheherazade',
                 fontSize: 14)),
         const SizedBox(height: 20),
@@ -1686,20 +1690,21 @@ class _EmptyState extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
-              color: EkklisiaColors.gold.withValues(alpha: 0.12),
+              color: ac.gold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: EkklisiaColors.gold.withValues(alpha: 0.4),
+                  color: ac.gold.withValues(alpha: 0.4),
                   width: 0.5),
             ),
-            child: const Text('Προσθήκη Πρώτου Αγίου',
+            child: Text('Προσθήκη Πρώτου Αγίου',
                 style: TextStyle(
-                    color: EkklisiaColors.gold, fontSize: 13)),
+                    color: ac.gold, fontSize: 13)),
           ),
         ),
       ],
     ),
   );
+  }
 }
 
 class _DeleteConfirmRow extends StatelessWidget {
@@ -1709,28 +1714,31 @@ class _DeleteConfirmRow extends StatelessWidget {
   final VoidCallback onCancel;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     child: Row(children: [
-      const Icon(Icons.warning_amber_rounded,
-          color: EkklisiaColors.maroonMid, size: 18),
-      const SizedBox(width: 8),
-      const Expanded(
+      Icon(Icons.warning_amber_rounded,
+          color: ac.maroonMid, size: 18),
+      SizedBox(width: 8),
+      Expanded(
         child: Text('Διαγραφή αυτού του αγίου;',
             style: TextStyle(
-                color: EkklisiaColors.textPrimary, fontSize: 13)),
+                color: ac.textPrimary, fontSize: 13)),
       ),
       TextButton(
         onPressed: onCancel,
-        child: const Text('Ακύρωση',
-            style: TextStyle(color: EkklisiaColors.textSecondary)),
+        child: Text('Ακύρωση',
+            style: TextStyle(color: ac.textSecondary)),
       ),
-      const SizedBox(width: 4),
+      SizedBox(width: 4),
       TextButton(
         onPressed: onConfirm,
-        child: const Text('Διαγραφή',
-            style: TextStyle(color: EkklisiaColors.maroonMid)),
+        child: Text('Διαγραφή',
+            style: TextStyle(color: ac.maroonMid)),
       ),
     ]),
   );
+  }
 }

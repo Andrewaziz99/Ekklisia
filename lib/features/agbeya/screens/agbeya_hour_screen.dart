@@ -12,6 +12,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/agbeya_model.dart';
 import '../../../features/settings/cubit/settings_cubit.dart';
@@ -67,10 +68,8 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
     final isDark = brightness == Brightness.dark;
     final bg = isDark ? BrightnessColors.bgDeep(brightness) : const Color(0xFFF5F0E8);
 
-    final settingsLang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = settingsLang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: bg,
@@ -103,6 +102,7 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
   // ── App Bar ─────────────────────────────────────────────────────────────────
 
   Widget _buildAppBar(BuildContext context, bool isDark, bool isGreek) {
+    final l = context.l10n;
     // Putting TabBar directly in SliverAppBar.bottom is the Flutter-recommended
     // pattern. It avoids the standalone SliverPersistentHeader whose
     // render object can have geometry == null during paint when the enclosing
@@ -123,7 +123,7 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
           IconButton(
             icon: const Icon(Icons.videocam_outlined,
                 color: _kGold, size: 24),
-            tooltip: isGreek ? 'Βίντεο' : 'مشاهدة الفيديو',
+            tooltip: l.video,
             onPressed: () => showVideoSheet(
               context,
               widget.hour.videoUrl,
@@ -134,7 +134,7 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
           IconButton(
             icon: const Icon(Icons.menu_book_outlined,
                 color: _kGold, size: 24),
-            tooltip: isGreek ? 'Ανάγνωση PDF' : 'قراءة PDF',
+            tooltip: l.readPdf,
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(

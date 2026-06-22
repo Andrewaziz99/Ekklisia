@@ -119,6 +119,28 @@ class AdminL10n {
   // ── Managers ─────────────────────────────────────────────────────────────
   String get manageBooks => _t('إدارة الكتب', 'Διαχείριση Βιβλίων');
   String get manageSaints => _t('إدارة القديسين', 'Διαχείριση Αγίων');
+  String get manageChurches => _t('إدارة الكنائس', 'Διαχείριση Εκκλησιών');
+  String get churches => _t('الكنائس', 'Εκκλησίες');
+  String get addChurch => _t('إضافة كنيسة', 'Προσθήκη Εκκλησίας');
+  String get editChurch => _t('تعديل الكنيسة', 'Επεξεργασία Εκκλησίας');
+  String get deleteChurch => _t('حذف الكنيسة', 'Διαγραφή Εκκλησίας');
+  String get churchNameAr => _t('اسم الكنيسة (عربي)', 'Όνομα Εκκλησίας (Αραβικά)');
+  String get churchNameEn => _t('اسم الكنيسة (يوناني)', 'Όνομα Εκκλησίας (Ελληνικά)');
+  String get mapsLink => _t('رابط خرائط Google', 'Σύνδεσμος Google Maps');
+  String get priests => _t('الكهنة', 'Ιερείς');
+  String get addPriest => _t('إضافة كاهن', 'Προσθήκη Ιερέα');
+  String get priestNameAr => _t('اسم الكاهن (عربي)', 'Όνομα Ιερέα (Αραβικά)');
+  String get priestNameEn => _t('اسم الكاهن (يوناني)', 'Όνομα Ιερέα (Ελληνικά)');
+  String get priestPhone => _t('رقم الهاتف', 'Τηλέφωνο');
+  String get priestImage => _t('صورة الكاهن', 'Φωτογραφία Ιερέα');
+  String get noChurches => _t('لا توجد كنائس', 'Δεν βρέθηκαν εκκλησίες');
+  String get cmsChurches => _t('الكنائس', 'Εκκλησίες');
+  // ── Bishop ──────────────────────────────────────────────────────────────
+  String get bishop => _t('الأسقف', 'Επίσκοπος');
+  String get bishopTitleEl => _t('اللقب الرسمي (يوناني)', 'Επίσημος Τίτλος (Ελληνικά)');
+  String get bishopTitleAr => _t('اللقب الرسمي (عربي)', 'Επίσημος Τίτλος (Αραβικά)');
+  String get bishopImage   => _t('صورة الأسقف', 'Φωτογραφία Επισκόπου');
+  String get saveBishop => _t('حفظ بيانات الأسقف', 'Αποθήκευση Επισκόπου');
   String get bulkUploadSaints =>
       _t('رفع مجمّع — القديسون', 'Μαζικό Ανέβασμα — Άγιοι');
   String get bulkUploadBooks =>
@@ -137,28 +159,22 @@ class AdminL10n {
   String get titleEl => _t('العنوان (يوناني)', 'Τίτλος (Ελληνικά)');
   String get saintNameAr => _t('اسم القديس (عربي)', 'Όνομα Αγίου (Αραβικά)');
   String get saintNameEl => _t('اسم القديس (يوناني)', 'Όνομα Αγίου (Ελληνικά)');
-  String get defaultCat => _t('القسم الافتراضي', 'Προεπιλεγμένη Κατηγορία');
-
-  // ── Status / progress ─────────────────────────────────────────────────────
-  String pendingCount(int n) => _t('$n في الانتظار', '$n εκκρεμή');
-  String doneCount(int n) => _t('$n منتهي', '$n ολοκληρώθηκαν');
-  String failedCount(int n) => _t('$n فشل', '$n απέτυχαν');
-  String uploadAllN(int n) => _t('رفع الكل ($n)', 'Ανέβασμα Όλων ($n)');
-
-  // ── Gallery ───────────────────────────────────────────────────────────────
-  String get gallery => _t('معرض الصور', 'Gallery');
-  String get galleryBulkUpload =>
-      _t('رفع مجمّع — الصور', 'Μαζικό Ανέβασμα — Gallery');
-
-  // ── Electronic Library ────────────────────────────────────────────────────
-  String get elibManager => _t('المكتبة الالكترونية', 'Ηλεκτρονική Βιβλιοθήκη');
-  String get elibVideos  => _t('فيديو', 'Βίντεο Elib');
-  String get elibBulkUpload =>
-      _t('رفع مجمّع — المكتبة', 'Μαζικό Ανέβασμα — Βιβλιοθήκη');
-  String get sections => _t('الأقسام', 'ΕΝΟΤΗΤΕΣ');
-  String get addSection => _t('إضافة قسم', 'Προσθήκη Ενότητας');
+  String get titleEn => _t('العنوان (إنجليزي)', 'Τίτλος (Αγγλικά)');
+  String get video => _t('فيديو', 'Βίντεο');
+  String get gallery => _t('المعرض', 'Γκαλερί');
+  String get galleryBulkUpload => _t('رفع مجمّع — المعرض', 'Μαζικό Ανέβασμα — Γκαλερί');
+  String get elibManager => _t('المكتبة الإلكترونية', 'Ηλεκτρονική Βιβλιοθήκη');
+  String get elibBulkUpload => _t('رفع مجمّع — المكتبة', 'Μαζικό Ανέβασμα — Βιβλιοθήκη');
+  String get elibVideos => _t('فيديوهات المكتبة', 'Βίντεο Βιβλιοθήκης');
+  String get sections => _t('الأقسام', 'Τμήματα');
+  String get addSection => _t('إضافة قسم', 'Προσθήκη Τμήματος');
   String get addItem => _t('إضافة عنصر', 'Προσθήκη Στοιχείου');
   String get addUrl => _t('إضافة رابط', 'Προσθήκη URL');
-  String get selectSection => _t('اختر قسمًا', 'Επιλέξτε ενότητα');
-  String get video => _t('فيديو', 'Βίντεο');
+  String get selectSection => _t('اختر قسمًا', 'Επιλογή Τμήματος');
+  String uploadAllN(int n) => _t('رفع الكل ($n)', 'Ανέβασμα Όλων ($n)');
+  String get defaultCat => _t('الفئة الافتراضية', 'Προεπιλεγμένη Κατηγορία');
+  String pendingCount(int n) => _t('في الانتظار ($n)', 'Σε αναμονή ($n)');
+  String doneCount(int n) => _t('تم ($n)', 'Ολοκληρωμένα ($n)');
+  String failedCount(int n) => _t('فشل ($n)', 'Αποτυχία ($n)');
+
 }

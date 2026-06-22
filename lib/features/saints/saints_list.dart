@@ -7,12 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
-import '../../features/settings/cubit/settings_cubit.dart';
-import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 import 'saint_detail.dart';
 import 'saints_cubit.dart';
@@ -42,9 +41,7 @@ class _SaintsListViewState extends State<_SaintsListView> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
+    final l = context.l10n;
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgDeep(brightness),
@@ -86,10 +83,8 @@ class _SaintsListViewState extends State<_SaintsListView> {
                           const SizedBox(height: 12),
                           Text(
                             _query.isEmpty
-                                ? (isGreek ? 'Δεν βρέθηκαν αγίοι' : 'لا يوجد قديسون')
-                                : (isGreek
-                                    ? 'Δεν βρέθηκαν αποτελέσματα για "$_query"'
-                                    : 'لا توجد نتائج لـ "$_query"'),
+                                ? l.noSaints
+                                : l.noResultsFor(_query),
                             style: TextStyle(
                                 color: BrightnessColors.textSecondary(br),
                                 fontSize: 14),
@@ -159,9 +154,7 @@ class _HeaderState extends State<_Header> {
     final goldBorder  = BrightnessColors.goldBorder(brightness);
     final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -183,7 +176,7 @@ class _HeaderState extends State<_Header> {
                   autofocus: true,
                   style: TextStyle(color: textPrimary, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: isGreek ? 'Αναζήτηση...' : 'بحث...',
+                    hintText: l.searchHint,
                     hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                     filled: true,
                     fillColor: bgMid,
@@ -208,18 +201,18 @@ class _HeaderState extends State<_Header> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        isGreek ? 'Άγιοι' : 'القديسون',
+                        l.saints,
                         style: TextStyle(
                           color: textPrimary,
-                          fontFamily: isGreek ? null : 'Scheherazade',
+                          fontFamily: l.bodyFont,
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                         )),
                     Text(
-                        isGreek ? 'القديسون' : 'Άγιοι',
+                        l.saintsTitleAlt,
                         style: TextStyle(
                           color: textSecondary,
-                          fontFamily: isGreek ? 'Scheherazade' : null,
+                          fontFamily: l.isAr ? null : 'Scheherazade',
                           fontSize: 14,
                         )),
                   ],

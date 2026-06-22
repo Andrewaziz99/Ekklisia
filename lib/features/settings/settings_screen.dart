@@ -25,18 +25,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final SettingsCubit   _cubit = sl<SettingsCubit>();
-  final SettingsService _svc   = sl<SettingsService>();
+  final SettingsCubit _cubit = sl<SettingsCubit>();
+  final SettingsService _svc = sl<SettingsService>();
 
-  late FontScale    _fontScale;
-  late AppLanguage  _language;
+  late FontScale _fontScale;
+  late AppLanguage _language;
   late AppThemeMode _themeMode;
 
   @override
   void initState() {
     super.initState();
     _fontScale = _svc.fontScale;
-    _language  = _svc.language;
+    _language = _svc.language;
     _themeMode = _svc.themeMode;
   }
 
@@ -116,9 +116,9 @@ class _SettingsAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final bgDeep     = BrightnessColors.bgDeep(brightness);
-    final goldDim    = BrightnessColors.goldDim(brightness);
-    final goldLight  = BrightnessColors.goldLight(brightness);
+    final bgDeep = BrightnessColors.bgDeep(brightness);
+    final goldDim = BrightnessColors.goldDim(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
 
     return SliverAppBar(
@@ -131,9 +131,7 @@ class _SettingsAppBar extends StatelessWidget {
         background: Container(
           decoration: BoxDecoration(
             gradient: BrightnessColors.headerGradient(brightness),
-            border: Border(
-              bottom: BorderSide(color: goldBorder, width: 0.5),
-            ),
+            border: Border(bottom: BorderSide(color: goldBorder, width: 0.5)),
           ),
           child: SafeArea(
             child: Column(
@@ -144,8 +142,7 @@ class _SettingsAppBar extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('✦',
-                          style: TextStyle(color: goldDim, fontSize: 11)),
+                      Text('✦', style: TextStyle(color: goldDim, fontSize: 11)),
                       const SizedBox(height: 4),
                       Text(
                         'الإعدادات',
@@ -184,18 +181,18 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgMid         = BrightnessColors.bgMid(brightness);
-    final bgElevated    = BrightnessColors.bgElevated(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final goldSubtle    = BrightnessColors.goldSubtle(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgMid = BrightnessColors.bgMid(brightness);
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final goldSubtle = BrightnessColors.goldSubtle(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, auth) {
-        final user   = auth.user;
+        final user = auth.user;
         final method = auth.signInMethod;
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -213,7 +210,7 @@ class _ProfileCard extends StatelessWidget {
               _Avatar(
                 photoUrl: user?.photoUrl ?? '',
                 initials: user?.initials ?? '؟',
-                isAdmin:  auth.isAdmin,
+                isAdmin: auth.isAdmin,
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -247,8 +244,7 @@ class _ProfileCard extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        if (auth.isAdmin)
-                          _Chip('Admin', gold),
+                        if (auth.isAdmin) _Chip('Admin', gold),
                         if (auth.isAnonymous)
                           _Chip('Guest', textSecondary)
                         else
@@ -291,26 +287,26 @@ class _ProfileCard extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 class _FontSizeCard extends StatelessWidget {
   const _FontSizeCard({required this.current, required this.onChanged});
-  final FontScale               current;
+  final FontScale current;
   final ValueChanged<FontScale> onChanged;
 
   static const Map<FontScale, double> _tileSizes = {
-    FontScale.small:      14,
-    FontScale.medium:     18,
-    FontScale.large:      24,
+    FontScale.small: 14,
+    FontScale.medium: 18,
+    FontScale.large: 24,
     FontScale.extraLarge: 30,
   };
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgPrimary     = BrightnessColors.bgPrimary(brightness);
-    final bgParchment   = BrightnessColors.bgParchment(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final goldSubtle    = BrightnessColors.goldSubtle(brightness);
-    final goldLight     = BrightnessColors.goldLight(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgPrimary = BrightnessColors.bgPrimary(brightness);
+    final bgParchment = BrightnessColors.bgParchment(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final goldSubtle = BrightnessColors.goldSubtle(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     final double previewSize = (_tileSizes[current] ?? 18) * 0.95;
@@ -340,7 +336,9 @@ class _FontSizeCard extends StatelessWidget {
                   child: Container(
                     key: ValueKey(current),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 3),
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: goldSubtle,
                       borderRadius: BorderRadius.circular(6),
@@ -368,7 +366,8 @@ class _FontSizeCard extends StatelessWidget {
                 return Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
-                        left: fs != FontScale.values.first ? 6 : 0),
+                      left: fs != FontScale.values.first ? 6 : 0,
+                    ),
                     child: GestureDetector(
                       onTap: () => onChanged(fs),
                       child: AnimatedContainer(
@@ -456,7 +455,7 @@ class _FontSizeCard extends StatelessWidget {
                       height: 1.5,
                     ),
                     child: Text(
-                      'Our Father who art in heaven, hallowed be thy name',
+                      'Πάτερ ἡμῶν ὁ ἐν τοῖς οὐρανοῖς, ἁγιασθήτω τὸ ὄνομά σου',
                       textAlign: TextAlign.center,
                       textScaleFactor: 1,
                     ),
@@ -495,47 +494,47 @@ class _FontSizeCard extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 class _LanguageCard extends StatelessWidget {
   const _LanguageCard({required this.current, required this.onChanged});
-  final AppLanguage               current;
+  final AppLanguage current;
   final ValueChanged<AppLanguage> onChanged;
 
   static const Map<AppLanguage, String?> _fontFamilies = {
     AppLanguage.arabic: 'Scheherazade',
-    AppLanguage.greek:  'GFSDidot',
+    AppLanguage.greek: 'GFSDidot',
   };
 
   static const Map<AppLanguage, String> _nativeNames = {
     AppLanguage.arabic: 'العربية',
-    AppLanguage.greek:  'Ελληνικά',
+    AppLanguage.greek: 'Ελληνικά',
   };
 
   static const Map<AppLanguage, String> _subtitles = {
     AppLanguage.arabic: 'Arabic',
-    AppLanguage.greek:  'Greek',
+    AppLanguage.greek: 'Greek',
   };
 
   static const Map<AppLanguage, String> _samples = {
     AppLanguage.arabic: 'الكتاب المقدس',
-    AppLanguage.greek:  'Ἁγία Γραφή',
+    AppLanguage.greek: 'Ἁγία Γραφή',
   };
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgPrimary     = BrightnessColors.bgPrimary(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final goldSubtle    = BrightnessColors.goldSubtle(brightness);
-    final goldLight     = BrightnessColors.goldLight(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgPrimary = BrightnessColors.bgPrimary(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final goldSubtle = BrightnessColors.goldSubtle(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return _Card(
       child: Column(
         children: AppLanguage.values.asMap().entries.map((entry) {
-          final idx      = entry.key;
-          final lang     = entry.value;
+          final idx = entry.key;
+          final lang = entry.value;
           final isActive = current == lang;
-          final isLast   = idx == AppLanguage.values.length - 1;
+          final isLast = idx == AppLanguage.values.length - 1;
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -550,7 +549,9 @@ class _LanguageCard extends StatelessWidget {
                     onTap: () => onChanged(lang),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -562,14 +563,17 @@ class _LanguageCard extends StatelessWidget {
                                   : bgPrimary,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: goldBorder
-                                    .withValues(alpha: isActive ? 1.0 : 0.5),
+                                color: goldBorder.withValues(
+                                  alpha: isActive ? 1.0 : 0.5,
+                                ),
                                 width: 0.5,
                               ),
                             ),
                             child: Center(
-                              child: Text(lang.flagEmoji,
-                                  style: const TextStyle(fontSize: 20)),
+                              child: Text(
+                                lang.flagEmoji,
+                                style: const TextStyle(fontSize: 20),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -607,8 +611,9 @@ class _LanguageCard extends StatelessWidget {
                                         fontFamily: _fontFamilies[lang],
                                         color: isActive
                                             ? gold.withValues(alpha: 0.7)
-                                            : textSecondary
-                                                .withValues(alpha: 0.55),
+                                            : textSecondary.withValues(
+                                                alpha: 0.55,
+                                              ),
                                         fontSize: 10,
                                       ),
                                     ),
@@ -620,14 +625,18 @@ class _LanguageCard extends StatelessWidget {
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 200),
                             child: isActive
-                                ? Icon(Icons.check_circle,
+                                ? Icon(
+                                    Icons.check_circle,
                                     size: 22,
                                     color: gold,
-                                    key: const ValueKey('on'))
-                                : Icon(Icons.radio_button_unchecked,
+                                    key: const ValueKey('on'),
+                                  )
+                                : Icon(
+                                    Icons.radio_button_unchecked,
                                     size: 22,
                                     color: goldBorder,
-                                    key: const ValueKey('off')),
+                                    key: const ValueKey('off'),
+                                  ),
                           ),
                         ],
                       ),
@@ -656,7 +665,7 @@ class _LanguageCard extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 class _ThemeModeCard extends StatelessWidget {
   const _ThemeModeCard({required this.current, required this.onChanged});
-  final AppThemeMode               current;
+  final AppThemeMode current;
   final ValueChanged<AppThemeMode> onChanged;
 
   @override
@@ -697,20 +706,20 @@ class _ThemeModeTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final String   labelAr, labelEn;
+  final String labelAr, labelEn;
   final IconData icon;
-  final bool     isActive;
+  final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgPrimary     = BrightnessColors.bgPrimary(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final goldSubtle    = BrightnessColors.goldSubtle(brightness);
-    final goldLight     = BrightnessColors.goldLight(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgPrimary = BrightnessColors.bgPrimary(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final goldSubtle = BrightnessColors.goldSubtle(brightness);
+    final goldLight = BrightnessColors.goldLight(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Expanded(
@@ -730,9 +739,7 @@ class _ThemeModeTile extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icon,
-                  size: 20,
-                  color: isActive ? gold : textSecondary),
+              Icon(icon, size: 20, color: isActive ? gold : textSecondary),
               const SizedBox(height: 6),
               Text(
                 labelAr,
@@ -776,7 +783,7 @@ class _StorageCard extends StatefulWidget {
 
 class _StorageCardState extends State<_StorageCard> {
   String _cacheSize = '…';
-  bool   _clearing  = false;
+  bool _clearing = false;
 
   @override
   void initState() {
@@ -807,11 +814,11 @@ class _StorageCardState extends State<_StorageCard> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgMid         = BrightnessColors.bgMid(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgMid = BrightnessColors.bgMid(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return _Card(
@@ -870,7 +877,9 @@ class _StorageCardState extends State<_StorageCard> {
                     style: TextButton.styleFrom(
                       foregroundColor: gold,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       side: BorderSide(color: goldBorder, width: 0.8),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -903,12 +912,13 @@ class _OfflineModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final gold          = BrightnessColors.gold(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final gold = BrightnessColors.gold(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
-    final isAr = context.watch<SettingsCubit>().state.language == AppLanguage.arabic;
+    final isAr =
+        context.watch<SettingsCubit>().state.language == AppLanguage.arabic;
     final isOn = context.watch<SettingsCubit>().state.offlineMode;
 
     return _Card(
@@ -1026,9 +1036,9 @@ class _SignOutCardState extends State<_SignOutCard> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final maroonColor   = BrightnessColors.maroon(brightness);
-    final maroonMid     = brightness == Brightness.dark
+    final brightness = Theme.of(context).brightness;
+    final maroonColor = BrightnessColors.maroon(brightness);
+    final maroonMid = brightness == Brightness.dark
         ? EkklisiaColors.darkMaroonMid
         : EkklisiaColors.lightMaroonMid;
     final textSecondary = BrightnessColors.textSecondary(brightness);
@@ -1061,13 +1071,11 @@ class _SignOutCardState extends State<_SignOutCard> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation(maroonMid),
+                              valueColor: AlwaysStoppedAnimation(maroonMid),
                             ),
                           ),
                         )
-                      : Icon(Icons.logout_outlined,
-                          size: 18, color: maroonMid),
+                      : Icon(Icons.logout_outlined, size: 18, color: maroonMid),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1122,17 +1130,17 @@ class _ConfirmDialog extends StatelessWidget {
   });
 
   final IconData icon;
-  final String   title, body, confirmLabel;
-  final bool     isDestructive;
+  final String title, body, confirmLabel;
+  final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgMid         = BrightnessColors.bgMid(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgMid = BrightnessColors.bgMid(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
-    final accentColor   = isDestructive
+    final accentColor = isDestructive
         ? BrightnessColors.maroon(brightness)
         : BrightnessColors.gold(brightness);
 
@@ -1154,65 +1162,81 @@ class _ConfirmDialog extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: accentColor.withValues(alpha: 0.12),
                 border: Border.all(
-                    color: accentColor.withValues(alpha: 0.3), width: 1),
+                  color: accentColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
               child: Icon(icon, size: 24, color: accentColor),
             ),
             const SizedBox(height: 16),
-            Text(title,
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                )),
-            const SizedBox(height: 8),
-            Text(body,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: textSecondary,
-                  fontSize: 14,
-                  height: 1.6,
-                )),
-            const SizedBox(height: 24),
-            Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: textSecondary,
-                    side: BorderSide(color: goldBorder, width: 0.5),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text('إلغاء',
-                      style: TextStyle(
-                          fontFamily: 'Scheherazade', fontSize: 14)),
-                ),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Scheherazade',
+                color: textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accentColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Scheherazade',
+                color: textSecondary,
+                fontSize: 14,
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: textSecondary,
+                      side: BorderSide(color: goldBorder, width: 0.5),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
-                  child: Text(confirmLabel,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      confirmLabel,
                       style: const TextStyle(
                         fontFamily: 'Scheherazade',
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                      )),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ],
         ),
       ),
@@ -1228,21 +1252,25 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final goldDim       = BrightnessColors.goldDim(brightness);
+    final brightness = Theme.of(context).brightness;
+    final goldDim = BrightnessColors.goldDim(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Column(
       children: [
-        Text('✦  ✦  ✦',
-            style: TextStyle(
-                color: goldDim, fontSize: 9, letterSpacing: 8)),
+        Text(
+          '✦  ✦  ✦',
+          style: TextStyle(color: goldDim, fontSize: 9, letterSpacing: 8),
+        ),
         const SizedBox(height: 6),
-        Text('الكنيسة القبطية الأرثوذكسية',
-            style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: textSecondary,
-                fontSize: 11)),
+        Text(
+          'الكنيسة القبطية الأرثوذكسية',
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            color: textSecondary,
+            fontSize: 11,
+          ),
+        ),
       ],
     );
   }
@@ -1258,9 +1286,9 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final gold          = BrightnessColors.gold(brightness);
-    final textPrimary   = BrightnessColors.textPrimary(brightness);
+    final brightness = Theme.of(context).brightness;
+    final gold = BrightnessColors.gold(brightness);
+    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Row(
@@ -1274,20 +1302,24 @@ class _SectionLabel extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 9),
-        Text(ar,
-            style: TextStyle(
-              fontFamily: 'Scheherazade',
-              color: textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            )),
+        Text(
+          ar,
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            color: textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const SizedBox(width: 8),
-        Text(en,
-            style: TextStyle(
-              color: textSecondary,
-              fontSize: 10,
-              letterSpacing: 0.8,
-            )),
+        Text(
+          en,
+          style: TextStyle(
+            color: textSecondary,
+            fontSize: 10,
+            letterSpacing: 0.8,
+          ),
+        ),
       ],
     );
   }
@@ -1300,7 +1332,7 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final bgMid      = BrightnessColors.bgMid(brightness);
+    final bgMid = BrightnessColors.bgMid(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
 
     return Container(
@@ -1309,10 +1341,7 @@ class _Card extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: goldBorder, width: 0.5),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: child,
-      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(15), child: child),
     );
   }
 }
@@ -1320,7 +1349,7 @@ class _Card extends StatelessWidget {
 class _Chip extends StatelessWidget {
   const _Chip(this.label, this.color);
   final String label;
-  final Color  color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1331,13 +1360,15 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: color.withValues(alpha: 0.35), width: 0.5),
       ),
-      child: Text(label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-          )),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
+      ),
     );
   }
 }
@@ -1373,14 +1404,14 @@ class _Avatar extends StatelessWidget {
     required this.isAdmin,
   });
   final String photoUrl, initials;
-  final bool   isAdmin;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
-    final brightness    = Theme.of(context).brightness;
-    final bgElevated    = BrightnessColors.bgElevated(brightness);
-    final gold          = BrightnessColors.gold(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
+    final brightness = Theme.of(context).brightness;
+    final bgElevated = BrightnessColors.bgElevated(brightness);
+    final gold = BrightnessColors.gold(brightness);
+    final goldBorder = BrightnessColors.goldBorder(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Container(
@@ -1404,15 +1435,17 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget _fallback(Color bg, Color textColor) => Container(
-        color: bg,
-        child: Center(
-          child: Text(initials,
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: textColor,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              )),
+    color: bg,
+    child: Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontFamily: 'Scheherazade',
+          color: textColor,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
         ),
-      );
+      ),
+    ),
+  );
 }

@@ -23,6 +23,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../utils/admin_colors.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -120,12 +121,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       u.displayName.isNotEmpty ? u.displayName : u.email.isNotEmpty ? u.email : 'User';
 
   void _snack(String msg, {bool error = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      duration: const Duration(seconds: 2),
+      duration: Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: error ? Colors.redAccent : EkklisiaColors.bgElevated,
+      backgroundColor: error ? Colors.redAccent : ac.bgElevated,
     ));
   }
 
@@ -135,29 +137,30 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     required String body,
     required String confirmLabel,
     bool destructive = false,
-  }) =>
-      showDialog<bool>(
+  }) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return showDialog<bool>(
         context: ctx,
         builder: (dialogCtx) => AlertDialog(
-          backgroundColor: EkklisiaColors.bgElevated,
+          backgroundColor: ac.bgElevated,
           title: Text(title,
-              style: const TextStyle(
-                  color: EkklisiaColors.goldLight, fontSize: 15)),
+              style: TextStyle(
+                  color: ac.goldLight, fontSize: 15)),
           content: Text(body,
-              style: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 13)),
+              style: TextStyle(
+                  color: ac.textSecondary, fontSize: 13)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx, false),
-              child: const Text('Cancel',
-                  style: TextStyle(color: EkklisiaColors.textSecondary)),
+              child: Text('Cancel',
+                  style: TextStyle(color: ac.textSecondary)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx, true),
               child: Text(
                 confirmLabel,
                 style: TextStyle(
-                  color: destructive ? Colors.redAccent : EkklisiaColors.gold,
+                  color: destructive ? Colors.redAccent : ac.gold,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -165,37 +168,39 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           ],
         ),
       );
+  }
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(children: [
       // ── Header ────────────────────────────────────────────────────────────
       Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-        decoration: const BoxDecoration(
-          color: EkklisiaColors.bgMid,
+        decoration: BoxDecoration(
+          color: ac.bgMid,
           border: Border(
-              bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+              bottom: BorderSide(color: ac.goldBorder, width: 0.5)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            const Icon(Icons.people_outline,
-                color: EkklisiaColors.gold, size: 20),
+            Icon(Icons.people_outline,
+                color: ac.gold, size: 20),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Users',
                       style: TextStyle(
-                          color: EkklisiaColors.goldLight,
+                          color: ac.goldLight,
                           fontSize: 15,
                           fontWeight: FontWeight.w700)),
                   Text('Manage accounts, roles & access',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary, fontSize: 11)),
+                          color: ac.textSecondary, fontSize: 11)),
                 ],
               ),
             ),
@@ -206,26 +211,26 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           TextField(
             controller: _search,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(
-                color: EkklisiaColors.textPrimary, fontSize: 13),
+            style: TextStyle(
+                color: ac.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Search by name, email or UID…',
-              hintStyle: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 12),
-              prefixIcon: const Icon(Icons.search,
-                  size: 18, color: EkklisiaColors.goldDim),
+              hintStyle: TextStyle(
+                  color: ac.textSecondary, fontSize: 12),
+              prefixIcon: Icon(Icons.search,
+                  size: 18, color: ac.goldDim),
               filled: true,
-              fillColor: EkklisiaColors.bgElevated,
+              fillColor: ac.bgElevated,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                    color: EkklisiaColors.goldBorder, width: 0.5),
+                borderSide: BorderSide(
+                    color: ac.goldBorder, width: 0.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: EkklisiaColors.gold, width: 1.0),
+                    BorderSide(color: ac.gold, width: 1.0),
               ),
             ),
           ),
@@ -257,16 +262,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               .snapshots(),
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
+              return Center(
                   child: CircularProgressIndicator(
                       valueColor:
-                          AlwaysStoppedAnimation(EkklisiaColors.gold)));
+                          AlwaysStoppedAnimation(ac.gold)));
             }
             if (snap.hasError) {
               return Center(
                   child: Text('Error: ${snap.error}',
-                      style: const TextStyle(
-                          color: EkklisiaColors.textSecondary)));
+                      style: TextStyle(
+                          color: ac.textSecondary)));
             }
 
             final docs = (snap.data?.docs ?? [])
@@ -285,15 +290,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             if (docs.isEmpty) {
               return Center(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.people_outline,
-                      size: 48, color: EkklisiaColors.goldDim),
+                  Icon(Icons.people_outline,
+                      size: 48, color: ac.goldDim),
                   const SizedBox(height: 12),
                   Text(
                     _search.text.isNotEmpty
                         ? 'No users match "${_search.text}"'
                         : 'No users in this filter',
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 14),
+                    style: TextStyle(
+                        color: ac.textSecondary, fontSize: 14),
                   ),
                 ]),
               );
@@ -306,19 +311,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     horizontal: 16, vertical: 8),
                 color: EkklisiaColors.bgPrimary,
                 child: Row(children: [
-                  const Icon(Icons.people,
-                      size: 14, color: EkklisiaColors.goldDim),
-                  const SizedBox(width: 6),
+                  Icon(Icons.people,
+                      size: 14, color: ac.goldDim),
+                  SizedBox(width: 6),
                   Text('${docs.length} user${docs.length != 1 ? 's' : ''}',
-                      style: const TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                      style: TextStyle(
+                          color: ac.textSecondary,
                           fontSize: 12)),
-                  const Spacer(),
+                  Spacer(),
                   Text(
                     '${docs.where((u) => u.isAdmin).length} admin · '
                     '${docs.where((u) => !u.isActive).length} inactive',
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 11),
+                    style: TextStyle(
+                        color: ac.textSecondary, fontSize: 11),
                   ),
                 ]),
               ),
@@ -345,19 +350,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Widget _chip(String label, String key) {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final active = _filter == key;
     return GestureDetector(
       onTap: () => setState(() => _filter = key),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: active
-              ? EkklisiaColors.goldSubtle
-              : EkklisiaColors.bgElevated,
+              ? ac.goldSubtle
+              : ac.bgElevated,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: active ? EkklisiaColors.gold : EkklisiaColors.goldBorder,
+            color: active ? ac.gold : ac.goldBorder,
             width: active ? 1.0 : 0.5,
           ),
         ),
@@ -365,8 +372,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           label,
           style: TextStyle(
             color: active
-                ? EkklisiaColors.goldLight
-                : EkklisiaColors.textSecondary,
+                ? ac.goldLight
+                : ac.textSecondary,
             fontSize: 12,
             fontWeight: active ? FontWeight.w600 : FontWeight.w400,
           ),
@@ -397,6 +404,7 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final dimmed = !user.isActive;
 
     return Opacity(
@@ -404,12 +412,12 @@ class _UserCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgMid,
+          color: ac.bgMid,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: user.isAdmin
-                ? EkklisiaColors.goldBorder
-                : EkklisiaColors.goldBorder.withOpacity(0.4),
+                ? ac.goldBorder
+                : ac.goldBorder.withOpacity(0.4),
             width: user.isAdmin ? 0.8 : 0.4,
           ),
         ),
@@ -424,8 +432,8 @@ class _UserCard extends StatelessWidget {
               children: [
                 if (user.displayName.isNotEmpty)
                   Text(user.displayName,
-                      style: const TextStyle(
-                          color: EkklisiaColors.textPrimary,
+                      style: TextStyle(
+                          color: ac.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700)),
                 Text(
@@ -437,8 +445,8 @@ class _UserCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: user.isAnonymous
-                        ? EkklisiaColors.textSecondary
-                        : EkklisiaColors.textPrimary,
+                        ? ac.textSecondary
+                        : ac.textPrimary,
                     fontSize:
                         user.displayName.isNotEmpty ? 11 : 13,
                     fontStyle: user.isAnonymous
@@ -461,22 +469,22 @@ class _UserCard extends StatelessWidget {
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text(
                       '${user.uid.substring(0, 8)}…',
-                      style: const TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                      style: TextStyle(
+                          color: ac.textSecondary,
                           fontSize: 10,
                           fontFamily: 'monospace'),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.copy,
-                        size: 10, color: EkklisiaColors.goldDim),
+                    SizedBox(width: 4),
+                    Icon(Icons.copy,
+                        size: 10, color: ac.goldDim),
                   ]),
                 ),
                 if (user.lastSeenAt != null) ...[
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     _relativeTime(user.lastSeenAt!),
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                    style: TextStyle(
+                        color: ac.textSecondary,
                         fontSize: 10),
                   ),
                 ],
@@ -490,29 +498,29 @@ class _UserCard extends StatelessWidget {
             children: [
               Row(mainAxisSize: MainAxisSize.min, children: [
                 if (user.isAdmin)
-                  _Badge('ADMIN', EkklisiaColors.gold),
+                  _Badge('ADMIN', ac.gold),
                 if (!user.isActive) ...[
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   _Badge('INACTIVE', Colors.redAccent),
                 ],
                 if (user.isAnonymous) ...[
-                  const SizedBox(width: 4),
-                  _Badge('ANON', EkklisiaColors.textSecondary),
+                  SizedBox(width: 4),
+                  _Badge('ANON', ac.textSecondary),
                 ],
                 if (user.fcmToken.isNotEmpty) ...[
-                  const SizedBox(width: 4),
-                  _Badge('FCM', EkklisiaColors.tealMid),
+                  SizedBox(width: 4),
+                  _Badge('FCM', ac.tealMid),
                 ],
               ]),
               const SizedBox(height: 6),
 
               // Action menu (disabled for self)
               if (_isSelf)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(right: 4),
                   child: Text('(you)',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 10)),
                 )
               else
@@ -556,13 +564,14 @@ class _ActionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert,
-          size: 18, color: EkklisiaColors.goldDim),
-      color: EkklisiaColors.bgElevated,
+      icon: Icon(Icons.more_vert,
+          size: 18, color: ac.goldDim),
+      color: ac.bgElevated,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+        side: BorderSide(color: ac.goldBorder, width: 0.5),
       ),
       onSelected: (v) {
         if (v == 'admin')  onToggleAdmin?.call();
@@ -579,16 +588,16 @@ class _ActionMenu extends StatelessWidget {
               user.isAdmin ? Icons.remove_moderator_outlined : Icons.admin_panel_settings_outlined,
               size: 16,
               color: onToggleAdmin != null
-                  ? EkklisiaColors.gold
-                  : EkklisiaColors.textSecondary,
+                  ? ac.gold
+                  : ac.textSecondary,
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Text(
               user.isAdmin ? 'Demote from admin' : 'Promote to admin',
               style: TextStyle(
                 color: onToggleAdmin != null
-                    ? EkklisiaColors.textPrimary
-                    : EkklisiaColors.textSecondary,
+                    ? ac.textPrimary
+                    : ac.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -606,7 +615,7 @@ class _ActionMenu extends StatelessWidget {
               size: 16,
               color: user.isActive
                   ? Colors.orangeAccent
-                  : EkklisiaColors.tealMid,
+                  : ac.tealMid,
             ),
             const SizedBox(width: 10),
             Text(
@@ -614,7 +623,7 @@ class _ActionMenu extends StatelessWidget {
               style: TextStyle(
                 color: user.isActive
                     ? Colors.orangeAccent
-                    : EkklisiaColors.tealMid,
+                    : ac.tealMid,
                 fontSize: 13,
               ),
             ),
@@ -648,17 +657,18 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       width: 40, height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: user.isAdmin
-            ? EkklisiaColors.goldSubtle
-            : EkklisiaColors.bgElevated,
+            ? ac.goldSubtle
+            : ac.bgElevated,
         border: Border.all(
           color: user.isAdmin
-              ? EkklisiaColors.gold
-              : EkklisiaColors.goldBorder,
+              ? ac.gold
+              : ac.goldBorder,
           width: user.isAdmin ? 1.5 : 0.5,
         ),
       ),
@@ -667,8 +677,8 @@ class _Avatar extends StatelessWidget {
           user.isAnonymous ? '?' : user.initials,
           style: TextStyle(
             color: user.isAdmin
-                ? EkklisiaColors.gold
-                : EkklisiaColors.textSecondary,
+                ? ac.gold
+                : ac.textSecondary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -684,7 +694,9 @@ class _Badge extends StatelessWidget {
   final Color  color;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
     decoration: BoxDecoration(
       color:        color.withOpacity(0.12),
@@ -700,4 +712,5 @@ class _Badge extends StatelessWidget {
           letterSpacing: 0.5),
     ),
   );
+  }
 }

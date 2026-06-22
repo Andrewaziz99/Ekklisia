@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
@@ -23,10 +24,8 @@ class BookmarksScreen extends StatelessWidget {
     final textSecondary = BrightnessColors.textSecondary(brightness);
     final gold = Theme.of(context).primaryColor;
 
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: bgDeep,
@@ -60,9 +59,9 @@ class BookmarksScreen extends StatelessWidget {
                                     TextStyle(color: goldDim, fontSize: 11)),
                             const SizedBox(height: 4),
                             Text(
-                              isGreek ? 'ΣΕΛΙΔΟΔΕΙΚΤΕΣ' : 'الإشارات المرجعية',
+                              l.bookmarks,
                               style: TextStyle(
-                                fontFamily: isGreek ? null : 'Scheherazade',
+                                fontFamily: l.bodyFont,
                                 color: goldLight,
                                 fontSize: isGreek ? 18 : 24,
                                 fontWeight: FontWeight.w700,
@@ -113,9 +112,9 @@ class BookmarksScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isGreek ? 'Δεν υπάρχουν σελιδοδείκτες' : 'لا توجد إشارات مرجعية',
+                  l.noBookmarks,
                   style: TextStyle(
-                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontFamily: l.bodyFont,
                     color: textSecondary,
                     fontSize: isGreek ? 15 : 18,
                   ),
@@ -134,9 +133,9 @@ class BookmarksScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isGreek ? 'Coming soon' : 'قريباً',
+                  l.comingSoon,
                   style: TextStyle(
-                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontFamily: l.bodyFont,
                     color: gold,
                     fontSize: 12,
                     letterSpacing: 1.0,

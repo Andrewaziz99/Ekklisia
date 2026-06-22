@@ -32,6 +32,7 @@ import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../data/repositories/pdf_content_repository.dart';
+import '../utils/admin_colors.dart';
 
 // ── Audio track entry (mutable form state per track) ──────────────────────────
 
@@ -73,9 +74,8 @@ class _AudioTrackEntry {
 }
 
 // ── Palette aliases ────────────────────────────────────────────────────────────
-const _kNavy   = EkklisiaColors.bgDeep;
-const _kGold   = EkklisiaColors.gold;
-const _kBorder = EkklisiaColors.goldBorder;
+const _kNavy   = EkklisiaColors.darkBgDeep;
+const _kGold   = EkklisiaColors.darkGold;
 
 // ════════════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -551,6 +551,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
       backgroundColor: EkklisiaColors.bgPrimary,
       body: _mode == _Mode.list ? _buildList() : _buildForm(),
@@ -560,6 +561,8 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   // ── List view ──────────────────────────────────────────────────────────────
 
   Widget _buildList() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<List<PdfContent>>(
       stream: _repo.watchAll(widget.category),
       builder: (context, snap) {
@@ -575,8 +578,8 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
               title:   widget.labelEn,
               titleAr: widget.labelAr,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new,
-                    color: EkklisiaColors.textSecondary, size: 18),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: ac.textSecondary, size: 18),
                 onPressed: () => context.go('/admin/dashboard'),
               ),
               trailing: _SmallBtn(
@@ -598,9 +601,9 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
             // ── List ──────────────────────────────────────────────────────
             Expanded(
               child: loading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                          color: EkklisiaColors.gold))
+                          color: ac.gold))
                   : items.isEmpty
                       ? _EmptyState(onAdd: _openAdd)
                       : ReorderableListView.builder(
@@ -629,6 +632,8 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   // ── Form view (add / edit) ─────────────────────────────────────────────────
 
   Widget _buildForm() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final isAdd = _editing == null;
 
     return Column(
@@ -640,22 +645,22 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
               : 'Edit — ${widget.labelEn}',
           titleAr: isAdd ? 'إضافة عنصر' : 'تعديل العنصر',
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: EkklisiaColors.textSecondary, size: 18),
+            icon: Icon(Icons.arrow_back_ios_new,
+                color: ac.textSecondary, size: 18),
             onPressed: _backToList,
           ),
           trailing: _saving
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: EkklisiaColors.gold))
+                      strokeWidth: 2, color: ac.gold))
               : TextButton.icon(
                   onPressed: _save,
-                  icon: const Icon(Icons.check,
-                      color: EkklisiaColors.gold, size: 18),
-                  label: const Text('Save',
-                      style: TextStyle(color: EkklisiaColors.gold)),
+                  icon: Icon(Icons.check,
+                      color: ac.gold, size: 18),
+                  label: Text('Save',
+                      style: TextStyle(color: ac.gold)),
                 ),
         ),
 
@@ -708,7 +713,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                           'Upload a PDF to Cloudinary folder '
                           '"Ekklisia/${widget.category}".',
                           style: TextStyle(
-                            color: EkklisiaColors.textSecondary
+                            color: ac.textSecondary
                                 .withValues(alpha: 0.7),
                             fontSize: 11,
                           ),
@@ -743,7 +748,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                         Text(
                           'Optional. Add one or more audio tracks (MP3, AAC…).',
                           style: TextStyle(
-                            color: EkklisiaColors.textSecondary
+                            color: ac.textSecondary
                                 .withValues(alpha: 0.7),
                             fontSize: 11,
                           ),
@@ -779,10 +784,10 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10),
                             decoration: BoxDecoration(
-                              color:        EkklisiaColors.bgMid,
+                              color:        ac.bgMid,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                  color: EkklisiaColors.goldBorder,
+                                  color: ac.goldBorder,
                                   width: 0.8),
                             ),
                             child: Row(
@@ -792,15 +797,15 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                                 Icon(Icons.add,
                                     size: 16,
                                     color: _saving
-                                        ? EkklisiaColors.textSecondary
-                                        : EkklisiaColors.gold),
-                                const SizedBox(width: 6),
+                                        ? ac.textSecondary
+                                        : ac.gold),
+                                SizedBox(width: 6),
                                 Text(
                                   'Add Audio Track',
                                   style: TextStyle(
                                     color: _saving
-                                        ? EkklisiaColors.textSecondary
-                                        : EkklisiaColors.gold,
+                                        ? ac.textSecondary
+                                        : ac.gold,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -824,7 +829,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                         Text(
                           'Optional. Upload a video file or paste a YouTube / Cloudinary URL.',
                           style: TextStyle(
-                            color: EkklisiaColors.textSecondary
+                            color: ac.textSecondary
                                 .withValues(alpha: 0.7),
                             fontSize: 11,
                           ),
@@ -834,24 +839,24 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                         // URL text field
                         TextFormField(
                           initialValue: _videoUrl,
-                          style: const TextStyle(
-                              color: EkklisiaColors.textPrimary,
+                          style: TextStyle(
+                              color: ac.textPrimary,
                               fontSize: 13),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Video URL (YouTube or direct link)',
                             labelStyle: TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                                color: ac.textSecondary,
                                 fontSize: 12),
                             hintText: 'https://youtube.com/... or https://res.cloudinary.com/...',
                             hintStyle: TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                                color: ac.textSecondary,
                                 fontSize: 11),
                             filled: true,
-                            fillColor: EkklisiaColors.bgDeep,
+                            fillColor: ac.bgDeep,
                             border: OutlineInputBorder(),
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: EkklisiaColors.goldBorder),
+                                  color: ac.goldBorder),
                             ),
                           ),
                           onChanged: (v) => setState(() {
@@ -862,20 +867,20 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                             _videoName         = null;
                           }),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
 
                         // OR — file upload
                         Row(children: [
-                          const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
+                          Expanded(child: Divider(color: ac.goldBorder)),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text('OR',
                                 style: TextStyle(
-                                    color: EkklisiaColors.textSecondary
+                                    color: ac.textSecondary
                                         .withValues(alpha: 0.6),
                                     fontSize: 11)),
                           ),
-                          const Expanded(child: Divider(color: EkklisiaColors.goldBorder)),
+                          Expanded(child: Divider(color: ac.goldBorder)),
                         ]),
                         const SizedBox(height: 8),
 
@@ -886,16 +891,16 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                             children: [
                               LinearProgressIndicator(
                                 value: _videoUploadProgress,
-                                backgroundColor: EkklisiaColors.bgMid,
-                                valueColor: const AlwaysStoppedAnimation(
-                                    EkklisiaColors.gold),
+                                backgroundColor: ac.bgMid,
+                                valueColor: AlwaysStoppedAnimation(
+                                    ac.gold),
                               ),
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
                               Text(
                                 'Uploading… ${((_videoUploadProgress ?? 0) * 100).toStringAsFixed(0)}%',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    color: EkklisiaColors.textSecondary,
+                                style: TextStyle(
+                                    color: ac.textSecondary,
                                     fontSize: 11),
                               ),
                             ],
@@ -906,21 +911,21 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: EkklisiaColors.bgDeep,
+                                color: ac.bgDeep,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                    color: EkklisiaColors.goldBorder,
+                                    color: ac.goldBorder,
                                     width: 0.5),
                               ),
                               child: Row(children: [
-                                const Icon(Icons.videocam_outlined,
-                                    color: EkklisiaColors.gold, size: 16),
-                                const SizedBox(width: 6),
+                                Icon(Icons.videocam_outlined,
+                                    color: ac.gold, size: 16),
+                                SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     _videoName ?? _videoUrl,
-                                    style: const TextStyle(
-                                        color: EkklisiaColors.textPrimary,
+                                    style: TextStyle(
+                                        color: ac.textPrimary,
                                         fontSize: 11),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -934,8 +939,8 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                                     _videoBytes        = null;
                                     _videoName         = null;
                                   }),
-                                  child: const Icon(Icons.close,
-                                      color: EkklisiaColors.textSecondary,
+                                  child: Icon(Icons.close,
+                                      color: ac.textSecondary,
                                       size: 16),
                                 ),
                               ]),
@@ -947,10 +952,10 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                               padding: const EdgeInsets.symmetric(
                                   vertical: 10),
                               decoration: BoxDecoration(
-                                color: EkklisiaColors.bgMid,
+                                color: ac.bgMid,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                    color: EkklisiaColors.goldBorder,
+                                    color: ac.goldBorder,
                                     width: 0.8),
                               ),
                               child: Row(
@@ -960,15 +965,15 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                                   Icon(Icons.upload_file,
                                       size: 16,
                                       color: _saving
-                                          ? EkklisiaColors.textSecondary
-                                          : EkklisiaColors.gold),
-                                  const SizedBox(width: 6),
+                                          ? ac.textSecondary
+                                          : ac.gold),
+                                  SizedBox(width: 6),
                                   Text(
                                     'Upload Video File',
                                     style: TextStyle(
                                       color: _saving
-                                          ? EkklisiaColors.textSecondary
-                                          : EkklisiaColors.gold,
+                                          ? ac.textSecondary
+                                          : ac.gold,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -993,16 +998,16 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Visible to users',
+                              Text('Visible to users',
                                   style: TextStyle(
-                                      color: EkklisiaColors.textPrimary,
+                                      color: ac.textPrimary,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Text(
                                 'Hidden items exist but won\'t appear in the app.',
                                 style: TextStyle(
-                                    color: EkklisiaColors.textSecondary
+                                    color: ac.textSecondary
                                         .withValues(alpha: 0.8),
                                     fontSize: 11),
                               ),
@@ -1014,7 +1019,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                           onChanged: _saving
                               ? null
                               : (v) => setState(() => _isVisible = v),
-                          activeColor: EkklisiaColors.gold,
+                          activeColor: ac.gold,
                         ),
                       ],
                     ),
@@ -1027,21 +1032,21 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                     child: ElevatedButton(
                       onPressed: _saving ? null : _save,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: EkklisiaColors.maroon,
+                        backgroundColor: ac.maroon,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       child: _saving
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: EkklisiaColors.gold))
+                                  color: ac.gold))
                           : Text(
                               isAdd ? 'Add Item' : 'Save Changes',
-                              style: const TextStyle(
-                                  color: EkklisiaColors.goldLight,
+                              style: TextStyle(
+                                  color: ac.goldLight,
                                   fontWeight: FontWeight.w700)),
                     ),
                   ),
@@ -1077,20 +1082,21 @@ class _ContentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color:        EkklisiaColors.bgElevated,
+        color:        ac.bgElevated,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder, width: 0.8),
+        border: Border.all(color: ac.goldBorder, width: 0.8),
       ),
       child: Row(
         children: [
           // ── Drag handle ─────────────────────────────────────────────────
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Icon(Icons.drag_handle,
-                color: EkklisiaColors.textSecondary, size: 20),
+                color: ac.textSecondary, size: 20),
           ),
 
           // ── Order badge ─────────────────────────────────────────────────
@@ -1100,12 +1106,12 @@ class _ContentRow extends StatelessWidget {
             decoration: BoxDecoration(
               color:  _kNavy,
               shape:  BoxShape.circle,
-              border: Border.all(color: _kBorder),
+              border: Border.all(color: ac.goldBorder),
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(
+                style: TextStyle(
                     color:      _kGold,
                     fontSize:   10,
                     fontWeight: FontWeight.w700),
@@ -1120,7 +1126,7 @@ class _ContentRow extends StatelessWidget {
             decoration: BoxDecoration(
               color:        _kNavy,
               borderRadius: BorderRadius.circular(4),
-              border:       Border.all(color: _kBorder),
+              border:       Border.all(color: ac.goldBorder),
             ),
             child: const Icon(Icons.picture_as_pdf_outlined,
                 color: _kGold, size: 14),
@@ -1134,7 +1140,7 @@ class _ContentRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color:        _kNavy,
                 borderRadius: BorderRadius.circular(4),
-                border:       Border.all(color: _kBorder),
+                border:       Border.all(color: ac.goldBorder),
               ),
               child: const Icon(Icons.music_note,
                   color: _kGold, size: 14),
@@ -1148,9 +1154,9 @@ class _ContentRow extends StatelessWidget {
               children: [
                 Text(
                   item.titleAr.isNotEmpty ? item.titleAr : '—',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color:      EkklisiaColors.textPrimary,
+                    color:      ac.textPrimary,
                     fontSize:   16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1158,8 +1164,8 @@ class _ContentRow extends StatelessWidget {
                 if (item.titleEl.isNotEmpty)
                   Text(
                     item.titleEl,
-                    style: const TextStyle(
-                        color:    EkklisiaColors.textSecondary,
+                    style: TextStyle(
+                        color:    ac.textSecondary,
                         fontSize: 11),
                   ),
               ],
@@ -1176,8 +1182,8 @@ class _ContentRow extends StatelessWidget {
                     : Icons.visibility_off_outlined,
                 size:  18,
                 color: item.isVisible
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.textSecondary,
+                    ? ac.gold
+                    : ac.textSecondary,
               ),
               onPressed: onToggle,
             ),
@@ -1185,8 +1191,8 @@ class _ContentRow extends StatelessWidget {
 
           // ── Edit ─────────────────────────────────────────────────────────
           IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                size: 18, color: EkklisiaColors.textSecondary),
+            icon: Icon(Icons.edit_outlined,
+                size: 18, color: ac.textSecondary),
             onPressed: onEdit,
           ),
 
@@ -1225,18 +1231,19 @@ class _PdfPickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onPick,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgMid,
+          color: ac.bgMid,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: _hasPdf
-                ? EkklisiaColors.tealMid
-                : _kBorder,
+                ? ac.tealMid
+                : ac.goldBorder,
             width: _hasPdf ? 1.0 : 0.5,
           ),
         ),
@@ -1248,8 +1255,8 @@ class _PdfPickerTile extends StatelessWidget {
                   : Icons.picture_as_pdf_outlined,
               size:  26,
               color: _hasPdf
-                  ? EkklisiaColors.tealMid
-                  : EkklisiaColors.goldDim,
+                  ? ac.tealMid
+                  : ac.goldDim,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1262,8 +1269,8 @@ class _PdfPickerTile extends StatelessWidget {
                         : 'Select PDF File',
                     style: TextStyle(
                       color: _hasPdf
-                          ? EkklisiaColors.textPrimary
-                          : EkklisiaColors.textSecondary,
+                          ? ac.textPrimary
+                          : ac.textSecondary,
                       fontSize:   13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1276,15 +1283,15 @@ class _PdfPickerTile extends StatelessWidget {
                             ? '${sizeMb!.toStringAsFixed(2)} MB — Tap to replace'
                             : 'Tap to replace')
                         : 'PDF only — Max 100 MB',
-                    style: const TextStyle(
-                        color:    EkklisiaColors.textSecondary,
+                    style: TextStyle(
+                        color:    ac.textSecondary,
                         fontSize: 11),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: EkklisiaColors.goldDim, size: 18),
+            Icon(Icons.chevron_right,
+                color: ac.goldDim, size: 18),
           ],
         ),
       ),
@@ -1310,6 +1317,7 @@ class _UploadProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final done = progress >= 1.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1319,16 +1327,16 @@ class _UploadProgressBar extends StatelessWidget {
           children: [
             Text(
               done ? 'Upload complete' : 'Uploading to Cloudinary…',
-              style: const TextStyle(
-                  color:    EkklisiaColors.textSecondary,
+              style: TextStyle(
+                  color:    ac.textSecondary,
                   fontSize: 11),
             ),
             Text(
               done ? 'Done ✓' : '${(progress * 100).round()}%',
               style: TextStyle(
                 color: done
-                    ? EkklisiaColors.tealMid
-                    : EkklisiaColors.gold,
+                    ? ac.tealMid
+                    : ac.gold,
                 fontSize:   11,
                 fontWeight: FontWeight.w700,
               ),
@@ -1341,9 +1349,9 @@ class _UploadProgressBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value:           progress,
             minHeight:       6,
-            backgroundColor: EkklisiaColors.bgElevated,
+            backgroundColor: ac.bgElevated,
             valueColor: AlwaysStoppedAnimation(
-                done ? EkklisiaColors.tealMid : EkklisiaColors.gold),
+                done ? ac.tealMid : ac.gold),
           ),
         ),
       ],
@@ -1369,6 +1377,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: EdgeInsets.only(
         top:    MediaQuery.of(context).padding.top + 12,
@@ -1376,9 +1385,9 @@ class _Header extends StatelessWidget {
         right:  16,
         bottom: 12,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color:  _kNavy,
-        border: Border(bottom: BorderSide(color: _kBorder, width: 0.5)),
+        border: Border(bottom: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -1389,14 +1398,14 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        color:      EkklisiaColors.goldLight,
+                    style: TextStyle(
+                        color:      ac.goldLight,
                         fontSize:   16,
                         fontWeight: FontWeight.w700)),
                 Text(titleAr,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontFamily: 'Scheherazade',
-                        color:      EkklisiaColors.textSecondary,
+                        color:      ac.textSecondary,
                         fontSize:   12)),
               ],
             ),
@@ -1422,16 +1431,17 @@ class _SmallBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: primary
-              ? EkklisiaColors.maroon
-              : EkklisiaColors.bgElevated,
+              ? ac.maroon
+              : ac.bgElevated,
           borderRadius: BorderRadius.circular(8),
-          border:       Border.all(color: _kBorder),
+          border:       Border.all(color: ac.goldBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1439,7 +1449,7 @@ class _SmallBtn extends StatelessWidget {
             Icon(icon, size: 14, color: _kGold),
             const SizedBox(width: 4),
             Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     color:      _kGold,
                     fontSize:   11,
                     fontWeight: FontWeight.w600)),
@@ -1462,44 +1472,45 @@ class _ReorderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color:   EkklisiaColors.maroon.withValues(alpha: 0.9),
+      color:   ac.maroon.withValues(alpha: 0.9),
       child: Row(
         children: [
-          const Icon(Icons.swap_vert,
-              color: EkklisiaColors.goldLight, size: 16),
+          Icon(Icons.swap_vert,
+              color: ac.goldLight, size: 16),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Text('Drag to reorder — save to apply.',
                 style: TextStyle(
-                    color:    EkklisiaColors.goldLight,
+                    color:    ac.goldLight,
                     fontSize: 12)),
           ),
           TextButton(
             onPressed: saving ? null : onCancel,
-            child: const Text('Cancel',
-                style: TextStyle(color: EkklisiaColors.textSecondary)),
+            child: Text('Cancel',
+                style: TextStyle(color: ac.textSecondary)),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           ElevatedButton(
             onPressed: saving ? null : onSave,
             style: ElevatedButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               minimumSize:    Size.zero,
               tapTargetSize:  MaterialTapTargetSize.shrinkWrap,
             ),
             child: saving
-                ? const SizedBox(
+                ? SizedBox(
                     width:  14,
                     height: 14,
                     child:  CircularProgressIndicator(
                         strokeWidth: 2,
-                        color:       EkklisiaColors.bgDeep))
-                : const Text('Save Order',
+                        color:       ac.bgDeep))
+                : Text('Save Order',
                     style: TextStyle(
-                        color:      EkklisiaColors.bgDeep,
+                        color:      ac.bgDeep,
                         fontSize:   11,
                         fontWeight: FontWeight.w700)),
           ),
@@ -1515,25 +1526,26 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('✦',
+          Text('✦',
               style: TextStyle(
-                  color:    EkklisiaColors.goldDim,
+                  color:    ac.goldDim,
                   fontSize: 40)),
           const SizedBox(height: 12),
-          const Text('No items yet',
+          Text('No items yet',
               style: TextStyle(
-                  color:      EkklisiaColors.goldLight,
+                  color:      ac.goldLight,
                   fontSize:   14,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          const Text('Add the first PDF item for this category.',
+          SizedBox(height: 6),
+          Text('Add the first PDF item for this category.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color:    EkklisiaColors.textSecondary,
+                  color:    ac.textSecondary,
                   fontSize: 12)),
           const SizedBox(height: 20),
           _SmallBtn(
@@ -1554,24 +1566,25 @@ class _DeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return AlertDialog(
-      backgroundColor: EkklisiaColors.bgElevated,
-      title: const Text('Delete Item',
+      backgroundColor: ac.bgElevated,
+      title: Text('Delete Item',
           style: TextStyle(
-              color:    EkklisiaColors.goldLight,
+              color:    ac.goldLight,
               fontSize: 15)),
       content: RichText(
         text: TextSpan(
-          style: const TextStyle(
-              color:     EkklisiaColors.textSecondary,
+          style: TextStyle(
+              color:     ac.textSecondary,
               fontSize:  13,
               height:    1.5),
           children: [
             const TextSpan(text: 'Delete '),
             TextSpan(
               text: '"${item.titleAr.isNotEmpty ? item.titleAr : item.titleEl}"',
-              style: const TextStyle(
-                  color:      EkklisiaColors.goldLight,
+              style: TextStyle(
+                  color:      ac.goldLight,
                   fontWeight: FontWeight.w700),
             ),
             const TextSpan(
@@ -1584,8 +1597,8 @@ class _DeleteDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary)),
+          child: Text('Cancel',
+              style: TextStyle(color: ac.textSecondary)),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
@@ -1611,31 +1624,32 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color:        EkklisiaColors.bgElevated,
+        color:        ac.bgElevated,
         borderRadius: BorderRadius.circular(12),
-        border:       Border.all(color: _kBorder, width: 0.8),
+        border:       Border.all(color: ac.goldBorder, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
             Text(title,
-                style: const TextStyle(
-                    color:         EkklisiaColors.goldLight,
+                style: TextStyle(
+                    color:         ac.goldLight,
                     fontSize:      12,
                     fontWeight:    FontWeight.w700,
                     letterSpacing: 0.5)),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(titleAr,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color:      EkklisiaColors.textSecondary,
+                    color:      ac.textSecondary,
                     fontSize:   12)),
           ]),
-          const Divider(height: 14, color: EkklisiaColors.goldBorder),
+          Divider(height: 14, color: ac.goldBorder),
           child,
         ],
       ),
@@ -1670,6 +1684,7 @@ class _AudioTrackTile extends StatefulWidget {
 class _AudioTrackTileState extends State<_AudioTrackTile> {
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final entry = widget.entry;
     final hasFile = entry.hasAudio;
 
@@ -1679,7 +1694,7 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
       decoration: BoxDecoration(
         color:        EkklisiaColors.bgPrimary,
         borderRadius: BorderRadius.circular(10),
-        border:       Border.all(color: EkklisiaColors.goldBorder, width: 0.8),
+        border:       Border.all(color: ac.goldBorder, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1689,13 +1704,13 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color:        EkklisiaColors.bgDeep,
+                color:        ac.bgDeep,
                 borderRadius: BorderRadius.circular(6),
-                border:       Border.all(color: EkklisiaColors.goldBorder),
+                border:       Border.all(color: ac.goldBorder),
               ),
               child: Text('Track ${widget.index + 1}',
-                  style: const TextStyle(
-                    color:      EkklisiaColors.gold,
+                  style: TextStyle(
+                    color:      ac.gold,
                     fontSize:   10,
                     fontWeight: FontWeight.w700,
                   )),
@@ -1734,15 +1749,15 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
           GestureDetector(
             onTap: widget.saving ? null : widget.onPick,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: Duration(milliseconds: 200),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color:        EkklisiaColors.bgMid,
+                color:        ac.bgMid,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: hasFile
-                      ? EkklisiaColors.tealMid
-                      : EkklisiaColors.goldBorder,
+                      ? ac.tealMid
+                      : ac.goldBorder,
                   width: hasFile ? 1.0 : 0.5,
                 ),
               ),
@@ -1753,8 +1768,8 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
                       : Icons.audio_file_outlined,
                   size:  22,
                   color: hasFile
-                      ? EkklisiaColors.tealMid
-                      : EkklisiaColors.goldDim,
+                      ? ac.tealMid
+                      : ac.goldDim,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -1768,8 +1783,8 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
                             : 'Select Audio File',
                         style: TextStyle(
                           color: hasFile
-                              ? EkklisiaColors.textPrimary
-                              : EkklisiaColors.textSecondary,
+                              ? ac.textPrimary
+                              : ac.textSecondary,
                           fontSize:   12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1779,16 +1794,16 @@ class _AudioTrackTileState extends State<_AudioTrackTile> {
                         hasFile
                             ? 'Tap to replace'
                             : 'MP3, M4A, AAC…',
-                        style: const TextStyle(
-                          color:    EkklisiaColors.textSecondary,
+                        style: TextStyle(
+                          color:    ac.textSecondary,
                           fontSize: 10,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right,
-                    color: EkklisiaColors.goldDim, size: 16),
+                Icon(Icons.chevron_right,
+                    color: ac.goldDim, size: 16),
               ]),
             ),
           ),
@@ -1835,12 +1850,13 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
-                color:      EkklisiaColors.textSecondary,
+            style: TextStyle(
+                color:      ac.textSecondary,
                 fontSize:   11,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 5),
@@ -1849,14 +1865,14 @@ class _Field extends StatelessWidget {
           textDirection: textDirection,
           validator:     validator,
           style: TextStyle(
-            color:      EkklisiaColors.textPrimary,
+            color:      ac.textPrimary,
             fontSize:   14,
             fontFamily: fontFamily,
           ),
           decoration: InputDecoration(
             hintText:  hint,
             hintStyle: TextStyle(
-                color:    EkklisiaColors.textSecondary.withValues(alpha: 0.4),
+                color:    ac.textSecondary.withValues(alpha: 0.4),
                 fontSize: 13),
             filled:    true,
             fillColor: EkklisiaColors.bgPrimary,
@@ -1864,14 +1880,14 @@ class _Field extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: EkklisiaColors.goldBorder)),
+                borderSide: BorderSide(color: ac.goldBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: EkklisiaColors.goldBorder)),
+                borderSide: BorderSide(color: ac.goldBorder)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                    color: EkklisiaColors.gold, width: 1.5)),
+                borderSide: BorderSide(
+                    color: ac.gold, width: 1.5)),
             errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: Colors.red.shade700)),

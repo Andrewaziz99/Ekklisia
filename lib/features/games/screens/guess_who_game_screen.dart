@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/game_model.dart';
 import '../../../shared/widgets/cached_image.dart';
@@ -244,10 +245,10 @@ class _GuessWhoPlayView extends StatelessWidget {
                             context.read<GameCubit>().nextQuestion(),
                         child: Text(
                           state.isLastQuestion
-                              ? (isGreek ? 'Αποτελέσματα' : 'النتائج')
-                              : (isGreek ? 'Επόμενο →' : '← التالي'),
+                              ? context.l10n.results
+                              : context.l10n.next,
                           style: TextStyle(
-                            fontFamily: isGreek ? null : 'Scheherazade',
+                            fontFamily: context.l10n.bodyFont,
                             fontSize: isGreek ? 14 : 18,
                             fontWeight: FontWeight.w700,
                           ),

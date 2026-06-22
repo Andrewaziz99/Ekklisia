@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 
 const kGameNavy    = Color(0xFF1B2A4A);
@@ -295,6 +296,7 @@ class GameResultView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bg = brightness == Brightness.light
         ? const Color(0xFFF5F0E8)
@@ -339,9 +341,9 @@ class GameResultView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isGreek ? 'Σωστές απαντήσεις' : 'إجابات صحيحة',
+                  l.correctAnswers,
                   style: TextStyle(
-                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontFamily: l.bodyFont,
                     color: brightness == Brightness.light
                         ? const Color(0xFF6B7280)
                         : BrightnessColors.textSecondary(brightness),
@@ -387,9 +389,9 @@ class GameResultView extends StatelessWidget {
                     ),
                     onPressed: onPlayAgain,
                     child: Text(
-                      isGreek ? 'Παίξε Ξανά' : 'العب مجددًا',
+                      l.playAgain,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         fontSize: isGreek ? 14 : 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -413,9 +415,9 @@ class GameResultView extends StatelessWidget {
                     ),
                     onPressed: onBack,
                     child: Text(
-                      isGreek ? 'Αλλαγή Παιχνιδιού' : 'تغيير اللعبة',
+                      l.changeGame,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         fontSize: isGreek ? 13 : 17,
                       ),
                     ),
@@ -438,6 +440,7 @@ class GameLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     return Scaffold(
       backgroundColor: brightness == Brightness.light
@@ -453,9 +456,9 @@ class GameLoadingView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              isGreek ? 'Φόρτωση ερωτήσεων…' : 'جارٍ تحميل الأسئلة…',
+              l.loadingQuestions,
               style: TextStyle(
-                fontFamily: isGreek ? null : 'Scheherazade',
+                fontFamily: l.bodyFont,
                 color: kGameGold.withValues(alpha: 0.7),
                 fontSize: isGreek ? 13 : 16,
               ),
@@ -519,9 +522,9 @@ class GameErrorView extends StatelessWidget {
                 ),
                 onPressed: onBack,
                 child: Text(
-                  isGreek ? 'Πίσω' : 'رجوع',
+                  context.l10n.back,
                   style: TextStyle(
-                    fontFamily: isGreek ? null : 'Scheherazade',
+                    fontFamily: context.l10n.bodyFont,
                     fontSize: isGreek ? 13 : 16,
                   ),
                 ),

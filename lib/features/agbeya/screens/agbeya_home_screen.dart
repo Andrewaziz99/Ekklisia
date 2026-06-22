@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/agbeya_model.dart';
 import '../../../data/repositories/agbeya_repository.dart';
@@ -70,10 +71,8 @@ class _AgbeyaHomeView extends StatelessWidget {
         ? const Color(0xFFF5F0E8)
         : BrightnessColors.bgDeep(brightness);
 
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: bg,
@@ -91,9 +90,9 @@ class _AgbeyaHomeView extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
-              isGreek ? 'Αγπέγια' : 'الأجبية',
+              l.agbeya,
               style: TextStyle(
-                fontFamily: isGreek ? null : 'Scheherazade',
+                fontFamily: l.bodyFont,
                 color: _kGold,
                 fontSize: isGreek ? 20 : 24,
                 fontWeight: FontWeight.w700,
@@ -137,10 +136,9 @@ class _AgbeyaHomeView extends StatelessWidget {
                       isGreek
                           ? 'Επτά Ώρες Προσευχής — διαβάστε και ακούστε'
                           : 'سبع ساعات من الصلاة — اقرأ واستمع',
-                      textDirection:
-                          isGreek ? TextDirection.ltr : TextDirection.rtl,
+                      textDirection: l.dir,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: brightness == Brightness.light
                             ? const Color(0xFF2C1A0E)
                             : Colors.white.withValues(alpha: 0.85),
@@ -170,11 +168,9 @@ class _AgbeyaHomeView extends StatelessWidget {
                 return SliverFillRemaining(
                   child: Center(
                     child: Text(
-                      isGreek
-                          ? 'Σφάλμα φόρτωσης'
-                          : 'حدث خطأ أثناء التحميل',
+                      l.loadingErrorLong,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: _kCrimson,
                       ),
                     ),
@@ -186,9 +182,9 @@ class _AgbeyaHomeView extends StatelessWidget {
                 return SliverFillRemaining(
                   child: Center(
                     child: Text(
-                      isGreek ? 'Δεν βρέθηκαν ώρες' : 'لا توجد ساعات بعد',
+                      l.noHours,
                       style: TextStyle(
-                        fontFamily: isGreek ? null : 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: Colors.grey,
                       ),
                     ),

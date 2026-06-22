@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/gallery_item_model.dart';
 import '../../data/repositories/gallery_repository.dart';
@@ -41,9 +42,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgDeep(brightness),
@@ -102,9 +102,9 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              isGreek ? 'Γκαλερί' : 'معرض الصور',
+              context.l10n.gallery,
               style: TextStyle(
-                fontFamily: isGreek ? null : 'Scheherazade',
+                fontFamily: context.l10n.bodyFont,
                 color: _kGold,
                 fontSize: isGreek ? 18 : 22,
                 fontWeight: FontWeight.w700,
@@ -308,9 +308,9 @@ class _EmptyState extends StatelessWidget {
               size: 56, color: _kGold.withValues(alpha: 0.35)),
           const SizedBox(height: 16),
           Text(
-            isGreek ? 'Δεν υπάρχουν εικόνες' : 'لا توجد صور',
+            context.l10n.noImages,
             style: TextStyle(
-              fontFamily: isGreek ? null : 'Scheherazade',
+              fontFamily: context.l10n.bodyFont,
               color: Colors.white.withValues(alpha: 0.45),
               fontSize: isGreek ? 15 : 18,
             ),

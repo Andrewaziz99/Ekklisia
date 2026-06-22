@@ -22,6 +22,7 @@ import '../../data/repositories/book_category_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-row state
@@ -310,6 +311,7 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -325,22 +327,24 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
   // ── Toolbar ───────────────────────────────────────────────────────────────
 
   Widget _buildToolbar() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
         border: Border(
-            bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+            bottom: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Row(children: [
         // Category picker for new files
         Expanded(
           child: _categoriesLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 36,
                   child: Center(
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: EkklisiaColors.gold)))
+                          strokeWidth: 2, color: ac.gold)))
               : _CategoryDropdown(
                   value: _sharedCategory,
                   categories: _categories,
@@ -348,17 +352,17 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
                   onChanged: (v) => setState(() => _sharedCategory = v),
                 ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         ElevatedButton.icon(
           onPressed: _uploading ? null : _pickFiles,
-          icon: const Icon(Icons.add, size: 16, color: EkklisiaColors.bgDeep),
+          icon: Icon(Icons.add, size: 16, color: ac.bgDeep),
           label: Text(context.adminL10n.addFiles,
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: EkklisiaColors.bgDeep)),
+                  color: ac.bgDeep)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: EkklisiaColors.gold,
+            backgroundColor: ac.gold,
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -372,16 +376,18 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
   // ── Empty state ───────────────────────────────────────────────────────────
 
   Widget _buildEmpty() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(Icons.cloud_upload_outlined,
-            size: 64, color: EkklisiaColors.goldDim.withOpacity(0.5)),
-        const SizedBox(height: 16),
+            size: 64, color: ac.goldDim.withOpacity(0.5)),
+        SizedBox(height: 16),
         Text(context.adminL10n.noFilesSelected,
             textDirection: context.adminL10n.dir,
             style: TextStyle(
                 fontFamily: context.adminL10n.fontFam,
-                color: EkklisiaColors.textSecondary,
+                color: ac.textSecondary,
                 fontSize: 15,
                 fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
@@ -391,13 +397,13 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
           textDirection: context.adminL10n.dir,
           style: TextStyle(
               fontFamily: context.adminL10n.fontFam,
-              color: EkklisiaColors.textSecondary, fontSize: 12, height: 1.6),
+              color: ac.textSecondary, fontSize: 12, height: 1.6),
         ),
-        const SizedBox(height: 6),
-        const Text(
+        SizedBox(height: 6),
+        Text(
           'PDF · MP4 · MOV · MP3 · WAV · AAC · M4A · OGG',
           textAlign: TextAlign.center,
-          style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 11),
+          style: TextStyle(color: ac.goldDim, fontSize: 11),
         ),
         const SizedBox(height: 4),
         Text(
@@ -405,7 +411,7 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
           'Video ${AppConstants.maxVideoSizeMb.toInt()} MB  ·  '
           'Audio ${AppConstants.maxAudioSizeMb.toInt()} MB',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: EkklisiaColors.textSecondary, fontSize: 10),
+          style: TextStyle(color: ac.textSecondary, fontSize: 10),
         ),
       ]),
     );
@@ -435,6 +441,8 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
   // ── Bottom bar ────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final pending  = _rows.where((r) => r.status == _RowStatus.pending).length;
     final doneCount= _rows.where((r) => r.status == _RowStatus.done).length;
     final errors   = _rows.where((r) => r.status == _RowStatus.error).length;
@@ -442,10 +450,10 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
         border: Border(
-            top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+            top: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (total > 0)
@@ -455,11 +463,11 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _StatusPill(context.adminL10n.pendingCount(total),
-                    EkklisiaColors.textSecondary),
+                    ac.textSecondary),
                 if (doneCount > 0) ...[
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _StatusPill(context.adminL10n.doneCount(doneCount),
-                      EkklisiaColors.tealMid),
+                      ac.tealMid),
                 ],
                 if (errors > 0) ...[
                   const SizedBox(width: 8),
@@ -474,15 +482,15 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () => context.go(Routes.adminBooks),
-              icon: const Icon(Icons.library_books_outlined,
-                  size: 16, color: EkklisiaColors.bgDeep),
+              icon: Icon(Icons.library_books_outlined,
+                  size: 16, color: ac.bgDeep),
               label: Text(context.adminL10n.manageLibrary,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: EkklisiaColors.bgDeep)),
+                      color: ac.bgDeep)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkklisiaColors.tealMid,
+                backgroundColor: ac.tealMid,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -496,27 +504,27 @@ class _BulkUploadScreenState extends State<BulkUploadScreen> {
               onPressed:
                   (_rows.isNotEmpty && !_uploading) ? _uploadAll : null,
               icon: _uploading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: EkklisiaColors.bgDeep))
-                  : const Icon(Icons.upload_rounded,
-                      size: 18, color: EkklisiaColors.bgDeep),
+                          color: ac.bgDeep))
+                  : Icon(Icons.upload_rounded,
+                      size: 18, color: ac.bgDeep),
               label: Text(
                 _uploading
                     ? context.adminL10n.uploadAll
                     : context.adminL10n.uploadAllN(pending),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: EkklisiaColors.bgDeep),
+                    color: ac.bgDeep),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _rows.isNotEmpty && !_uploading
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.goldDim.withOpacity(0.4),
+                    ? ac.gold
+                    : ac.goldDim.withOpacity(0.4),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -560,8 +568,8 @@ class _FileRowCard extends StatelessWidget {
   static Color _colorFor(BookMediaType t) {
     switch (t) {
       case BookMediaType.video: return EkklisiaColors.ocean;
-      case BookMediaType.audio: return EkklisiaColors.tealMid;
-      default:                  return EkklisiaColors.maroon;
+      case BookMediaType.audio: return EkklisiaColors.darkTealMid;
+      default:                  return EkklisiaColors.darkMaroon;
     }
   }
 
@@ -575,23 +583,24 @@ class _FileRowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final isUploading = row.status == _RowStatus.uploading;
     final isDone      = row.status == _RowStatus.done;
     final isError     = row.status == _RowStatus.error;
 
     final borderColor = isDone
-        ? EkklisiaColors.tealMid
+        ? ac.tealMid
         : isError
             ? Colors.redAccent
             : isUploading
-                ? EkklisiaColors.gold
-                : EkklisiaColors.goldBorder;
+                ? ac.gold
+                : ac.goldBorder;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor, width: 0.8),
       ),
@@ -627,30 +636,30 @@ class _FileRowCard extends StatelessWidget {
                 row.item.fileName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: EkklisiaColors.textSecondary, fontSize: 11),
+                style: TextStyle(
+                    color: ac.textSecondary, fontSize: 11),
               ),
             ),
             if (row.item.fileSizeMb > 0)
               Text(
                 '${row.item.fileSizeMb.toStringAsFixed(1)} MB',
-                style: const TextStyle(
-                    color: EkklisiaColors.textSecondary, fontSize: 10),
+                style: TextStyle(
+                    color: ac.textSecondary, fontSize: 10),
               ),
             if (!uploading && !isDone)
               GestureDetector(
                 onTap: onRemove,
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(left: 8),
                   child: Icon(Icons.close,
-                      size: 16, color: EkklisiaColors.textSecondary),
+                      size: 16, color: ac.textSecondary),
                 ),
               ),
             if (isDone)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(left: 8),
                 child: Icon(Icons.check_circle_outline,
-                    size: 16, color: EkklisiaColors.tealMid),
+                    size: 16, color: ac.tealMid),
               ),
           ]),
           const SizedBox(height: 10),
@@ -674,14 +683,14 @@ class _FileRowCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: row.progress,
                 minHeight: 5,
-                backgroundColor: EkklisiaColors.bgElevated,
-                valueColor: const AlwaysStoppedAnimation(EkklisiaColors.gold),
+                backgroundColor: ac.bgElevated,
+                valueColor: AlwaysStoppedAnimation(ac.gold),
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(row.stepLabel,
-                style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                    color: ac.textSecondary,
                     fontSize: 10,
                     fontStyle: FontStyle.italic)),
           ],
@@ -690,7 +699,7 @@ class _FileRowCard extends StatelessWidget {
           if (isError && row.errorMsg != null) ...[
             const SizedBox(height: 6),
             Text('Error: ${row.errorMsg}',
-                style: const TextStyle(
+                style: TextStyle(
                     color: Colors.redAccent, fontSize: 10),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),
@@ -712,39 +721,40 @@ class _TitleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return TextField(
       controller: ctrl,
       enabled: enabled,
       textDirection: TextDirection.rtl,
-      style: const TextStyle(
+      style: TextStyle(
           fontFamily: 'Scheherazade',
-          color: EkklisiaColors.textPrimary,
+          color: ac.textPrimary,
           fontSize: 14),
       decoration: InputDecoration(
         hintText: 'عنوان الكتاب',
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textSecondary,
+            color: ac.textSecondary,
             fontSize: 13),
         isDense: true,
         filled: true,
-        fillColor: EkklisiaColors.bgElevated,
+        fillColor: ac.bgElevated,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(7),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
+          borderSide: BorderSide(
+              color: ac.goldBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(7),
           borderSide:
-              const BorderSide(color: EkklisiaColors.gold, width: 1.5),
+              BorderSide(color: ac.gold, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(7),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.3),
+          borderSide: BorderSide(
+              color: ac.goldBorder, width: 0.3),
         ),
       ),
     );
@@ -766,34 +776,35 @@ class _CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final effectiveValue = categories.any((c) => c.id == value)
         ? value
         : (categories.isNotEmpty ? categories.first.id : null);
 
     return DropdownButtonFormField<String>(
       value: effectiveValue,
-      dropdownColor: EkklisiaColors.bgElevated,
+      dropdownColor: ac.bgElevated,
       isDense: true,
-      style: const TextStyle(
-          color: EkklisiaColors.textPrimary, fontSize: 13),
+      style: TextStyle(
+          color: ac.textPrimary, fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 11),
+        labelStyle: TextStyle(
+            color: ac.textSecondary, fontSize: 11),
         isDense: true,
         filled: true,
-        fillColor: EkklisiaColors.bgElevated,
+        fillColor: ac.bgElevated,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(7),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
+          borderSide: BorderSide(
+              color: ac.goldBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(7),
           borderSide:
-              const BorderSide(color: EkklisiaColors.gold, width: 1.5),
+              BorderSide(color: ac.gold, width: 1.5),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(7)),
       ),
@@ -802,9 +813,9 @@ class _CategoryDropdown extends StatelessWidget {
                 value: c.id,
                 child: Text(
                   c.nameAr,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Scheherazade',
-                      color: EkklisiaColors.textPrimary),
+                      color: ac.textPrimary),
                 ),
               ))
           .toList(),
@@ -820,6 +831,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(

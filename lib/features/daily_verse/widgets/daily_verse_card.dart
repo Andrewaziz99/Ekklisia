@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../features/settings/cubit/settings_cubit.dart';
 import '../../../features/settings/cubit/settings_state.dart';
@@ -46,10 +47,8 @@ class _VerseContent extends StatelessWidget {
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     // Pick language-appropriate verse text
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek   = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek   = !l.isAr;
     final verse     = state.verse!;
     final verseText = isGreek && verse.verseEl.isNotEmpty
         ? verse.verseEl
@@ -57,11 +56,11 @@ class _VerseContent extends StatelessWidget {
     final reference = isGreek && verse.referenceEl.isNotEmpty
         ? verse.referenceEl
         : verse.referenceAr;
-    final textDir   = isGreek ? TextDirection.ltr : TextDirection.rtl;
+    final textDir   = l.dir;
     final crossAlign = isGreek
         ? CrossAxisAlignment.start
         : CrossAxisAlignment.end;
-    final fontFamily = isGreek ? null : 'Scheherazade';
+    final fontFamily = l.bodyFont;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -104,7 +103,7 @@ class _VerseContent extends StatelessWidget {
                   Text('✦', style: TextStyle(color: goldDim, fontSize: 10)),
                   const SizedBox(width: 6),
                   Text(
-                    isGreek ? 'Ο Στίχος της Ημέρας' : 'آية اليوم',
+                    l.dailyVerseTitle,
                     textDirection: textDir,
                     style: TextStyle(
                       fontFamily: fontFamily,

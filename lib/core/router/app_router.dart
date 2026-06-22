@@ -38,6 +38,7 @@ import '../../admin/gallery/gallery_manager_screen.dart';
 import '../../admin/gallery/gallery_bulk_upload_screen.dart';
 import '../../admin/electronic_library/elib_manager_screen.dart';
 import '../../admin/electronic_library/elib_bulk_upload_screen.dart';
+import '../../admin/content/churches_manager.dart';
 import '../../admin/content/pdf_content_manager.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
@@ -98,6 +99,7 @@ abstract class Routes {
   static const String adminCmsGalleryBulk = '/admin/cms/gallery-bulk';
   static const String adminCmsElib        = '/admin/cms/elib';
   static const String adminCmsElibBulk    = '/admin/cms/elib-bulk';
+  static const String adminCmsChurches    = '/admin/cms/churches';
 
   // User content routes (pushed via Navigator, not go_router shell)
   static const String homeBible       = '/home/bible';
@@ -385,6 +387,11 @@ class AppRouter {
             builder: (_, state) => ElibBulkUploadScreen(
               sectionId: (state.extra as String?) ?? '',
             ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsChurches,
+            name:    'adminCmsChurches',
+            builder: (_, __) => const ChurchesManagerScreen(),
           ),
         ],
       ),

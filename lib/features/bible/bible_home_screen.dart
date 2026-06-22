@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../core/utils/text_normalizer.dart';
 import '../../data/models/bible_model.dart';
@@ -53,10 +54,8 @@ class _BibleHomeScreenState extends State<BibleHomeScreen>
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
     final langCode = isGreek ? 'el' : 'ar';
 
     final bgDeep = BrightnessColors.bgDeep(brightness);
@@ -136,6 +135,7 @@ class _BibleSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final goldLight = BrightnessColors.goldLight(brightness);
     final bgDeep = BrightnessColors.bgDeep(brightness);
 
@@ -167,9 +167,9 @@ class _BibleSliverAppBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isGreek ? 'ΑΓΙΑ ΓΡΑΦΗ' : 'الكتاب المقدس',
+                    l.bible,
                     style: TextStyle(
-                      fontFamily: isGreek ? null : 'Scheherazade',
+                      fontFamily: l.bodyFont,
                       color: goldLight,
                       fontSize: isGreek ? 20 : 28,
                       fontWeight: FontWeight.w700,
@@ -211,8 +211,8 @@ class _BibleSliverAppBar extends StatelessWidget {
               fontSize: isGreek ? 12 : 14,
             ),
             tabs: [
-              Tab(text: isGreek ? 'Παλαιά Διαθήκη' : 'العهد القديم'),
-              Tab(text: isGreek ? 'Καινή Διαθήκη' : 'العهد الجديد'),
+              Tab(text: l.oldTestament),
+              Tab(text: l.newTestament),
             ],
           ),
         ),
@@ -244,6 +244,7 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final l = context.l10n;
     final bgDeep = BrightnessColors.bgDeep(brightness);
     final bgElevated = BrightnessColors.bgElevated(brightness);
     final goldDim = BrightnessColors.goldDim(brightness);
@@ -258,16 +259,16 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: l.dir,
         style: TextStyle(
-          fontFamily: isGreek ? null : 'Scheherazade',
+          fontFamily: l.bodyFont,
           color: textPrimary,
           fontSize: 15,
         ),
         decoration: InputDecoration(
-          hintText: isGreek ? 'Αναζήτηση βιβλίου…' : 'ابحث عن سفر…',
+          hintText: l.searchBible,
           hintStyle: TextStyle(
-            fontFamily: isGreek ? null : 'Scheherazade',
+            fontFamily: l.bodyFont,
             color: textSecondary,
             fontSize: 14,
           ),
@@ -504,6 +505,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final gold = BrightnessColors.gold(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
@@ -516,9 +518,9 @@ class _ErrorView extends StatelessWidget {
             const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
             const SizedBox(height: 12),
             Text(
-              isGreek ? 'Σφάλμα φόρτωσης' : 'حدث خطأ أثناء التحميل',
+              l.loadingErrorLong,
               style: TextStyle(
-                fontFamily: isGreek ? null : 'Scheherazade',
+                fontFamily: l.bodyFont,
                 color: textSecondary,
                 fontSize: isGreek ? 14 : 16,
               ),
@@ -531,9 +533,9 @@ class _ErrorView extends StatelessWidget {
                 side: BorderSide(color: gold),
               ),
               child: Text(
-                isGreek ? 'Επανάληψη' : 'إعادة المحاولة',
+                l.retry,
                 style: TextStyle(
-                  fontFamily: isGreek ? null : 'Scheherazade',
+                  fontFamily: l.bodyFont,
                 ),
               ),
             ),
@@ -552,6 +554,7 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final goldDim = BrightnessColors.goldDim(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
@@ -562,9 +565,9 @@ class _EmptyView extends StatelessWidget {
           Icon(Icons.menu_book_outlined, size: 52, color: goldDim),
           const SizedBox(height: 12),
           Text(
-            isGreek ? 'Δεν βρέθηκαν βιβλία' : 'لا توجد أسفار',
+            l.noBibleBooks,
             style: TextStyle(
-              fontFamily: isGreek ? null : 'Scheherazade',
+              fontFamily: l.bodyFont,
               color: textSecondary,
               fontSize: isGreek ? 14 : 17,
             ),

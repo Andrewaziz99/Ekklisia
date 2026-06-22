@@ -24,6 +24,7 @@ import '../../data/repositories/saints_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 // ── Media type ────────────────────────────────────────────────────────────────
 
@@ -305,6 +306,7 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       children: [
         _buildToolbar(),
@@ -332,13 +334,15 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
   // ── Toolbar ──────────────────────────────────────────────────────────────────
 
   Widget _buildToolbar() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
         border: Border(
-          bottom: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+          bottom: BorderSide(color: ac.goldBorder, width: 0.5),
         ),
       ),
       child: Row(
@@ -353,7 +357,7 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
                 textDirection: context.adminL10n.dir,
                 style: TextStyle(
                   fontFamily: context.adminL10n.fontFam,
-                  color: EkklisiaColors.goldLight,
+                  color: ac.goldLight,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -365,13 +369,13 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
           if (!_uploading)
             OutlinedButton.icon(
               onPressed: _pickFiles,
-              icon: const Icon(Icons.add, size: 16),
+              icon: Icon(Icons.add, size: 16),
               label: Text(context.adminL10n.addFiles),
               style: OutlinedButton.styleFrom(
-                foregroundColor: EkklisiaColors.gold,
-                side: const BorderSide(color: EkklisiaColors.goldBorder),
+                foregroundColor: ac.gold,
+                side: BorderSide(color: ac.goldBorder),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                textStyle: const TextStyle(fontSize: 12),
+                textStyle: TextStyle(fontSize: 12),
               ),
             ),
         ],
@@ -382,19 +386,21 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
   // ── Bottom bar ───────────────────────────────────────────────────────────────
 
   Widget _buildBottomBar() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final hasPending = _pendingCount > 0;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
         border: Border(
-          top: BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+          top: BorderSide(color: ac.goldBorder, width: 0.5),
         ),
       ),
       child: Row(
         children: [
           // Status pills
-          _StatusPill(label: context.adminL10n.pendingCount(_pendingCount), color: EkklisiaColors.textSecondary),
+          _StatusPill(label: context.adminL10n.pendingCount(_pendingCount), color: ac.textSecondary),
           const SizedBox(width: 6),
           if (_doneCount > 0)
             _StatusPill(label: context.adminL10n.doneCount(_doneCount), color: Colors.green),
@@ -406,25 +412,25 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
           if (!_uploading && hasPending)
             ElevatedButton.icon(
               onPressed: _uploadAll,
-              icon: const Icon(Icons.cloud_upload_outlined, size: 16),
+              icon: Icon(Icons.cloud_upload_outlined, size: 16),
               label: Text(context.adminL10n.uploadAllN(_pendingCount)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkklisiaColors.gold,
+                backgroundColor: ac.gold,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                textStyle: const TextStyle(
+                textStyle: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             )
           else if (_uploading)
-            const SizedBox(
+            SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: EkklisiaColors.gold,
+                color: ac.gold,
               ),
             ),
         ],
@@ -435,6 +441,8 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
   // ── Empty state ───────────────────────────────────────────────────────────────
 
   Widget _buildEmptyState() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -442,7 +450,7 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
           Icon(
             Icons.upload_file_outlined,
             size: 56,
-            color: EkklisiaColors.goldDim,
+            color: ac.goldDim,
           ),
           const SizedBox(height: 16),
           Text(
@@ -450,7 +458,7 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
             textDirection: context.adminL10n.dir,
             style: TextStyle(
               fontFamily: context.adminL10n.fontFam,
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -461,18 +469,18 @@ class _SaintsBulkUploadScreenState extends State<SaintsBulkUploadScreen> {
             textDirection: context.adminL10n.dir,
             style: TextStyle(
               fontFamily: context.adminL10n.fontFam,
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: _pickFiles,
-            icon: const Icon(Icons.add, size: 16),
+            icon: Icon(Icons.add, size: 16),
             label: Text(context.adminL10n.addFiles),
             style: OutlinedButton.styleFrom(
-              foregroundColor: EkklisiaColors.gold,
-              side: const BorderSide(color: EkklisiaColors.goldBorder),
+              foregroundColor: ac.gold,
+              side: BorderSide(color: ac.goldBorder),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
           ),
@@ -501,22 +509,23 @@ class _FileRowCard extends StatelessWidget {
     switch (row.status) {
       case _RowStatus.done:     return Colors.green.withOpacity(0.6);
       case _RowStatus.error:    return Colors.redAccent.withOpacity(0.6);
-      case _RowStatus.uploading: return EkklisiaColors.gold.withOpacity(0.5);
-      default:                  return EkklisiaColors.goldBorder;
+      case _RowStatus.uploading: return EkklisiaColors.darkGold.withOpacity(0.5);
+      default:                  return EkklisiaColors.darkGoldBorder;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final type = row.mediaType;
     final isDone = row.status == _RowStatus.done;
     final isError = row.status == _RowStatus.error;
     final isUploading = row.status == _RowStatus.uploading;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _borderColor, width: 0.8),
       ),
@@ -556,8 +565,8 @@ class _FileRowCard extends StatelessWidget {
                 child: Text(
                   row.fileName,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                  style: TextStyle(
+                    color: ac.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -565,8 +574,8 @@ class _FileRowCard extends StatelessWidget {
               // Size
               Text(
                 '${row.fileSizeMb.toStringAsFixed(1)} MB',
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 10,
                 ),
               ),
@@ -580,21 +589,21 @@ class _FileRowCard extends StatelessWidget {
                   child: const Icon(Icons.error_outline, size: 18, color: Colors.redAccent),
                 )
               else if (isUploading)
-                const SizedBox(
+                SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: EkklisiaColors.gold,
+                    color: ac.gold,
                   ),
                 )
               else if (onRemove != null)
                 GestureDetector(
                   onTap: onRemove,
-                  child: const Icon(
+                  child: Icon(
                     Icons.close,
                     size: 18,
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                   ),
                 ),
             ],
@@ -608,9 +617,9 @@ class _FileRowCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: row.progress,
                 minHeight: 3,
-                backgroundColor: EkklisiaColors.bgDeep,
+                backgroundColor: ac.bgDeep,
                 valueColor: AlwaysStoppedAnimation(
-                  isDone ? Colors.green : EkklisiaColors.gold,
+                  isDone ? Colors.green : ac.gold,
                 ),
               ),
             ),
@@ -649,7 +658,7 @@ class _FileRowCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               row.errorMsg!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.redAccent,
                 fontSize: 10,
               ),
@@ -683,13 +692,14 @@ class _NameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return TextField(
       controller: controller,
       enabled: enabled,
       textAlign: arabicFont ? TextAlign.right : TextAlign.left,
       textDirection: arabicFont ? TextDirection.rtl : TextDirection.ltr,
       style: TextStyle(
-        color: EkklisiaColors.textPrimary,
+        color: ac.textPrimary,
         fontSize: 13,
         fontFamily: arabicFont ? 'Scheherazade' : null,
       ),
@@ -697,25 +707,25 @@ class _NameField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: EkklisiaColors.textSecondary,
+          color: ac.textSecondary,
           fontSize: 12,
           fontFamily: arabicFont ? 'Scheherazade' : null,
         ),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         filled: true,
-        fillColor: EkklisiaColors.bgDeep,
+        fillColor: ac.bgDeep,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+          borderSide: BorderSide(color: ac.goldBorder, width: 0.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5),
+          borderSide: BorderSide(color: ac.goldBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
-          borderSide: const BorderSide(color: EkklisiaColors.gold, width: 1),
+          borderSide: BorderSide(color: ac.gold, width: 1),
         ),
       ),
     );
@@ -729,6 +739,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(

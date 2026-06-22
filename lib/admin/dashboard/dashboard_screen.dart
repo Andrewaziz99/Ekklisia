@@ -587,6 +587,7 @@ class _CmsShortcuts extends StatelessWidget {
       (label: l.cmsSaints,     icon: Icons.person_outline,      color: EkklisiaColors.darkPlum,       path: Routes.adminCmsSaints),
       (label: l.cmsDailyVerse, icon: Icons.menu_book_outlined,  color: EkklisiaColors.darkTealMid,    path: Routes.adminCmsDailyVerse),
       (label: l.cmsAgbeya,     icon: Icons.access_time_outlined,color: EkklisiaColors.darkMaroon,     path: Routes.adminCmsAgbeya),
+      (label: l.cmsChurches,   icon: Icons.church_outlined,     color: EkklisiaColors.darkTealDark,   path: Routes.adminCmsChurches),
     ];
 
     return LayoutBuilder(

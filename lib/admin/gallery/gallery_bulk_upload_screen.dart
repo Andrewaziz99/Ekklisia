@@ -21,6 +21,7 @@ import '../../features/auth/auth_cubit.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 // ── File row state ────────────────────────────────────────────────────────────
 
@@ -164,6 +165,7 @@ class _GalleryBulkUploadScreenState extends State<GalleryBulkUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final l = context.adminL10n;
     final isGreek = context.select<SettingsCubit, bool>(
       (c) => c.state.language == AppLanguage.greek,
@@ -234,6 +236,7 @@ class _DragOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return SizedBox.expand(
       child: ColoredBox(
         color: const Color(0xFF0D1B2A).withValues(alpha: 0.88),
@@ -246,24 +249,24 @@ class _DragOverlay extends StatelessWidget {
                 height: 140,
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: EkklisiaColors.gold,
+                    color: ac.gold,
                     width: 2,
                     strokeAlign: BorderSide.strokeAlignOutside,
                   ),
                   borderRadius: BorderRadius.circular(24),
-                  color: EkklisiaColors.gold.withValues(alpha: 0.08),
+                  color: ac.gold.withValues(alpha: 0.08),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.add_photo_alternate_outlined,
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   size: 64,
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
+              SizedBox(height: 20),
+              Text(
                 'Drop images here',
                 style: TextStyle(
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -291,10 +294,11 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final l = context.adminL10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: EkklisiaColors.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
@@ -305,7 +309,7 @@ class _Toolbar extends StatelessWidget {
               title,
               style: TextStyle(
                 fontFamily: isGreek ? null : 'Scheherazade',
-                color: EkklisiaColors.gold,
+                color: ac.gold,
                 fontSize: isGreek ? 16 : 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -313,10 +317,10 @@ class _Toolbar extends StatelessWidget {
           ),
           FilledButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add_photo_alternate, size: 16),
+            icon: Icon(Icons.add_photo_alternate, size: 16),
             label: Text(l.addFiles),
             style: FilledButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               foregroundColor: Colors.black,
             ),
           ),
@@ -338,7 +342,7 @@ class _RowTile extends StatelessWidget {
   Color get _statusColor => switch (row.status) {
     _RowStatus.done => Colors.green,
     _RowStatus.failed => Colors.red,
-    _RowStatus.uploading => EkklisiaColors.gold,
+    _RowStatus.uploading => EkklisiaColors.darkGold,
     _RowStatus.pending => Colors.white24,
   };
 
@@ -351,6 +355,7 @@ class _RowTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -369,22 +374,22 @@ class _RowTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   row.file.name,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Text(
                 '${(row.file.size / 1024).toStringAsFixed(0)} KB',
-                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                style: TextStyle(color: Colors.white38, fontSize: 11),
               ),
             ],
           ),
           if (row.status == _RowStatus.uploading) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             LinearProgressIndicator(
               value: row.progress,
-              color: EkklisiaColors.gold,
+              color: ac.gold,
               backgroundColor: Colors.white12,
               minHeight: 3,
             ),
@@ -396,19 +401,19 @@ class _RowTile extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: row.titleArCtrl,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                       fontFamily: 'Scheherazade',
                     ),
                     decoration: InputDecoration(
                       labelText: l.titleAr,
-                      labelStyle: const TextStyle(
+                      labelStyle: TextStyle(
                         color: Colors.white54,
                         fontSize: 12,
                       ),
                       isDense: true,
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -416,15 +421,15 @@ class _RowTile extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: row.titleElCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    style: TextStyle(color: Colors.white, fontSize: 13),
                     decoration: InputDecoration(
                       labelText: l.titleEl,
-                      labelStyle: const TextStyle(
+                      labelStyle: TextStyle(
                         color: Colors.white54,
                         fontSize: 12,
                       ),
                       isDense: true,
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -436,7 +441,7 @@ class _RowTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 row.error!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                style: TextStyle(color: Colors.redAccent, fontSize: 11),
                 maxLines: 2,
               ),
             ),
@@ -469,9 +474,10 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFF0D1B2A),
         border: Border(top: BorderSide(color: Color(0xFF2A3A50))),
       ),
@@ -486,11 +492,11 @@ class _BottomBar extends StatelessWidget {
             const SizedBox(width: 6),
             _chip('$pending …', Colors.white38),
           ],
-          const Spacer(),
+          Spacer(),
           FilledButton(
             onPressed: onUpload,
             style: FilledButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               foregroundColor: Colors.black,
             ),
             child: uploading
@@ -528,6 +534,7 @@ class _EmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -540,12 +547,12 @@ class _EmptyHint extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l.noFilesSelected,
-            style: const TextStyle(color: Colors.white38, fontSize: 13),
+            style: TextStyle(color: Colors.white38, fontSize: 13),
           ),
           const SizedBox(height: 6),
           Text(
             l.filenameHint,
-            style: const TextStyle(color: Colors.white24, fontSize: 11),
+            style: TextStyle(color: Colors.white24, fontSize: 11),
           ),
         ],
       ),

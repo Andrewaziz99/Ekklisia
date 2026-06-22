@@ -4,9 +4,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/colors.dart';
-import '../../core/theme/theme.dart';
+
 import '../cms_router.dart';
+import '../utils/admin_colors.dart';
 
 class CMSSidebar extends StatelessWidget {
   const CMSSidebar({
@@ -20,28 +20,21 @@ class CMSSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
     return Container(
       width: 240,
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
-        border: Border(
-          right: BorderSide(
-            color: EkklisiaColors.goldBorder,
-            width: 0.5,
-          ),
-        ),
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
+        border: Border(right: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Column(
         children: [
           // ── Header ───────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: EkklisiaColors.goldBorder,
-                  width: 0.5,
-                ),
+                bottom: BorderSide(color: ac.goldBorder, width: 0.5),
               ),
             ),
             child: Row(
@@ -51,24 +44,13 @@ class CMSSidebar extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      colors: [
-                        EkklisiaColors.bronze,
-                        EkklisiaColors.maroon,
-                      ],
-                    ),
-                    border: Border.all(
-                      color: EkklisiaColors.goldBorder,
-                      width: 0.8,
-                    ),
+                    gradient: RadialGradient(colors: [ac.bronze, ac.maroon]),
+                    border: Border.all(color: ac.goldBorder, width: 0.8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       '✦',
-                      style: TextStyle(
-                        color: EkklisiaColors.goldLight,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: ac.goldLight, fontSize: 14),
                     ),
                   ),
                 ),
@@ -77,19 +59,19 @@ class CMSSidebar extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Ekklisia',
                         style: TextStyle(
-                          color: EkklisiaColors.goldLight,
+                          color: ac.goldLight,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'CMS',
                         style: TextStyle(
-                          color: EkklisiaColors.goldDim,
+                          color: ac.goldDim,
                           fontSize: 8,
                           letterSpacing: 2,
                         ),
@@ -117,7 +99,7 @@ class CMSSidebar extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 4),
-                _buildDivider(),
+                _buildDivider(context),
                 const SizedBox(height: 8),
                 _SidebarAction(
                   icon: Icons.people_outline,
@@ -146,13 +128,8 @@ class CMSSidebar extends StatelessWidget {
           // ── Footer ───────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: EkklisiaColors.goldBorder,
-                  width: 0.5,
-                ),
-              ),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: ac.goldBorder, width: 0.5)),
             ),
             child: Column(
               children: [
@@ -162,26 +139,23 @@ class CMSSidebar extends StatelessWidget {
                     horizontal: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.goldSubtle,
+                    color: ac.goldSubtle,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: EkklisiaColors.goldBorder,
-                      width: 0.5,
-                    ),
+                    border: Border.all(color: ac.goldBorder, width: 0.5),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         Icons.admin_panel_settings_outlined,
                         size: 12,
-                        color: EkklisiaColors.gold,
+                        color: ac.gold,
                       ),
                       SizedBox(width: 6),
                       Text(
                         'Admin Access',
                         style: TextStyle(
-                          color: EkklisiaColors.gold,
+                          color: ac.gold,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -198,11 +172,13 @@ class CMSSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Divider(
-        color: EkklisiaColors.goldBorder.withOpacity(0.3),
+        color: ac.goldBorder.withValues(alpha: 0.3),
         height: 1,
         thickness: 0.5,
       ),
@@ -230,6 +206,7 @@ class _SidebarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -240,8 +217,8 @@ class _SidebarSection extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: EkklisiaColors.goldLight,
+                style: TextStyle(
+                  color: ac.goldLight,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
@@ -249,20 +226,22 @@ class _SidebarSection extends StatelessWidget {
               ),
               Text(
                 titleAr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.goldDim,
+                  color: ac.goldDim,
                   fontSize: 9,
                 ),
               ),
             ],
           ),
         ),
-        ...items.map((item) => _SidebarItem(
-          item: item,
-          isActive: currentPath.startsWith(item.path),
-          onTap: () => onItemTap(item.path),
-        )),
+        ...items.map(
+          (item) => _SidebarItem(
+            item: item,
+            isActive: currentPath.startsWith(item.path),
+            onTap: () => onItemTap(item.path),
+          ),
+        ),
       ],
     );
   }
@@ -284,10 +263,11 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: isActive ? EkklisiaColors.goldSubtle : Colors.transparent,
+        color: isActive ? ac.goldSubtle : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -298,7 +278,7 @@ class _SidebarItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border(
                 left: BorderSide(
-                  color: isActive ? EkklisiaColors.gold : Colors.transparent,
+                  color: isActive ? ac.gold : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -308,9 +288,7 @@ class _SidebarItem extends StatelessWidget {
                 Icon(
                   isActive ? item.activeIcon : item.icon,
                   size: 18,
-                  color: isActive
-                      ? EkklisiaColors.gold
-                      : EkklisiaColors.textSecondary,
+                  color: isActive ? ac.gold : ac.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -320,19 +298,18 @@ class _SidebarItem extends StatelessWidget {
                       Text(
                         item.labelEn,
                         style: TextStyle(
-                          color: isActive
-                              ? EkklisiaColors.goldLight
-                              : EkklisiaColors.textSecondary,
+                          color: isActive ? ac.goldLight : ac.textSecondary,
                           fontSize: 12,
-                          fontWeight:
-                          isActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                       Text(
                         item.labelAr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 9,
                         ),
                       ),
@@ -368,10 +345,11 @@ class _SidebarAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
-        color: isActive ? EkklisiaColors.goldSubtle : Colors.transparent,
+        color: isActive ? ac.goldSubtle : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
@@ -382,7 +360,7 @@ class _SidebarAction extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border(
                 left: BorderSide(
-                  color: isActive ? EkklisiaColors.gold : Colors.transparent,
+                  color: isActive ? ac.gold : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -392,9 +370,7 @@ class _SidebarAction extends StatelessWidget {
                 Icon(
                   icon,
                   size: 18,
-                  color: isActive
-                      ? EkklisiaColors.gold
-                      : EkklisiaColors.textSecondary,
+                  color: isActive ? ac.gold : ac.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -404,19 +380,18 @@ class _SidebarAction extends StatelessWidget {
                       Text(
                         labelEn,
                         style: TextStyle(
-                          color: isActive
-                              ? EkklisiaColors.goldLight
-                              : EkklisiaColors.textSecondary,
+                          color: isActive ? ac.goldLight : ac.textSecondary,
                           fontSize: 12,
-                          fontWeight:
-                          isActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                       Text(
                         labelAr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 9,
                         ),
                       ),

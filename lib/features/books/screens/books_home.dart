@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/book_category_model.dart';
 import '../../../data/models/book_model.dart';
@@ -73,10 +74,8 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
     final brightness = Theme.of(context).brightness;
     final bgDeep = BrightnessColors.bgDeep(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Scaffold(
       backgroundColor: bgDeep,
@@ -122,6 +121,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
   }
 
   SliverAppBar _buildSliverAppBar(Brightness brightness, bool isGreek) {
+    final l = context.l10n;
     final bgDeep = BrightnessColors.bgDeep(brightness);
     final goldDim = BrightnessColors.goldDim(brightness);
     final goldLight = BrightnessColors.goldLight(brightness);
@@ -157,9 +157,9 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                       style: TextStyle(color: goldDim, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(
-                    isGreek ? 'ΒΙΒΛΙΟΘΗΚΗ' : 'المكتبة',
+                    l.library,
                     style: TextStyle(
-                      fontFamily: isGreek ? null : 'Scheherazade',
+                      fontFamily: l.bodyFont,
                       color: goldLight,
                       fontSize: isGreek ? 20 : 28,
                       fontWeight: FontWeight.w700,
@@ -168,7 +168,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isGreek ? 'ΒΙΒΛΙΟΘΗΚΗ' : 'LIBRARY',
+                    l.librarySubtitle,
                     style: TextStyle(
                       color: goldDim,
                       fontSize: 9,
@@ -210,9 +210,9 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                     fontSize: isGreek ? 11 : 13,
                   ),
                   tabs: [
-                    Tab(text: isGreek ? 'ΟΛΑ' : 'الكل'),
-                    Tab(text: isGreek ? 'ΛΗΨΕΙΣ' : 'تم التحميل'),
-                    Tab(text: isGreek ? 'ΠΡΟΣΦΑΤΑ' : 'الأحدث'),
+                    Tab(text: l.all),
+                    Tab(text: l.downloads),
+                    Tab(text: l.recent),
                   ],
                 ),
               ),
@@ -229,9 +229,7 @@ class _BooksHomeScreenState extends State<BooksHomeScreen>
                   ),
                   onPressed: () =>
                       setState(() => _isListView = !_isListView),
-                  tooltip: _isListView
-                      ? (isGreek ? 'Προβολή πλέγματος' : 'عرض شبكي')
-                      : (isGreek ? 'Προβολή λίστας' : 'عرض قائمة'),
+                  tooltip: _isListView ? l.gridView : l.listView,
                 ),
               ),
             ],
@@ -295,7 +293,7 @@ class _BooksContent extends StatelessWidget {
         if (state.hasError) {
           return _ErrorView(
               message: state.errorMessage ??
-                  (isGreek ? 'Σφάλμα φόρτωσης' : 'حدث خطأ'));
+                  context.l10n.loadingError);
         }
 
         final books = filter.apply(state.filteredBooks);
@@ -549,28 +547,24 @@ class _SearchBar extends StatelessWidget {
     final gold = Theme.of(context).primaryColor;
     final bgElevated = BrightnessColors.bgElevated(brightness);
 
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        textDirection:
-            isGreek ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: l.dir,
         style: TextStyle(
-          fontFamily: isGreek ? null : 'Scheherazade',
+          fontFamily: l.bodyFont,
           color: textPrimary,
           fontSize: 16,
         ),
         decoration: InputDecoration(
-          hintText:
-              isGreek ? 'Αναζήτηση βιβλίου…' : 'ابحث عن كتاب…',
+          hintText: l.searchBook,
           hintStyle: TextStyle(
-            fontFamily: isGreek ? null : 'Scheherazade',
+            fontFamily: l.bodyFont,
             color: textSecondary,
           ),
           prefixIcon: Icon(Icons.search, color: goldDim),
@@ -630,10 +624,8 @@ class _CategoryFilterState extends State<_CategoryFilter> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     return BlocBuilder<BooksCubit, BooksState>(
       buildWhen: (prev, curr) =>
@@ -648,7 +640,7 @@ class _CategoryFilterState extends State<_CategoryFilter> {
               // "All" chip
               _chip(
                 context,
-                label: isGreek ? 'ΟΛΑ' : 'الكل',
+                label: l.all,
                 isSelected: state.selectedCategory == null,
                 isGreek: isGreek,
                 onTap: () =>
@@ -803,6 +795,7 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final goldDim = BrightnessColors.goldDim(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
@@ -816,9 +809,9 @@ class _EmptyView extends StatelessWidget {
             Icon(Icons.library_books_outlined, size: 56, color: goldDim),
             const SizedBox(height: 16),
             Text(
-              isGreek ? 'Δεν βρέθηκαν βιβλία' : 'لا توجد كتب',
+              l.noBooksFound,
               style: TextStyle(
-                fontFamily: isGreek ? null : 'Scheherazade',
+                fontFamily: l.bodyFont,
                 color: textSecondary,
                 fontSize: isGreek ? 15 : 18,
               ),
@@ -851,7 +844,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () => context.read<BooksCubit>().watchBooks(),
-              child: const Text('إعادة المحاولة'),
+              child: Text(context.l10n.retry),
             ),
           ],
         ),

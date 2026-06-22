@@ -9,6 +9,7 @@ import '../../core/theme/colors.dart';
 import '../../core/theme/theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../cms_router.dart';
+import '../utils/admin_colors.dart';
 
 class AdminCMSDashboard extends StatefulWidget {
   const AdminCMSDashboard({super.key});
@@ -31,6 +32,7 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -119,6 +121,8 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -134,25 +138,25 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
             _QuickActionButton(
               label: 'Προσθήκη Βίβλου',
               icon: Icons.menu_book_outlined,
-              color: EkklisiaColors.tealMid,
+              color: ac.tealMid,
               onPressed: () => context.go(CMSRouter.bibles),
             ),
             _QuickActionButton(
               label: 'Προσθήκη Ύμνου',
               icon: Icons.add_box_outlined,
-              color: EkklisiaColors.plum,
+              color: ac.plum,
               onPressed: () => context.go(CMSRouter.hymns),
             ),
             _QuickActionButton(
               label: 'Προσθήκη Προσευχής',
               icon: Icons.add_location_outlined,
-              color: EkklisiaColors.maroon,
+              color: ac.maroon,
               onPressed: () => context.go(CMSRouter.prayers),
             ),
             _QuickActionButton(
               label: 'Προσθήκη Αγίου',
               icon: Icons.person_add_outlined,
-              color: EkklisiaColors.bronze,
+              color: ac.bronze,
               onPressed: () => context.go(CMSRouter.saints),
             ),
           ],
@@ -162,6 +166,8 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
   }
 
   Widget _buildRecentActivity() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,14 +175,14 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
           'Κατάσταση Συστήματος',
           style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: EkklisiaColors.bgMid,
+            color: ac.bgMid,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: EkklisiaColors.goldBorder,
+              color: ac.goldBorder,
               width: 0.5,
             ),
           ),
@@ -185,8 +191,8 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
               Container(
                 width: 12,
                 height: 12,
-                decoration: const BoxDecoration(
-                  color: EkklisiaColors.tealMid,
+                decoration: BoxDecoration(
+                  color: ac.tealMid,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -195,19 +201,19 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Σύνδεση Βάσης Δεδομένων',
                       style: TextStyle(
-                        color: EkklisiaColors.textPrimary,
+                        color: ac.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4),
+                    Text(
                       'Το Firestore είναι συνδεδεμένο και συγχρονισμένο',
                       style: TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                        color: ac.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -218,17 +224,17 @@ class _AdminCMSDashboardState extends State<AdminCMSDashboard> {
                 padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.tealMid.withOpacity(0.12),
+                  color: ac.tealMid.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: EkklisiaColors.tealMid.withOpacity(0.4),
+                    color: ac.tealMid.withOpacity(0.4),
                     width: 0.5,
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Ενεργό',
                   style: TextStyle(
-                    color: EkklisiaColors.tealMid,
+                    color: ac.tealMid,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -260,15 +266,16 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgMid,
+          color: ac.bgMid,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: EkklisiaColors.goldBorder,
+            color: ac.goldBorder,
             width: 0.5,
           ),
         ),
@@ -279,24 +286,24 @@ class _StatCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: EkklisiaColors.goldSubtle,
+                color: ac.goldSubtle,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: EkklisiaColors.goldBorder,
+                  color: ac.goldBorder,
                   width: 0.5,
                 ),
               ),
               child: Icon(
                 icon,
-                color: EkklisiaColors.gold,
+                color: ac.gold,
                 size: 20,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
-                color: EkklisiaColors.textPrimary,
+              style: TextStyle(
+                color: ac.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -308,20 +315,20 @@ class _StatCard extends StatelessWidget {
                 if (snap.hasData) {
                   return Text(
                     '${snap.data} στοιχεία',
-                    style: const TextStyle(
-                      color: EkklisiaColors.gold,
+                    style: TextStyle(
+                      color: ac.gold,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   );
                 }
-                return const SizedBox(
+                return SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
                     valueColor: AlwaysStoppedAnimation(
-                      EkklisiaColors.gold,
+                      ac.gold,
                     ),
                   ),
                 );
@@ -331,17 +338,17 @@ class _StatCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Διαχείριση',
                   style: TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                     fontSize: 11,
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_outlined,
                   size: 14,
-                  color: EkklisiaColors.goldDim,
+                  color: ac.goldDim,
                 ),
               ],
             ),
@@ -382,6 +389,7 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Material(
       color: Colors.transparent,
       child: InkWell(

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../data/models/game_model.dart';
 import '../../../data/repositories/game_repository.dart';
@@ -21,10 +22,8 @@ class GamesHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = context.select<SettingsCubit, AppLanguage>(
-      (c) => c.state.language,
-    );
-    final isGreek = lang == AppLanguage.greek;
+    final l = context.l10n;
+    final isGreek = !l.isAr;
     final brightness = Theme.of(context).brightness;
 
     return Scaffold(
@@ -65,9 +64,9 @@ class GamesHomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isGreek ? 'Παιχνίδια' : 'الألعاب',
+                            l.games,
                             style: TextStyle(
-                              fontFamily: isGreek ? null : 'Scheherazade',
+                              fontFamily: l.bodyFont,
                               color: kGameGold,
                               fontSize: isGreek ? 22 : 26,
                               fontWeight: FontWeight.w700,

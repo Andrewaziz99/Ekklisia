@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/theme.dart';
+import '../utils/admin_colors.dart';
 
 typedef RowBuilder<T> = List<Widget> Function(T item, int index);
 
@@ -62,6 +63,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       children: [
         // ── Header with toolbar ────────────────────────────────────────────
@@ -83,13 +85,15 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
   }
 
   Widget _buildToolbar() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgDeep,
+      decoration: BoxDecoration(
+        color: ac.bgDeep,
         border: Border(
           bottom: BorderSide(
-            color: EkklisiaColors.goldBorder,
+            color: ac.goldBorder,
             width: 0.5,
           ),
         ),
@@ -123,35 +127,35 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
           TextField(
             controller: _searchCtrl,
             onChanged: widget.onSearch,
-            style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+            style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: widget.searchHint,
-              hintStyle: const TextStyle(
-                color: EkklisiaColors.textSecondary,
+              hintStyle: TextStyle(
+                color: ac.textSecondary,
                 fontSize: 12,
               ),
-              prefixIcon: const Icon(
+              prefixIcon: Icon(
                 Icons.search,
                 size: 18,
-                color: EkklisiaColors.goldDim,
+                color: ac.goldDim,
               ),
               filled: true,
-              fillColor: EkklisiaColors.bgElevated,
+              fillColor: ac.bgElevated,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: EkklisiaColors.goldBorder,
+                borderSide: BorderSide(
+                  color: ac.goldBorder,
                   width: 0.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: EkklisiaColors.gold,
+                borderSide: BorderSide(
+                  color: ac.gold,
                   width: 1.0,
                 ),
               ),
@@ -163,16 +167,18 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
   }
 
   Widget _buildTable() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return SingleChildScrollView(
       controller: _scrollCtrl,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
           headingRowColor: WidgetStateProperty.all(
-            EkklisiaColors.bgElevated,
+            ac.bgElevated,
           ),
           dataRowColor: WidgetStateProperty.all(
-            EkklisiaColors.bgMid,
+            ac.bgMid,
           ),
           columns: [
             // Index column
@@ -226,14 +232,14 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
                           icon: Icons.edit_outlined,
                           tooltip: 'Edit',
                           onPressed: () => widget.onEdit(item),
-                          color: EkklisiaColors.gold,
+                          color: ac.gold,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         _ActionButton(
                           icon: Icons.delete_outline,
                           tooltip: 'Delete',
                           onPressed: () => _confirmDelete(item),
-                          color: EkklisiaColors.maroon,
+                          color: ac.maroon,
                         ),
                       ],
                     ),
@@ -248,30 +254,32 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
   }
 
   void _confirmDelete(T item) {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final id = (item as dynamic).id as String;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: EkklisiaColors.bgPrimary,
-        title: const Text(
+        title: Text(
           'Delete Item?',
           style: TextStyle(
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
           ),
         ),
-        content: const Text(
+        content: Text(
           'This action cannot be undone.',
           style: TextStyle(
-            color: EkklisiaColors.textSecondary,
+            color: ac.textSecondary,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary),
+              style: TextStyle(color: ac.textSecondary),
             ),
           ),
           TextButton(
@@ -279,9 +287,9 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
               Navigator.pop(ctx);
               widget.onDelete(id);
             },
-            child: const Text(
+            child: Text(
               'Delete',
-              style: TextStyle(color: EkklisiaColors.maroon),
+              style: TextStyle(color: ac.maroon),
             ),
           ),
         ],
@@ -298,9 +306,10 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+      final ac = AdminC(Theme.of(context).brightness);
+    return Center(
       child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
+        valueColor: AlwaysStoppedAnimation(ac.gold),
       ),
     );
   }
@@ -320,6 +329,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -327,13 +337,13 @@ class _EmptyState extends StatelessWidget {
           Icon(
             icon,
             size: 48,
-            color: EkklisiaColors.goldDim,
+            color: ac.goldDim,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+            style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 14,
             ),
           ),
@@ -361,6 +371,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Tooltip(
       message: tooltip,
       child: InkWell(

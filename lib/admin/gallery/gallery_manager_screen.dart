@@ -25,6 +25,7 @@ import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 import '../../shared/widgets/cached_image.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 class GalleryManagerScreen extends StatefulWidget {
   const GalleryManagerScreen({super.key});
@@ -159,6 +160,7 @@ class _GalleryManagerScreenState extends State<GalleryManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final brightness = Theme.of(context).brightness;
     final l = context.adminL10n;
     final isGreek = context.select<SettingsCubit, bool>(
@@ -229,10 +231,11 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final l = context.adminL10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: EkklisiaColors.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
@@ -243,7 +246,7 @@ class _Toolbar extends StatelessWidget {
               title,
               style: TextStyle(
                 fontFamily: isGreek ? null : 'Scheherazade',
-                color: EkklisiaColors.gold,
+                color: ac.gold,
                 fontSize: isGreek ? 18 : 22,
                 fontWeight: FontWeight.w700,
               ),
@@ -251,21 +254,21 @@ class _Toolbar extends StatelessWidget {
           ),
           OutlinedButton.icon(
             onPressed: onBulk,
-            icon: const Icon(Icons.upload_file, size: 16),
+            icon: Icon(Icons.upload_file, size: 16),
             label: Text(l.bulk),
             style: OutlinedButton.styleFrom(
-              foregroundColor: EkklisiaColors.gold,
-              side: const BorderSide(color: EkklisiaColors.gold),
+              foregroundColor: ac.gold,
+              side: BorderSide(color: ac.gold),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add_photo_alternate, size: 16),
+            icon: Icon(Icons.add_photo_alternate, size: 16),
             label: Text(l.add),
             style: FilledButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -295,6 +298,7 @@ class _ImageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final title = (isGreek && item.titleEl.isNotEmpty) ? item.titleEl : item.titleAr;
     final bgCard = brightness == Brightness.dark
         ? const Color(0xFF162535)
@@ -353,7 +357,7 @@ class _ImageCard extends StatelessWidget {
                       child: Switch(
                         value: item.isPublished,
                         onChanged: onTogglePublish,
-                        activeColor: EkklisiaColors.gold,
+                        activeColor: ac.gold,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -383,6 +387,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -391,7 +396,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             l.noFilesSelected,
-            style: const TextStyle(color: Colors.white38, fontSize: 14),
+            style: TextStyle(color: Colors.white38, fontSize: 14),
           ),
         ],
       ),

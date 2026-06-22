@@ -14,6 +14,7 @@ import '../../shared/widgets/cached_image.dart';
 import '../../features/books/cubit/books_cubit.dart';
 import '../../features/books/cubit/books_state.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 class BooksManagerScreen extends StatefulWidget {
   const BooksManagerScreen({super.key});
@@ -27,10 +28,14 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
   List<BookCategory> _categories = [];
 
   static const _catColors = {
-    'bible': EkklisiaColors.maroon, 'prayers': EkklisiaColors.maroonMid,
-    'liturgy': EkklisiaColors.bronze, 'hymns': EkklisiaColors.tealDark,
-    'saints': EkklisiaColors.plum, 'fathers': EkklisiaColors.forest,
-    'commentaries': EkklisiaColors.ocean, 'studies': EkklisiaColors.ocean,
+    'bible':         EkklisiaColors.darkMaroon,
+    'prayers':       EkklisiaColors.darkMaroonMid,
+    'liturgy':       EkklisiaColors.darkBronze,
+    'hymns':         EkklisiaColors.tealDark,
+    'saints':        EkklisiaColors.darkPlum,
+    'fathers':       EkklisiaColors.forest,
+    'commentaries':  EkklisiaColors.ocean,
+    'studies':       EkklisiaColors.ocean,
   };
 
   @override
@@ -51,6 +56,7 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return BlocBuilder<BooksCubit, BooksState>(
       builder: (context, state) {
         final visible = state.books.where((b) {
@@ -64,10 +70,10 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
           // ── Toolbar ───────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            decoration: const BoxDecoration(
-              color: EkklisiaColors.bgDeep,
+            decoration: BoxDecoration(
+              color: ac.bgDeep,
               border: Border(bottom: BorderSide(
-                  color: EkklisiaColors.goldBorder, width: 0.5)),
+                  color: ac.goldBorder, width: 0.5)),
             ),
             child: Column(children: [
               Row(children: [
@@ -79,37 +85,37 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
                   categories: _categories,
                   onChanged: (v) => setState(() => _filterCat = v),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 OutlinedButton.icon(
                   onPressed: () => context.go(Routes.adminBulkUpload),
-                  icon: const Icon(Icons.cloud_upload_outlined, size: 15,
-                      color: EkklisiaColors.gold),
+                  icon: Icon(Icons.cloud_upload_outlined, size: 15,
+                      color: ac.gold),
                   label: Text(context.adminL10n.bulk,
                       style: TextStyle(
                           fontFamily: context.adminL10n.fontFam,
                           fontSize: 12, fontWeight: FontWeight.w600,
-                          color: EkklisiaColors.gold)),
+                          color: ac.gold)),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                        color: EkklisiaColors.gold, width: 1),
+                    side: BorderSide(
+                        color: ac.gold, width: 1),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => context.go(Routes.adminUpload),
-                  icon: const Icon(Icons.add, size: 16,
-                      color: EkklisiaColors.bgDeep),
+                  icon: Icon(Icons.add, size: 16,
+                      color: ac.bgDeep),
                   label: Text(context.adminL10n.upload,
                       style: TextStyle(
                           fontFamily: context.adminL10n.fontFam,
                           fontSize: 12, fontWeight: FontWeight.w700,
-                          color: EkklisiaColors.bgDeep)),
+                          color: ac.bgDeep)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: EkklisiaColors.gold,
+                    backgroundColor: ac.gold,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -125,18 +131,18 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
 
           // ── List ──────────────────────────────────────────────────
           Expanded(child: state.isLoading
-              ? const Center(child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold)))
+              ? Center(child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation(ac.gold)))
               : visible.isEmpty
               ? _EmptyState(onUpload: () => context.go(Routes.adminUpload))
               : ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: visible.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, __) => SizedBox(height: 10),
             itemBuilder: (_, i) => _BookRow(
               book: visible[i],
               catColor: _catColors[visible[i].category] ??
-                  EkklisiaColors.bgElevated,
+                  ac.bgElevated,
               onToggle: () => _togglePublish(
                   context, visible[i]),
               onDelete: () => _confirmDelete(context, visible[i].id),
@@ -177,16 +183,18 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
     }
   }
 
-  void _snack(BuildContext context, String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(msg),
-        backgroundColor: EkklisiaColors.bgElevated,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5)),
-      ));
+  void _snack(BuildContext context, String msg) {
+    final ac = AdminC(Theme.of(context).brightness);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: ac.bgElevated,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+              color: ac.goldBorder, width: 0.5)),
+    ));
+  }
 }
 
 // ── Book Row ──────────────────────────────────────────────────────────────────
@@ -209,11 +217,12 @@ class _BookRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Row(children: [
         // Colour strip
@@ -237,7 +246,7 @@ class _BookRow extends StatelessWidget {
             color: catColor.withOpacity(0.25),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+                color: ac.goldBorder, width: 0.5),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
@@ -262,27 +271,27 @@ class _BookRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textDirection: TextDirection.rtl,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textPrimary,
+                    color: ac.textPrimary,
                     fontSize: 14, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Row(children: [
               _Tag(label: book.category, color: catColor),
-              const SizedBox(width: 6),
-              Text(book.formattedSize, style: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 10)),
+              SizedBox(width: 6),
+              Text(book.formattedSize, style: TextStyle(
+                  color: ac.textSecondary, fontSize: 10)),
               if (book.pageCount > 0) ...[
-                const SizedBox(width: 6),
-                Text('${book.pageCount}pp', style: const TextStyle(
-                    color: EkklisiaColors.textSecondary, fontSize: 10)),
+                SizedBox(width: 6),
+                Text('${book.pageCount}pp', style: TextStyle(
+                    color: ac.textSecondary, fontSize: 10)),
               ],
             ]),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               book.createdAt.toIso8601String().substring(0, 10),
-              style: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 10),
+              style: TextStyle(
+                  color: ac.textSecondary, fontSize: 10),
             ),
           ],
         )),
@@ -296,18 +305,18 @@ class _BookRow extends StatelessWidget {
               GestureDetector(
                 onTap: onToggle,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: book.isPublished
-                        ? EkklisiaColors.tealMid.withOpacity(0.15)
-                        : EkklisiaColors.bgElevated,
+                        ? ac.tealMid.withOpacity(0.15)
+                        : ac.bgElevated,
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: book.isPublished
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.goldBorder,
+                          ? ac.tealMid
+                          : ac.goldBorder,
                       width: 0.5,
                     ),
                   ),
@@ -315,31 +324,31 @@ class _BookRow extends StatelessWidget {
                     book.isPublished ? 'LIVE' : 'DRAFT',
                     style: TextStyle(
                       color: book.isPublished
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.textSecondary,
+                          ? ac.tealMid
+                          : ac.textSecondary,
                       fontSize: 9, fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 _IconBtn(
                   icon: Icons.visibility_outlined,
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   onTap: onView,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 _IconBtn(
                   icon: Icons.edit_outlined,
-                  color: EkklisiaColors.bronze,
+                  color: ac.bronze,
                   onTap: onEdit,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 _IconBtn(
                   icon: Icons.delete_outline,
-                  color: EkklisiaColors.maroonMid,
+                  color: ac.maroonMid,
                   onTap: onDelete,
                 ),
               ]),
@@ -359,6 +368,7 @@ class _FileCountStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     if (books.isEmpty) return const SizedBox.shrink();
     final pdfs   = books.where((b) => b.mediaType == BookMediaType.pdf).length;
     final videos = books.where((b) => b.mediaType == BookMediaType.video).length;
@@ -366,27 +376,27 @@ class _FileCountStrip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        color: EkklisiaColors.bgMid,
+      decoration: BoxDecoration(
+        color: ac.bgMid,
         border: Border(bottom: BorderSide(
-            color: EkklisiaColors.goldBorder, width: 0.5)),
+            color: ac.goldBorder, width: 0.5)),
       ),
       child: Row(children: [
         _CountChip(icon: Icons.picture_as_pdf_outlined,
             label: 'PDFs', value: pdfs,
-            color: EkklisiaColors.maroon),
+            color: ac.maroon),
         const SizedBox(width: 10),
         _CountChip(icon: Icons.videocam_outlined,
             label: 'Videos', value: videos,
             color: EkklisiaColors.ocean),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         _CountChip(icon: Icons.headphones_outlined,
             label: 'Audios', value: audios,
-            color: EkklisiaColors.tealMid),
-        const Spacer(),
+            color: ac.tealMid),
+        Spacer(),
         Text('${books.length} total',
-            style: const TextStyle(
-                color: EkklisiaColors.textSecondary,
+            style: TextStyle(
+                color: ac.textSecondary,
                 fontSize: 10, fontWeight: FontWeight.w500)),
       ]),
     );
@@ -406,7 +416,9 @@ class _CountChip extends StatelessWidget {
   final Color    color;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       Icon(icon, size: 12, color: color),
@@ -415,6 +427,7 @@ class _CountChip extends StatelessWidget {
           color: color, fontSize: 10, fontWeight: FontWeight.w600)),
     ],
   );
+  }
 }
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
@@ -434,10 +447,13 @@ class _CoverFallback extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Center(
     child: Icon(_icon(mediaType), size: 18,
         color: color.withOpacity(0.7)),
   );
+  }
 }
 
 class _Tag extends StatelessWidget {
@@ -445,15 +461,18 @@ class _Tag extends StatelessWidget {
   final String label;
   final Color  color;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
     decoration: BoxDecoration(
       color: color.withOpacity(0.2),
       borderRadius: BorderRadius.circular(3),
     ),
-    child: Text(label, style: const TextStyle(
-        color: EkklisiaColors.textSecondary, fontSize: 9)),
+    child: Text(label, style: TextStyle(
+        color: ac.textSecondary, fontSize: 9)),
   );
+  }
 }
 
 class _IconBtn extends StatelessWidget {
@@ -462,7 +481,9 @@ class _IconBtn extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return GestureDetector(
     onTap: onTap,
     child: Container(
       width: 28, height: 28,
@@ -474,6 +495,7 @@ class _IconBtn extends StatelessWidget {
       child: Icon(icon, size: 14, color: color),
     ),
   );
+  }
 }
 
 class _SearchField extends StatelessWidget {
@@ -481,30 +503,33 @@ class _SearchField extends StatelessWidget {
   final TextEditingController ctrl;
   final ValueChanged<String> onChanged;
   @override
-  Widget build(BuildContext context) => TextField(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return TextField(
     controller: ctrl,
     onChanged: onChanged,
-    style: const TextStyle(color: EkklisiaColors.textPrimary, fontSize: 13),
+    style: TextStyle(color: ac.textPrimary, fontSize: 13),
     decoration: InputDecoration(
       hintText: '${context.adminL10n.search} ${context.adminL10n.totalBooks}…',
-      hintStyle: const TextStyle(
-          color: EkklisiaColors.textSecondary, fontSize: 12),
-      prefixIcon: const Icon(Icons.search,
-          size: 18, color: EkklisiaColors.goldDim),
-      filled: true, fillColor: EkklisiaColors.bgElevated,
+      hintStyle: TextStyle(
+          color: ac.textSecondary, fontSize: 12),
+      prefixIcon: Icon(Icons.search,
+          size: 18, color: ac.goldDim),
+      filled: true, fillColor: ac.bgElevated,
       contentPadding: const EdgeInsets.symmetric(vertical: 10),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-            color: EkklisiaColors.goldBorder, width: 0.5),
+        borderSide: BorderSide(
+            color: ac.goldBorder, width: 0.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-            color: EkklisiaColors.gold, width: 1.0),
+        borderSide: BorderSide(
+            color: ac.gold, width: 1.0),
       ),
     ),
   );
+  }
 }
 
 class _FilterButton extends StatelessWidget {
@@ -524,19 +549,21 @@ class _FilterButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton<String?>(
-    color: EkklisiaColors.bgElevated,
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return PopupMenuButton<String?>(
+    color: ac.bgElevated,
     shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+        side: BorderSide(color: ac.goldBorder, width: 0.5)),
     onSelected: onChanged,
     itemBuilder: (_) => [
       PopupMenuItem(
         value: null,
         child: Text('All', style: TextStyle(
             color: selected == null
-                ? EkklisiaColors.gold
-                : EkklisiaColors.textPrimary,
+                ? ac.gold
+                : ac.textPrimary,
             fontSize: 13)),
       ),
       ...categories.map((cat) => PopupMenuItem(
@@ -546,8 +573,8 @@ class _FilterButton extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'Scheherazade',
             color: selected == cat.id
-                ? EkklisiaColors.gold
-                : EkklisiaColors.textPrimary,
+                ? ac.gold
+                : ac.textPrimary,
             fontSize: 14,
           ),
         ),
@@ -556,12 +583,12 @@ class _FilterButton extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: selected != null
-              ? EkklisiaColors.gold
-              : EkklisiaColors.goldBorder,
+              ? ac.gold
+              : ac.goldBorder,
           width: 0.5,
         ),
       ),
@@ -569,42 +596,45 @@ class _FilterButton extends StatelessWidget {
         Icon(Icons.filter_list,
             size: 16,
             color: selected != null
-                ? EkklisiaColors.gold
-                : EkklisiaColors.goldDim),
+                ? ac.gold
+                : ac.goldDim),
         if (selected != null) ...[
-          const SizedBox(width: 4),
-          Text(_selectedLabel, style: const TextStyle(
+          SizedBox(width: 4),
+          Text(_selectedLabel, style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.gold, fontSize: 11)),
+              color: ac.gold, fontSize: 11)),
         ],
       ]),
     ),
   );
+  }
 }
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onUpload});
   final VoidCallback onUpload;
   @override
-  Widget build(BuildContext context) => Center(child: Column(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Center(child: Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      const Icon(Icons.library_books_outlined,
-          size: 52, color: EkklisiaColors.goldDim),
-      const SizedBox(height: 16),
+      Icon(Icons.library_books_outlined,
+          size: 52, color: ac.goldDim),
+      SizedBox(height: 16),
       Text(context.adminL10n.noFilesSelected, textDirection: context.adminL10n.dir,
           style: TextStyle(fontFamily: context.adminL10n.fontFam,
-              color: EkklisiaColors.textSecondary, fontSize: 16)),
-      const SizedBox(height: 20),
+              color: ac.textSecondary, fontSize: 16)),
+      SizedBox(height: 20),
       ElevatedButton.icon(
         onPressed: onUpload,
-        icon: const Icon(Icons.upload_file, size: 18,
-            color: EkklisiaColors.bgDeep),
+        icon: Icon(Icons.upload_file, size: 18,
+            color: ac.bgDeep),
         label: Text(context.adminL10n.uploadBook, textDirection: context.adminL10n.dir,
             style: TextStyle(fontFamily: context.adminL10n.fontFam,
-                fontWeight: FontWeight.w700, color: EkklisiaColors.bgDeep)),
+                fontWeight: FontWeight.w700, color: ac.bgDeep)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: EkklisiaColors.gold,
+          backgroundColor: ac.gold,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10)),
@@ -612,57 +642,60 @@ class _EmptyState extends StatelessWidget {
       ),
     ],
   ));
+  }
 }
 
 class _DeleteDialog extends StatelessWidget {
   const _DeleteDialog();
 
   @override
-  Widget build(BuildContext context) => Dialog(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Dialog(
     backgroundColor: Colors.transparent,
     child: Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EkklisiaColors.maroon, width: 0.5),
+        border: Border.all(color: ac.maroon, width: 0.5),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.warning_amber_rounded,
-            color: EkklisiaColors.maroonMid, size: 40),
-        const SizedBox(height: 12),
+        Icon(Icons.warning_amber_rounded,
+            color: ac.maroonMid, size: 40),
+        SizedBox(height: 12),
         Text(context.adminL10n.delete, textDirection: context.adminL10n.dir,
             style: TextStyle(fontFamily: context.adminL10n.fontFam,
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
             fontSize: 16, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'This permanently removes the item from Firestore.\n'
           'The Cloudinary asset will remain unless deleted manually.',
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 12,
+              color: ac.textSecondary, fontSize: 12,
               height: 1.5),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Row(children: [
           Expanded(child: OutlinedButton(
             onPressed: () => Navigator.of(context).pop(false),
             style: OutlinedButton.styleFrom(
-              foregroundColor: EkklisiaColors.textSecondary,
-                  side: const BorderSide(
-                      color: EkklisiaColors.goldBorder, width: 0.5),
+              foregroundColor: ac.textSecondary,
+                  side: BorderSide(
+                      color: ac.goldBorder, width: 0.5),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text(context.adminL10n.cancel,
                     style: TextStyle(fontFamily: context.adminL10n.fontFam)),
               )),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: EkklisiaColors.maroon,
+                  backgroundColor: ac.maroon,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
@@ -675,4 +708,5 @@ class _DeleteDialog extends StatelessWidget {
           ]),
         ),
       );
+  }
 }

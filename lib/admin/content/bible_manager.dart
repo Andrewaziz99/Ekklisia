@@ -23,11 +23,11 @@ import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/bible_model.dart';
 import '../../data/repositories/bible_repository.dart';
+import '../utils/admin_colors.dart';
 
 // ── Palette aliases ────────────────────────────────────────────────────────────
-const _kGold = EkklisiaColors.gold;
-const _kNavy = EkklisiaColors.bgDeep;
-const _kBorder = EkklisiaColors.goldBorder;
+const _kGold = EkklisiaColors.darkGold;
+const _kNavy = EkklisiaColors.darkBgDeep;
 
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN — language tabs + XML config + books list
@@ -59,6 +59,7 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
       backgroundColor: EkklisiaColors.bgPrimary,
       body: NestedScrollView(
@@ -78,11 +79,11 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Holy Bible',
                         style: TextStyle(
-                          color: EkklisiaColors.goldLight,
+                          color: ac.goldLight,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -91,7 +92,7 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
                         'الكتاب المقدس',
                         style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkklisiaColors.goldDim,
+                          color: ac.goldDim,
                           fontSize: 11,
                         ),
                       ),
@@ -108,7 +109,7 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
                   controller: _tabs,
                   indicatorColor: _kGold,
                   labelColor: _kGold,
-                  unselectedLabelColor: EkklisiaColors.textSecondary,
+                  unselectedLabelColor: ac.textSecondary,
                   tabs: const [
                     Tab(text: 'Arabic — العربية'),
                     Tab(text: 'Greek — Ελληνικά'),
@@ -230,31 +231,33 @@ class _LangTabState extends State<_LangTab> with AutomaticKeepAliveClientMixin {
   }
 
   Future<bool> _confirm(String title, String body) async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: EkklisiaColors.bgElevated,
+        backgroundColor: ac.bgElevated,
         title: Text(
           title,
-          style: const TextStyle(
-            color: EkklisiaColors.goldLight,
+          style: TextStyle(
+            color: ac.goldLight,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
         ),
         content: Text(
           body,
-          style: const TextStyle(
-            color: EkklisiaColors.textSecondary,
+          style: TextStyle(
+            color: ac.textSecondary,
             fontSize: 12,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: EkklisiaColors.textSecondary),
+              style: TextStyle(color: ac.textSecondary),
             ),
           ),
           TextButton(
@@ -269,6 +272,7 @@ class _LangTabState extends State<_LangTab> with AutomaticKeepAliveClientMixin {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     super.build(context);
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -320,22 +324,23 @@ class _XmlSourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.source_outlined,
-                color: EkklisiaColors.goldDim,
+                color: ac.goldDim,
                 size: 15,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'XML Source',
                 style: TextStyle(
-                  color: EkklisiaColors.goldLight,
+                  color: ac.goldLight,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -377,9 +382,9 @@ class _XmlSourceCard extends StatelessWidget {
                     sublabel: cfg['xml_url'] as String? ?? '',
                     color: _kGold,
                     trailing: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.restore_outlined,
-                        color: EkklisiaColors.textSecondary,
+                        color: ac.textSecondary,
                         size: 16,
                       ),
                       tooltip: 'Revert to asset',
@@ -393,21 +398,21 @@ class _XmlSourceCard extends StatelessWidget {
 
           // Upload progress
           if (uploadProgress != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: uploadProgress,
-                backgroundColor: EkklisiaColors.bgElevated,
+                backgroundColor: ac.bgElevated,
                 valueColor: const AlwaysStoppedAnimation(_kGold),
                 minHeight: 4,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               '${((uploadProgress! * 100).round())}% uploading…',
-              style: const TextStyle(
-                color: EkklisiaColors.textSecondary,
+              style: TextStyle(
+                color: ac.textSecondary,
                 fontSize: 10,
               ),
             ),
@@ -417,7 +422,7 @@ class _XmlSourceCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               error!,
-              style: const TextStyle(color: Color(0xFFEF5350), fontSize: 11),
+              style: TextStyle(color: Color(0xFFEF5350), fontSize: 11),
             ),
           ],
         ],
@@ -442,6 +447,7 @@ class _SourceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -464,8 +470,8 @@ class _SourceRow extends StatelessWidget {
                 sublabel,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: EkklisiaColors.goldDim,
+                style: TextStyle(
+                  color: ac.goldDim,
                   fontSize: 10,
                   fontFamily: 'monospace',
                 ),
@@ -490,22 +496,23 @@ class _OverridesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.edit_note_outlined,
-                color: EkklisiaColors.goldDim,
+                color: ac.goldDim,
                 size: 15,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Verse Overrides',
                 style: TextStyle(
-                  color: EkklisiaColors.goldLight,
+                  color: ac.goldLight,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -521,10 +528,10 @@ class _OverridesCard extends StatelessWidget {
               }
               final items = snap.data ?? [];
               if (items.isEmpty) {
-                return const Text(
+                return Text(
                   'No overrides — all verses use the XML source.',
                   style: TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                     fontSize: 11,
                   ),
                 );
@@ -548,13 +555,14 @@ class _OverrideTile extends StatelessWidget {
   final BibleRepository repo;
 
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: EkklisiaColors.bgPrimary,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _kBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +573,7 @@ class _OverrideTile extends StatelessWidget {
               children: [
                 Text(
                   override.reference,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
                     color: _kGold,
                     fontSize: 12,
@@ -577,9 +585,9 @@ class _OverrideTile extends StatelessWidget {
                   override.text,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textPrimary,
+                    color: ac.textPrimary,
                     fontSize: 13,
                     height: 1.5,
                   ),
@@ -588,9 +596,9 @@ class _OverrideTile extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.delete_outline,
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               size: 16,
             ),
             tooltip: 'Delete override',
@@ -633,22 +641,23 @@ class _BooksCardState extends State<_BooksCard> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.format_list_bulleted_outlined,
-                color: EkklisiaColors.goldDim,
+                color: ac.goldDim,
                 size: 15,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Books',
                 style: TextStyle(
-                  color: EkklisiaColors.goldLight,
+                  color: ac.goldLight,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -660,12 +669,12 @@ class _BooksCardState extends State<_BooksCard> {
             future: _future,
             builder: (_, snap) {
               if (snap.connectionState != ConnectionState.done) {
-                return const Center(
+                return Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
                     child: CircularProgressIndicator(
                       strokeWidth: 1.5,
-                      valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
+                      valueColor: AlwaysStoppedAnimation(ac.gold),
                     ),
                   ),
                 );
@@ -673,7 +682,7 @@ class _BooksCardState extends State<_BooksCard> {
               if (snap.hasError) {
                 return Text(
                   'Error: ${snap.error}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Color(0xFFEF5350),
                     fontSize: 11,
                   ),
@@ -719,6 +728,7 @@ class _TestamentGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -726,9 +736,9 @@ class _TestamentGroup extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.goldDim,
+              color: ac.goldDim,
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -762,7 +772,7 @@ class _TestamentGroup extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: EkklisiaColors.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _kBorder, width: 0.5),
+                  border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: Column(
@@ -770,7 +780,7 @@ class _TestamentGroup extends StatelessWidget {
                   children: [
                     Text(
                       book.number.toString(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: _kGold,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -784,7 +794,7 @@ class _TestamentGroup extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: langCode == 'el' ? null : 'Scheherazade',
-                        color: EkklisiaColors.textSecondary,
+                        color: ac.textSecondary,
                         fontSize: langCode == 'el' ? 8 : 10,
                       ),
                     ),
@@ -815,6 +825,7 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final bookName = langCode == 'el' ? book.nameEl : book.nameAr;
     return Scaffold(
       backgroundColor: EkklisiaColors.bgPrimary,
@@ -831,15 +842,15 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
               bookName,
               style: TextStyle(
                 fontFamily: langCode == 'el' ? null : 'Scheherazade',
-                color: EkklisiaColors.goldLight,
+                color: ac.goldLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               '${book.chapterCount} chapters',
-              style: const TextStyle(
-                color: EkklisiaColors.goldDim,
+              style: TextStyle(
+                color: ac.goldDim,
                 fontSize: 10,
               ),
             ),
@@ -847,7 +858,7 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Container(height: 0.5, color: _kBorder),
+          child: Container(height: 0.5, color: ac.goldBorder),
         ),
       ),
       body: GridView.builder(
@@ -875,14 +886,14 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: EkklisiaColors.bgElevated,
+                color: ac.bgElevated,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _kBorder, width: 0.5),
+                border: Border.all(color: ac.goldBorder, width: 0.5),
               ),
               child: Center(
                 child: Text(
                   '${chapter.number}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _kGold,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -965,6 +976,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final bookName = langCode == 'el' ? widget.book.nameEl : widget.book.nameAr;
     return Scaffold(
       backgroundColor: EkklisiaColors.bgPrimary,
@@ -981,15 +993,15 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
               '$bookName ${widget.chapter.number}',
               style: TextStyle(
                 fontFamily: langCode == 'el' ? null : 'Scheherazade',
-                color: EkklisiaColors.goldLight,
+                color: ac.goldLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               '${widget.chapter.verses.length} verses  •  tap ✏ to edit',
-              style: const TextStyle(
-                color: EkklisiaColors.goldDim,
+              style: TextStyle(
+                color: ac.goldDim,
                 fontSize: 10,
               ),
             ),
@@ -997,14 +1009,14 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Container(height: 0.5, color: _kBorder),
+          child: Container(height: 0.5, color: ac.goldBorder),
         ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: widget.chapter.verses.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 0.5, color: _kBorder),
+            Divider(height: 0.5, color: ac.goldBorder),
         itemBuilder: (_, i) {
           final verse = widget.chapter.verses[i];
           final isOverridden = _localOverrides.containsKey(verse.number);
@@ -1020,9 +1032,9 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
                 shape: BoxShape.circle,
                 color: isOverridden
                     ? _kGold.withValues(alpha: 0.15)
-                    : EkklisiaColors.bgElevated,
+                    : ac.bgElevated,
                 border: Border.all(
-                  color: isOverridden ? _kGold : _kBorder,
+                  color: isOverridden ? _kGold : ac.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -1030,7 +1042,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
                 child: Text(
                   verse.number.toString(),
                   style: TextStyle(
-                    color: isOverridden ? _kGold : EkklisiaColors.textSecondary,
+                    color: isOverridden ? _kGold : ac.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1041,7 +1053,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
               _verseText(verse),
               style: TextStyle(
                 fontFamily: langCode == 'el' ? null : 'Scheherazade',
-                color: EkklisiaColors.textPrimary,
+                color: ac.textPrimary,
                 fontSize: langCode == 'el' ? 13 : 16,
                 height: 1.6,
               ),
@@ -1050,7 +1062,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
               icon: Icon(
                 Icons.edit_outlined,
                 size: 16,
-                color: isOverridden ? _kGold : EkklisiaColors.textSecondary,
+                color: isOverridden ? _kGold : ac.textSecondary,
               ),
               onPressed: () => _editVerse(verse),
             ),
@@ -1077,17 +1089,18 @@ class _EditVerseDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final isArabic = langCode == 'ar';
     return AlertDialog(
-      backgroundColor: EkklisiaColors.bgElevated,
+      backgroundColor: ac.bgElevated,
       contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Edit Verse',
             style: TextStyle(
-              color: EkklisiaColors.goldLight,
+              color: ac.goldLight,
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
@@ -1111,7 +1124,7 @@ class _EditVerseDialog extends StatelessWidget {
           minLines: 4,
           style: TextStyle(
             fontFamily: isArabic ? 'Scheherazade' : null,
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
             fontSize: isArabic ? 18 : 14,
             height: 1.6,
           ),
@@ -1121,11 +1134,11 @@ class _EditVerseDialog extends StatelessWidget {
             contentPadding: const EdgeInsets.all(12),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: _kBorder, width: 0.5),
+              borderSide: BorderSide(color: ac.goldBorder, width: 0.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: _kGold, width: 1),
+              borderSide: BorderSide(color: _kGold, width: 1),
             ),
           ),
         ),
@@ -1133,9 +1146,9 @@ class _EditVerseDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(
+          child: Text(
             'Cancel',
-            style: TextStyle(color: EkklisiaColors.textSecondary),
+            style: TextStyle(color: ac.textSecondary),
           ),
         ),
         TextButton(
@@ -1163,12 +1176,13 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: child,
     );
@@ -1189,6 +1203,7 @@ class _OutlineBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final color = danger ? const Color(0xFFEF5350) : _kGold;
     return GestureDetector(
       onTap: onTap,
@@ -1223,6 +1238,7 @@ class _MiniShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       height: 12,
       width: 160,

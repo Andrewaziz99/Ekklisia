@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../core/services/coptic_calendar_service.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../core/theme/colors.dart';
@@ -74,9 +75,8 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
     final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
-    final isGreek = context.select<SettingsCubit, bool>(
-      (c) => c.state.language == AppLanguage.greek,
-    );
+    final l = context.l10n;
+    final isGreek = !l.isAr;
 
     final season = CopticCalendarService.getLiturgicalSeason(DateTime.now());
 
@@ -90,9 +90,9 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          isGreek ? 'Κοπτικό Ημερολόγιο' : 'التقويم القبطي',
+          l.copticCalendar,
           style: TextStyle(
-            fontFamily: isGreek ? null : 'Scheherazade',
+            fontFamily: l.bodyFont,
             color: gold,
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -103,9 +103,9 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
             TextButton(
               onPressed: _goToToday,
               child: Text(
-                isGreek ? 'Σήμερα' : 'اليوم',
+                l.today,
                 style: TextStyle(
-                  fontFamily: isGreek ? null : 'Scheherazade',
+                  fontFamily: l.bodyFont,
                   color: gold,
                   fontSize: 14,
                 ),
@@ -170,6 +170,7 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
   }
 
   void _showDaySheet(BuildContext context, int day, bool isGreek) {
+    final l = context.l10n;
     final feasts = CopticCalendarService.getFeastsForDay(_viewMonth, day);
     final brightness = Theme.of(context).brightness;
     final bgMid = BrightnessColors.bgMid(brightness);
@@ -298,9 +299,9 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
               )
             else ...[
               Text(
-                isGreek ? 'Εορτές της ημέρας' : 'أعياد اليوم',
+                l.todayFeasts,
                 style: TextStyle(
-                  fontFamily: isGreek ? null : 'Scheherazade',
+                  fontFamily: l.bodyFont,
                   color: gold,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -342,6 +343,7 @@ class _TodayBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final bgMid = BrightnessColors.bgMid(brightness);
     final gold = BrightnessColors.gold(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
@@ -353,7 +355,7 @@ class _TodayBanner extends StatelessWidget {
         ? CopticCalendarService.monthNameEl(today.month)
         : CopticCalendarService.monthNameAr(today.month);
     final seasonName = isGreek ? season.nameEl : season.nameAr;
-    final yearSuffix = isGreek ? 'Α.Μ.' : 'ش';
+    final yearSuffix = l.copticYearSuffix;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),

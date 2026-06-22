@@ -23,6 +23,7 @@ import '../../data/repositories/elib_repository.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 import '../admin_l10n.dart';
+import '../utils/admin_colors.dart';
 
 class ElibManagerScreen extends StatefulWidget {
   const ElibManagerScreen({super.key});
@@ -238,6 +239,7 @@ class _ElibManagerScreenState extends State<ElibManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final isGreek = context.select<SettingsCubit, bool>(
       (c) => c.state.language == AppLanguage.greek,
     );
@@ -349,9 +351,10 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: EkklisiaColors.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
@@ -362,7 +365,7 @@ class _TopBar extends StatelessWidget {
               title,
               style: TextStyle(
                 fontFamily: isGreek ? null : 'Scheherazade',
-                color: EkklisiaColors.gold,
+                color: ac.gold,
                 fontSize: isGreek ? 18 : 22,
                 fontWeight: FontWeight.w700,
               ),
@@ -371,10 +374,10 @@ class _TopBar extends StatelessWidget {
           if (onBulk != null)
             FilledButton.icon(
               onPressed: onBulk,
-              icon: const Icon(Icons.upload_file, size: 16),
+              icon: Icon(Icons.upload_file, size: 16),
               label: Text(l.bulk),
               style: FilledButton.styleFrom(
-                backgroundColor: EkklisiaColors.gold,
+                backgroundColor: ac.gold,
                 foregroundColor: Colors.black,
               ),
             ),
@@ -411,6 +414,7 @@ class _SectionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     if (horizontal) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -421,17 +425,17 @@ class _SectionPanel extends StatelessWidget {
               children: [
                 Text(
                   l.sections,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white54,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.8,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
                 GestureDetector(
                   onTap: onAdd,
-                  child: const Icon(Icons.add_circle_outline, color: EkklisiaColors.gold, size: 18),
+                  child: Icon(Icons.add_circle_outline, color: ac.gold, size: 18),
                 ),
               ],
             ),
@@ -449,23 +453,23 @@ class _SectionPanel extends StatelessWidget {
                   onTap: () => onSelect(s.id),
                   onLongPress: () => onDelete(s),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
+                    duration: Duration(milliseconds: 150),
                     margin: const EdgeInsets.only(right: 8, bottom: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: selected
-                          ? EkklisiaColors.gold.withValues(alpha: 0.15)
-                          : const Color(0xFF162535),
+                          ? ac.gold.withValues(alpha: 0.15)
+                          : Color(0xFF162535),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: selected ? EkklisiaColors.gold : const Color(0xFF2A3A50),
+                        color: selected ? ac.gold : Color(0xFF2A3A50),
                       ),
                     ),
                     child: Text(
                       title,
                       style: TextStyle(
                         fontFamily: isGreek ? null : 'Scheherazade',
-                        color: selected ? EkklisiaColors.gold : Colors.white70,
+                        color: selected ? ac.gold : Colors.white70,
                         fontSize: isGreek ? 12 : 14,
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                       ),
@@ -489,23 +493,23 @@ class _SectionPanel extends StatelessWidget {
             children: [
               Text(
                 l.sections,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white54,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.8,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               GestureDetector(
                 onTap: onAdd,
-                child: const Icon(Icons.add, color: EkklisiaColors.gold, size: 20),
+                child: Icon(Icons.add, color: ac.gold, size: 20),
               ),
             ],
           ),
         ),
         if (loading)
-          const Expanded(child: Center(child: CircularProgressIndicator(color: EkklisiaColors.gold, strokeWidth: 2)))
+          Expanded(child: Center(child: CircularProgressIndicator(color: ac.gold, strokeWidth: 2)))
         else
           Expanded(
             child: ListView.builder(
@@ -516,13 +520,13 @@ class _SectionPanel extends StatelessWidget {
                 final title = (isGreek && s.titleEl.isNotEmpty) ? s.titleEl : s.titleAr;
                 return ListTile(
                   selected: selected,
-                  selectedTileColor: EkklisiaColors.gold.withValues(alpha: 0.1),
-                  selectedColor: EkklisiaColors.gold,
+                  selectedTileColor: ac.gold.withValues(alpha: 0.1),
+                  selectedColor: ac.gold,
                   title: Text(
                     title,
                     style: TextStyle(
                       fontFamily: isGreek ? null : 'Scheherazade',
-                      color: selected ? EkklisiaColors.gold : Colors.white70,
+                      color: selected ? ac.gold : Colors.white70,
                       fontSize: isGreek ? 13 : 15,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     ),
@@ -583,6 +587,7 @@ class _ItemsPanelState extends State<_ItemsPanel> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final sectionTitle = widget.section == null
         ? ''
         : (widget.isGreek && widget.section!.titleEl.isNotEmpty
@@ -595,7 +600,7 @@ class _ItemsPanelState extends State<_ItemsPanel> {
         // Section items header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: const BoxDecoration(color: Color(0xFF0D1B2A)),
+          decoration: BoxDecoration(color: Color(0xFF0D1B2A)),
           child: Row(
             children: [
               Expanded(
@@ -611,9 +616,9 @@ class _ItemsPanelState extends State<_ItemsPanel> {
               ),
               TextButton.icon(
                 onPressed: widget.onAddUrl,
-                icon: const Icon(Icons.link, size: 15),
+                icon: Icon(Icons.link, size: 15),
                 label: Text(widget.l.addUrl),
-                style: TextButton.styleFrom(foregroundColor: EkklisiaColors.gold),
+                style: TextButton.styleFrom(foregroundColor: ac.gold),
               ),
             ],
           ),
@@ -625,9 +630,9 @@ class _ItemsPanelState extends State<_ItemsPanel> {
             builder: (ctx, snap) {
               if (snap.connectionState == ConnectionState.waiting &&
                   _localItems == null) {
-                return const Center(
+                return Center(
                   child: CircularProgressIndicator(
-                    color: EkklisiaColors.gold, strokeWidth: 2),
+                    color: ac.gold, strokeWidth: 2),
                 );
               }
               // Sync local copy from stream only when not dragging.
@@ -645,7 +650,7 @@ class _ItemsPanelState extends State<_ItemsPanel> {
                 return Center(
                   child: Text(
                     widget.l.noFilesSelected,
-                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                    style: TextStyle(color: Colors.white38, fontSize: 13),
                   ),
                 );
               }
@@ -700,6 +705,7 @@ class _ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final title = (isGreek && item.titleEl.isNotEmpty) ? item.titleEl : item.titleAr;
     final isVideo = item.mediaType == ElibMediaType.video;
 
@@ -717,14 +723,14 @@ class _ItemTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: (isVideo ? Colors.blue : EkklisiaColors.gold).withValues(alpha: 0.15),
+              color: (isVideo ? Colors.blue : ac.gold).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               _isYouTube
                   ? Icons.smart_display_outlined
                   : (isVideo ? Icons.videocam_outlined : Icons.audiotrack_outlined),
-              color: isVideo ? Colors.blue : EkklisiaColors.gold,
+              color: isVideo ? Colors.blue : ac.gold,
               size: 18,
             ),
           ),
@@ -746,7 +752,7 @@ class _ItemTile extends StatelessWidget {
                 ),
                 Text(
                   item.mediaUrl,
-                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                  style: TextStyle(color: Colors.white38, fontSize: 10),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -769,7 +775,7 @@ class _ItemTile extends StatelessWidget {
             child: Switch(
               value: item.isPublished,
               onChanged: onTogglePublish,
-              activeColor: EkklisiaColors.gold,
+              activeColor: ac.gold,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
@@ -792,10 +798,11 @@ class _NoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Text(
         l.selectSection,
-        style: const TextStyle(color: Colors.white38, fontSize: 13),
+        style: TextStyle(color: Colors.white38, fontSize: 13),
       ),
     );
   }

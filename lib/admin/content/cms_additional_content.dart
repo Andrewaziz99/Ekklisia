@@ -13,6 +13,7 @@ import '../../data/models/content_models.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../components/admin_data_table.dart';
 import '../components/content_form.dart';
+import '../utils/admin_colors.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // PRAYERS MANAGEMENT SCREEN
@@ -33,10 +34,13 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _editingItem != null ? _buildForm() : _buildTable();
   }
 
   Widget _buildTable() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<QuerySnapshot>(
       stream: _fb
           .collection(AppConstants.prayersCollection)
@@ -60,19 +64,19 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
           columns: ['Title (EN)', 'Title (AR)', 'Occasion', 'Status'],
           rowBuilder: (prayer, idx) => [
             Text(prayer.titleEn,
-                style: const TextStyle(
-                  color: EkklisiaColors.textPrimary,
+                style: TextStyle(
+                  color: ac.textPrimary,
                   fontSize: 12,
                 )),
             Text(prayer.titleAr,
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 11,
                   fontFamily: 'Scheherazade',
                 )),
             Text(prayer.occasion ?? 'General',
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 11,
                 )),
             _StatusBadge(prayer.isPublished),
@@ -195,10 +199,11 @@ class _PrayersManagerScreenState extends State<PrayersManagerScreen> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
+      isError ? ac.maroon : ac.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -223,10 +228,13 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _editingItem != null ? _buildForm() : _buildTable();
   }
 
   Widget _buildTable() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<QuerySnapshot>(
       stream: _fb
           .collection(AppConstants.liturgiesCollection)
@@ -250,18 +258,18 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
           columns: ['Title', 'Type', 'Season', 'Status'],
           rowBuilder: (liturgy, idx) => [
             Text(liturgy.titleEn,
-                style: const TextStyle(
-                  color: EkklisiaColors.textPrimary,
+                style: TextStyle(
+                  color: ac.textPrimary,
                   fontSize: 12,
                 )),
             Text(liturgy.liturgyType ?? 'General',
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 11,
                 )),
             Text(liturgy.season ?? 'Regular',
-                style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 11,
                 )),
             _StatusBadge(liturgy.isPublished),
@@ -392,10 +400,11 @@ class _LiturgiesManagerScreenState extends State<LiturgiesManagerScreen> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
+      isError ? ac.maroon : ac.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -412,15 +421,17 @@ class _StatusBadge extends StatelessWidget {
   final bool isPublished;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
+      color: (isPublished ? ac.tealMid : ac.goldDim)
           .withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(4),
       border: Border.all(
         color:
-        (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
+        (isPublished ? ac.tealMid : ac.goldDim)
             .withValues(alpha: 0.4),
         width: 0.5,
       ),
@@ -428,10 +439,11 @@ class _StatusBadge extends StatelessWidget {
     child: Text(
       isPublished ? 'Published' : 'Draft',
       style: TextStyle(
-        color: isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim,
+        color: isPublished ? ac.tealMid : ac.goldDim,
         fontSize: 9,
         fontWeight: FontWeight.w700,
       ),
     ),
   );
+  }
 }

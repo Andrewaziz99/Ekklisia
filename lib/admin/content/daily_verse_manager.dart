@@ -17,6 +17,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/theme/colors.dart';
 import '../../data/models/daily_verse_model.dart';
 import '../../data/repositories/daily_verse_repository.dart';
+import '../utils/admin_colors.dart';
 
 class DailyVerseManagerScreen extends StatefulWidget {
   const DailyVerseManagerScreen({super.key});
@@ -49,10 +50,12 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
   }
 
   void _openForm([DailyVerseModel? existing]) async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: EkklisiaColors.bgMid,
+      backgroundColor: ac.bgMid,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -75,22 +78,24 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
   }
 
   Future<void> _resetAllSent() async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: EkklisiaColors.bgElevated,
-        title: const Text('Reset full cycle?',
-            style: TextStyle(color: EkklisiaColors.goldLight)),
-        content: const Text(
+        backgroundColor: ac.bgElevated,
+        title: Text('Reset full cycle?',
+            style: TextStyle(color: ac.goldLight)),
+        content: Text(
           'This will clear the sent date on every verse so the '
           'rotation restarts from verse #1. Continue?',
-          style: TextStyle(color: EkklisiaColors.textSecondary),
+          style: TextStyle(color: ac.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: EkklisiaColors.textSecondary)),
+            child: Text('Cancel',
+                style: TextStyle(color: ac.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -107,19 +112,21 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
   }
 
   Future<void> _delete(DailyVerseModel v) async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: EkklisiaColors.bgElevated,
-        title: const Text('Delete verse?',
-            style: TextStyle(color: EkklisiaColors.goldLight)),
+        backgroundColor: ac.bgElevated,
+        title: Text('Delete verse?',
+            style: TextStyle(color: ac.goldLight)),
         content: Text('Delete verse #${v.order}?',
-            style: const TextStyle(color: EkklisiaColors.textSecondary)),
+            style: TextStyle(color: ac.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: EkklisiaColors.textSecondary)),
+            child: Text('Cancel',
+                style: TextStyle(color: ac.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -137,44 +144,45 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgDeep,
+      backgroundColor: ac.bgDeep,
       body: Column(
         children: [
           // ── Header ─────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            decoration: const BoxDecoration(
-              color: EkklisiaColors.bgMid,
+            decoration: BoxDecoration(
+              color: ac.bgMid,
               border: Border(
                   bottom:
-                      BorderSide(color: EkklisiaColors.goldBorder, width: 0.5)),
+                      BorderSide(color: ac.goldBorder, width: 0.5)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.menu_book_outlined,
-                    color: EkklisiaColors.gold, size: 20),
+                Icon(Icons.menu_book_outlined,
+                    color: ac.gold, size: 20),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Daily Verse',
                           style: TextStyle(
-                              color: EkklisiaColors.goldLight,
+                              color: ac.goldLight,
                               fontSize: 15,
                               fontWeight: FontWeight.w700)),
                       Text('آية اليوم — manage scheduled verses',
                           style: TextStyle(
                               fontFamily: 'Scheherazade',
-                              color: EkklisiaColors.textSecondary,
+                              color: ac.textSecondary,
                               fontSize: 11)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.refresh,
-                      color: EkklisiaColors.textSecondary, size: 18),
+                  icon: Icon(Icons.refresh,
+                      color: ac.textSecondary, size: 18),
                   onPressed: _load,
                   tooltip: 'Refresh',
                 ),
@@ -186,14 +194,14 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
                 ),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: EkklisiaColors.goldSubtle,
-                    foregroundColor: EkklisiaColors.goldLight,
+                    backgroundColor: ac.goldSubtle,
+                    foregroundColor: ac.goldLight,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(
-                          color: EkklisiaColors.goldBorder, width: 0.5),
+                      side: BorderSide(
+                          color: ac.goldBorder, width: 0.5),
                     ),
                   ),
                   icon: const Icon(Icons.add, size: 16),
@@ -207,23 +215,23 @@ class _DailyVerseManagerScreenState extends State<DailyVerseManagerScreen> {
           // ── Body ───────────────────────────────────────────────────────
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
+                      valueColor: AlwaysStoppedAnimation(ac.gold),
                       strokeWidth: 2,
                     ),
                   )
                 : _error != null
                     ? Center(
                         child: Text(_error!,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.redAccent, fontSize: 12)),
                       )
                     : _verses.isEmpty
-                        ? const _EmptyState()
+                        ? _EmptyState()
                         : RefreshIndicator(
-                            color: EkklisiaColors.gold,
-                            backgroundColor: EkklisiaColors.bgMid,
+                            color: ac.gold,
+                            backgroundColor: ac.bgMid,
                             onRefresh: _load,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -265,11 +273,12 @@ class _VerseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -285,15 +294,15 @@ class _VerseTile extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.goldSubtle,
+                    color: ac.goldSubtle,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: EkklisiaColors.goldBorder, width: 0.5),
+                        color: ac.goldBorder, width: 0.5),
                   ),
                   child: Text(
                     '#${verse.order}',
-                    style: const TextStyle(
-                      color: EkklisiaColors.goldLight,
+                    style: TextStyle(
+                      color: ac.goldLight,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -307,13 +316,13 @@ class _VerseTile extends StatelessWidget {
                       horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: verse.isSent
-                        ? EkklisiaColors.tealMid.withOpacity(0.12)
-                        : EkklisiaColors.bgElevated,
+                        ? ac.tealMid.withOpacity(0.12)
+                        : ac.bgElevated,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: verse.isSent
-                          ? EkklisiaColors.tealMid.withOpacity(0.4)
-                          : EkklisiaColors.goldBorder,
+                          ? ac.tealMid.withOpacity(0.4)
+                          : ac.goldBorder,
                       width: 0.5,
                     ),
                   ),
@@ -321,8 +330,8 @@ class _VerseTile extends StatelessWidget {
                     verse.isSent ? verse.sentDate : 'PENDING',
                     style: TextStyle(
                       color: verse.isSent
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.textSecondary,
+                          ? ac.tealMid
+                          : ac.textSecondary,
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -336,40 +345,40 @@ class _VerseTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: EkklisiaColors.bgElevated,
+                      color: ac.bgElevated,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: EkklisiaColors.goldBorder, width: 0.5),
+                          color: ac.goldBorder, width: 0.5),
                     ),
-                    child: const Text('HIDDEN',
+                    child: Text('HIDDEN',
                         style: TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.5,
                         )),
                   ),
-                const Spacer(),
+                Spacer(),
                 // Actions
                 _iconBtn(Icons.visibility_outlined, onToggle,
                     verse.isActive
-                        ? EkklisiaColors.tealMid
-                        : EkklisiaColors.textSecondary,
+                        ? ac.tealMid
+                        : ac.textSecondary,
                     tooltip: verse.isActive ? 'Hide' : 'Show'),
                 if (verse.isSent)
                   _iconBtn(Icons.refresh, onResetSent,
-                      EkklisiaColors.textSecondary,
+                      ac.textSecondary,
                       tooltip: 'Reset sent date'),
-                _iconBtn(Icons.edit_outlined, onEdit, EkklisiaColors.gold,
+                _iconBtn(Icons.edit_outlined, onEdit, ac.gold,
                     tooltip: 'Edit'),
                 _iconBtn(Icons.delete_outline, onDelete, Colors.redAccent,
                     tooltip: 'Delete'),
               ],
             ),
           ),
-          const Divider(
+          Divider(
               height: 1,
-              color: EkklisiaColors.goldBorder,
+              color: ac.goldBorder,
               indent: 14,
               endIndent: 14),
           // Verse preview
@@ -381,9 +390,9 @@ class _VerseTile extends StatelessWidget {
               textDirection: TextDirection.rtl,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkklisiaColors.textPrimary,
+                color: ac.textPrimary,
                 fontSize: 14,
                 height: 1.6,
               ),
@@ -397,9 +406,9 @@ class _VerseTile extends StatelessWidget {
                 child: Text(
                   verse.referenceAr,
                   textDirection: TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.goldDim,
+                    color: ac.goldDim,
                     fontSize: 11,
                   ),
                 ),
@@ -494,6 +503,7 @@ class _VerseFormState extends State<_VerseForm> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final isEdit = widget.existing != null;
 
     return Padding(
@@ -513,7 +523,7 @@ class _VerseFormState extends State<_VerseForm> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.goldBorder,
+                    color: ac.goldBorder,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -521,19 +531,19 @@ class _VerseFormState extends State<_VerseForm> {
 
               Text(
                 isEdit ? 'Edit Verse' : 'Add Daily Verse',
-                style: const TextStyle(
-                  color: EkklisiaColors.goldLight,
+                style: TextStyle(
+                  color: ac.goldLight,
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'إضافة / تعديل آية اليوم',
                 textDirection: TextDirection.rtl,
                 style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary,
+                  color: ac.textSecondary,
                   fontSize: 13,
                 ),
               ),
@@ -598,28 +608,28 @@ class _VerseFormState extends State<_VerseForm> {
               // Save button
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: EkklisiaColors.goldSubtle,
-                  foregroundColor: EkklisiaColors.goldLight,
+                  backgroundColor: ac.goldSubtle,
+                  foregroundColor: ac.goldLight,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(
-                        color: EkklisiaColors.goldBorder, width: 0.5),
+                    side: BorderSide(
+                        color: ac.goldBorder, width: 0.5),
                   ),
                 ),
                 onPressed: _saving ? null : _save,
                 child: _saving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation(
-                              EkklisiaColors.goldLight),
+                              ac.goldLight),
                         ),
                       )
                     : Text(isEdit ? 'Save Changes' : 'Add Verse',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w700)),
               ),
             ],
@@ -629,15 +639,18 @@ class _VerseFormState extends State<_VerseForm> {
     );
   }
 
-  Widget _fieldLabel(String text) => Text(
+  Widget _fieldLabel(String text) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Text(
         text,
-        style: const TextStyle(
-          color: EkklisiaColors.textSecondary,
+        style: TextStyle(
+          color: ac.textSecondary,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
       );
+  }
 
   Widget _field({
     required TextEditingController controller,
@@ -648,8 +661,9 @@ class _VerseFormState extends State<_VerseForm> {
     String? fontFamily,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-  }) =>
-      TextFormField(
+  }) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return TextFormField(
         controller: controller,
         enabled: enabled,
         textDirection: textDir,
@@ -657,70 +671,34 @@ class _VerseFormState extends State<_VerseForm> {
         validator: validator,
         style: TextStyle(
           fontFamily: fontFamily,
-          color: EkklisiaColors.textPrimary,
+          color: ac.textPrimary,
           fontSize: fontFamily != null ? 16 : 14,
         ),
-        decoration: _inputDecoration(label, hint),
+        decoration: ac.inputDeco(hint ?? label ?? ''),
       );
+  }
 
   Widget _textArea({
     required TextEditingController controller,
     TextDirection textDir = TextDirection.ltr,
     String? fontFamily,
     String? Function(String?)? validator,
-  }) =>
-      TextFormField(
+  }) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return TextFormField(
         controller: controller,
         maxLines: 4,
         textDirection: textDir,
         validator: validator,
         style: TextStyle(
           fontFamily: fontFamily,
-          color: EkklisiaColors.textPrimary,
+          color: ac.textPrimary,
           fontSize: fontFamily != null ? 17 : 14,
           height: 1.7,
         ),
-        decoration: _inputDecoration(null, null),
+        decoration: ac.inputDeco(''),
       );
-
-  InputDecoration _inputDecoration(String? label, String? hint) =>
-      InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 12),
-        hintStyle: const TextStyle(
-            color: EkklisiaColors.goldBorder, fontSize: 12),
-        filled: true,
-        fillColor: EkklisiaColors.bgElevated,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.gold, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.0),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
-        ),
-      );
+  }
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
@@ -730,6 +708,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -739,25 +718,25 @@ class _EmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: EkklisiaColors.goldBorder, width: 0.5),
-              color: EkklisiaColors.bgMid,
+                  color: ac.goldBorder, width: 0.5),
+              color: ac.bgMid,
             ),
-            child: const Icon(Icons.menu_book_outlined,
-                size: 36, color: EkklisiaColors.goldDim),
+            child: Icon(Icons.menu_book_outlined,
+                size: 36, color: ac.goldDim),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'No verses scheduled yet',
             style: TextStyle(
-                color: EkklisiaColors.textSecondary, fontSize: 14),
+                color: ac.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'لا توجد آيات مجدولة',
             textDirection: TextDirection.rtl,
             style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.goldDim,
+              color: ac.goldDim,
               fontSize: 13,
             ),
           ),

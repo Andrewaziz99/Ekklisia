@@ -27,6 +27,7 @@ import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/agbeya_model.dart';
 import '../../data/repositories/agbeya_repository.dart';
+import '../utils/admin_colors.dart';
 
 // ── Hour names reference ──────────────────────────────────────────────────────
 const _kHourNamesAr = {
@@ -66,6 +67,7 @@ class _AgbeyaManagerScreenState extends State<AgbeyaManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     if (_mode == _ScreenMode.edit) {
       return _EditView(
         repo: _repo,
@@ -95,6 +97,7 @@ class _ListViewState extends State<_ListView> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return StreamBuilder<List<AgbeyaHour>>(
       stream: widget.repo.watchAllHours(),
       builder: (context, snap) {
@@ -105,41 +108,41 @@ class _ListViewState extends State<_ListView> {
           // ── Toolbar ───────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            decoration: const BoxDecoration(
-              color: EkklisiaColors.bgDeep,
+            decoration: BoxDecoration(
+              color: ac.bgDeep,
               border: Border(
                   bottom: BorderSide(
-                      color: EkklisiaColors.goldBorder, width: 0.5)),
+                      color: ac.goldBorder, width: 0.5)),
             ),
             child: Row(children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Agbeya Hours',
                         style: TextStyle(
-                            color: EkklisiaColors.goldLight,
+                            color: ac.goldLight,
                             fontSize: 14,
                             fontWeight: FontWeight.w700)),
                     Text('الأجبية',
                         style: TextStyle(
                             fontFamily: 'Scheherazade',
-                            color: EkklisiaColors.textSecondary,
+                            color: ac.textSecondary,
                             fontSize: 12)),
                   ],
                 ),
               ),
               ElevatedButton.icon(
                 onPressed: () => widget.onEdit(null),
-                icon: const Icon(Icons.add,
-                    size: 16, color: EkklisiaColors.bgDeep),
-                label: const Text('New Hour',
+                icon: Icon(Icons.add,
+                    size: 16, color: ac.bgDeep),
+                label: Text('New Hour',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: EkklisiaColors.bgDeep)),
+                        color: ac.bgDeep)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: EkklisiaColors.gold,
+                  backgroundColor: ac.gold,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 10),
                   shape: RoundedRectangleBorder(
@@ -152,9 +155,9 @@ class _ListViewState extends State<_ListView> {
           // ── List ──────────────────────────────────────────────────────
           Expanded(
             child: loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold)))
+                        valueColor: AlwaysStoppedAnimation(ac.gold)))
                 : hours.isEmpty
                     ? _EmptyState(onAdd: () => widget.onEdit(null))
                     : Stack(
@@ -204,16 +207,18 @@ class _ListViewState extends State<_ListView> {
     if (mounted) _snack(context, 'Hour deleted');
   }
 
-  void _snack(BuildContext context, String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  void _snack(BuildContext context, String msg) {
+    final ac = AdminC(Theme.of(context).brightness);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(msg),
-        backgroundColor: EkklisiaColors.bgElevated,
+        backgroundColor: ac.bgElevated,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5)),
+            side: BorderSide(
+                color: ac.goldBorder, width: 0.5)),
       ));
+  }
 }
 
 // ── Hour Row ──────────────────────────────────────────────────────────────────
@@ -232,14 +237,15 @@ class _HourRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hourColor = _hourColor(hour.hourNumber);
+      final ac = AdminC(Theme.of(context).brightness);
+    final hourColor = _hourColor(hour.hourNumber, ac);
 
     return Container(
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
         border:
-            Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+            Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Row(children: [
         // Colour strip
@@ -292,34 +298,34 @@ class _HourRow extends StatelessWidget {
                 textDirection: TextDirection.rtl,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textPrimary,
+                  color: ac.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 3),
+              SizedBox(height: 3),
               Row(children: [
                 _Chip(
                   label: '${hour.sections.length} sections',
-                  color: EkklisiaColors.textSecondary,
+                  color: ac.textSecondary,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 if (hour.hasAudio)
-                  _Chip(label: '♪ audio', color: EkklisiaColors.tealMid)
+                  _Chip(label: '♪ audio', color: ac.tealMid)
                 else
-                  _Chip(label: 'no audio', color: EkklisiaColors.goldDim),
-                const SizedBox(width: 4),
+                  _Chip(label: 'no audio', color: ac.goldDim),
+                SizedBox(width: 4),
                 if (hour.hasPdf)
-                  _Chip(label: '📄 pdf', color: EkklisiaColors.bronze)
+                  _Chip(label: '📄 pdf', color: ac.bronze)
                 else
-                  _Chip(label: 'no pdf', color: EkklisiaColors.goldDim),
+                  _Chip(label: 'no pdf', color: ac.goldDim),
                 if (hour.formattedDuration.isNotEmpty) ...[
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   _Chip(
                     label: hour.formattedDuration,
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                   ),
                 ],
               ]),
@@ -336,18 +342,18 @@ class _HourRow extends StatelessWidget {
               GestureDetector(
                 onTap: onToggle,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: hour.isPublished
-                        ? EkklisiaColors.tealMid.withOpacity(0.15)
-                        : EkklisiaColors.bgElevated,
+                        ? ac.tealMid.withOpacity(0.15)
+                        : ac.bgElevated,
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: hour.isPublished
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.goldBorder,
+                          ? ac.tealMid
+                          : ac.goldBorder,
                       width: 0.5,
                     ),
                   ),
@@ -355,8 +361,8 @@ class _HourRow extends StatelessWidget {
                     hour.isPublished ? 'LIVE' : 'DRAFT',
                     style: TextStyle(
                       color: hour.isPublished
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.textSecondary,
+                          ? ac.tealMid
+                          : ac.textSecondary,
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
@@ -364,17 +370,17 @@ class _HourRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(mainAxisSize: MainAxisSize.min, children: [
                 _IconBtn(
                   icon: Icons.edit_outlined,
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   onTap: onEdit,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 _IconBtn(
                   icon: Icons.delete_outline,
-                  color: EkklisiaColors.maroonMid,
+                  color: ac.maroonMid,
                   onTap: onDelete,
                 ),
               ]),
@@ -385,13 +391,13 @@ class _HourRow extends StatelessWidget {
     );
   }
 
-  Color _hourColor(int n) {
-    const colors = [
-      EkklisiaColors.maroon,
-      EkklisiaColors.bronze,
+  Color _hourColor(int n, AdminC ac) {
+    final colors = [
+      ac.maroon,
+      ac.bronze,
       EkklisiaColors.tealDark,
-      EkklisiaColors.maroonMid,
-      EkklisiaColors.plum,
+      ac.maroonMid,
+      ac.plum,
       EkklisiaColors.ocean,
       EkklisiaColors.forest,
     ];
@@ -801,19 +807,25 @@ class _EditViewState extends State<_EditView> {
     }
   }
 
+  InputDecoration _inputDec({required String hint, bool counter = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return ac.inputDeco(hint);
+  }
+
   void _snack(String msg, {bool error = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-          error ? EkklisiaColors.maroon : EkklisiaColors.bgElevated,
+          error ? ac.maroon : ac.bgElevated,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
             color: error
-                ? EkklisiaColors.maroonMid
-                : EkklisiaColors.goldBorder,
+                ? ac.maroonMid
+                : ac.goldBorder,
             width: 0.5),
       ),
     ));
@@ -823,44 +835,45 @@ class _EditViewState extends State<_EditView> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(children: [
       // ── Top bar ──────────────────────────────────────────────────────
       Container(
         padding: const EdgeInsets.fromLTRB(8, 10, 16, 10),
-        decoration: const BoxDecoration(
-          color: EkklisiaColors.bgDeep,
+        decoration: BoxDecoration(
+          color: ac.bgDeep,
           border: Border(
               bottom: BorderSide(
-                  color: EkklisiaColors.goldBorder, width: 0.5)),
+                  color: ac.goldBorder, width: 0.5)),
         ),
         child: Row(children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: EkklisiaColors.gold, size: 18),
+            icon: Icon(Icons.arrow_back_ios_new,
+                color: ac.gold, size: 18),
             onPressed: widget.onDone,
           ),
           Text(
             widget.initial == null ? 'New Agbeya Hour' : 'Edit Hour',
-            style: const TextStyle(
-                color: EkklisiaColors.goldLight,
+            style: TextStyle(
+                color: ac.goldLight,
                 fontSize: 14,
                 fontWeight: FontWeight.w700),
           ),
           const Spacer(),
           if (_saving)
-            const SizedBox(
+            SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold)),
+                  valueColor: AlwaysStoppedAnimation(ac.gold)),
             )
           else
             ElevatedButton(
               onPressed: _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkklisiaColors.gold,
-                foregroundColor: EkklisiaColors.bgDeep,
+                backgroundColor: ac.gold,
+                foregroundColor: ac.bgDeep,
                 padding: const EdgeInsets.symmetric(
                     horizontal: 18, vertical: 10),
                 shape: RoundedRectangleBorder(
@@ -886,14 +899,14 @@ class _EditViewState extends State<_EditView> {
                   margin: const EdgeInsets.only(bottom: 14),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.maroon.withOpacity(0.15),
+                    color: ac.maroon.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: EkklisiaColors.maroonMid, width: 0.5),
+                        color: ac.maroonMid, width: 0.5),
                   ),
                   child: Text(_saveError,
-                      style: const TextStyle(
-                          color: EkklisiaColors.maroonMid, fontSize: 12)),
+                      style: TextStyle(
+                          color: ac.maroonMid, fontSize: 12)),
                 ),
 
               // ── Hour Number ───────────────────────────────────────────
@@ -902,9 +915,9 @@ class _EditViewState extends State<_EditView> {
                 titleAr: 'رقم الساعة',
                 child: DropdownButtonFormField<int>(
                   value: _hourNumber,
-                  dropdownColor: EkklisiaColors.bgElevated,
-                  style: const TextStyle(
-                      color: EkklisiaColors.textPrimary, fontSize: 14),
+                  dropdownColor: ac.bgElevated,
+                  style: TextStyle(
+                      color: ac.textPrimary, fontSize: 14),
                   decoration: _inputDec(hint: 'Select hour'),
                   items: List.generate(
                     7,
@@ -912,9 +925,9 @@ class _EditViewState extends State<_EditView> {
                       value: i + 1,
                       child: Text(
                         '${i + 1} — ${_kHourNamesAr[i + 1] ?? ''}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Scheherazade',
-                            color: EkklisiaColors.textPrimary,
+                            color: ac.textPrimary,
                             fontSize: 14),
                       ),
                     ),
@@ -976,8 +989,8 @@ class _EditViewState extends State<_EditView> {
                     final track    = _tracks[i];
                     final isFirst  = i == 0;
                     final accent   = isFirst
-                        ? EkklisiaColors.gold
-                        : EkklisiaColors.tealMid;
+                        ? ac.gold
+                        : ac.tealMid;
                     return Container(
                       margin: EdgeInsets.only(bottom: i < _tracks.length - 1 ? 14 : 0),
                       padding: const EdgeInsets.all(12),
@@ -1016,10 +1029,10 @@ class _EditViewState extends State<_EditView> {
                                   fontWeight: FontWeight.w700),
                             ),
                             if (!isFirst && track.url.isEmpty) ...[
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text('اختياري', style: TextStyle(
                                   fontFamily: 'Scheherazade',
-                                  color: EkklisiaColors.textSecondary,
+                                  color: ac.textSecondary,
                                   fontSize: 11)),
                             ],
                           ]),
@@ -1056,8 +1069,8 @@ class _EditViewState extends State<_EditView> {
                               hasFile: track.file != null || track.bytes != null,
                               fileName: track.name,
                               borderColor: track.url.isNotEmpty
-                                  ? EkklisiaColors.tealMid
-                                  : EkklisiaColors.goldBorder,
+                                  ? ac.tealMid
+                                  : ac.goldBorder,
                               onTap: track.uploading ? null : () => _pickTrackAudio(i),
                             ),
                           if (track.uploading) ...[
@@ -1067,7 +1080,7 @@ class _EditViewState extends State<_EditView> {
                               child: LinearProgressIndicator(
                                 value: track.progress,
                                 minHeight: 5,
-                                backgroundColor: EkklisiaColors.bgElevated,
+                                backgroundColor: ac.bgElevated,
                                 valueColor: AlwaysStoppedAnimation(accent),
                               ),
                             ),
@@ -1114,8 +1127,8 @@ class _EditViewState extends State<_EditView> {
                       hasFile: _coverFile != null || _coverBytes != null,
                       fileName: _coverName,
                       borderColor: _coverUrl.isNotEmpty
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.goldBorder,
+                          ? ac.tealMid
+                          : ac.goldBorder,
                       onTap: _coverUploading ? null : _pickCover,
                     ),
                   if (_coverUploading) ...[
@@ -1125,9 +1138,9 @@ class _EditViewState extends State<_EditView> {
                       child: LinearProgressIndicator(
                         value: _coverProgress,
                         minHeight: 5,
-                        backgroundColor: EkklisiaColors.bgElevated,
-                        valueColor: const AlwaysStoppedAnimation(
-                            EkklisiaColors.gold),
+                        backgroundColor: ac.bgElevated,
+                        valueColor: AlwaysStoppedAnimation(
+                            ac.gold),
                       ),
                     ),
                   ],
@@ -1146,21 +1159,21 @@ class _EditViewState extends State<_EditView> {
                         horizontal: 10, vertical: 7),
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: EkklisiaColors.goldSubtle,
+                      color: ac.goldSubtle,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: EkklisiaColors.goldBorder, width: 0.5),
+                          color: ac.goldBorder, width: 0.5),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.info_outline,
-                          size: 14, color: EkklisiaColors.gold),
+                      Icon(Icons.info_outline,
+                          size: 14, color: ac.gold),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Phase 1: users read this PDF while the audio plays. '
                           'Phase 2 text sections can be added separately.',
-                          style: const TextStyle(
-                              color: EkklisiaColors.textSecondary,
+                          style: TextStyle(
+                              color: ac.textSecondary,
                               fontSize: 11,
                               height: 1.4),
                         ),
@@ -1194,8 +1207,8 @@ class _EditViewState extends State<_EditView> {
                       hasFile: _pdfFile != null || _pdfBytes != null,
                       fileName: _pdfName,
                       borderColor: _pdfUrl.isNotEmpty
-                          ? EkklisiaColors.tealMid
-                          : EkklisiaColors.goldBorder,
+                          ? ac.tealMid
+                          : ac.goldBorder,
                       onTap: _pdfUploading ? null : _pickPdf,
                     ),
                   if (_pdfUploading) ...[
@@ -1205,54 +1218,54 @@ class _EditViewState extends State<_EditView> {
                       child: LinearProgressIndicator(
                         value: _pdfProgress,
                         minHeight: 5,
-                        backgroundColor: EkklisiaColors.bgElevated,
-                        valueColor: const AlwaysStoppedAnimation(
-                            EkklisiaColors.gold),
+                        backgroundColor: ac.bgElevated,
+                        valueColor: AlwaysStoppedAnimation(
+                            ac.gold),
                       ),
                     ),
                   ],
 
                   // ── Paste URL directly (reuse an existing upload) ─────
-                  const SizedBox(height: 14),
-                  Divider(color: EkklisiaColors.goldBorder.withOpacity(0.5), height: 1),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 14),
+                  Divider(color: ac.goldBorder.withOpacity(0.5), height: 1),
+                  SizedBox(height: 12),
                   Row(children: [
-                    const Icon(Icons.link, size: 14, color: EkklisiaColors.goldDim),
-                    const SizedBox(width: 6),
-                    const Text(
+                    Icon(Icons.link, size: 14, color: ac.goldDim),
+                    SizedBox(width: 6),
+                    Text(
                       'Or paste a Cloudinary URL directly',
                       style: TextStyle(
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(width: 6),
-                    const Text(
+                    SizedBox(width: 6),
+                    Text(
                       '(لإعادة استخدام PDF)',
                       style: TextStyle(
                           fontFamily: 'Scheherazade',
-                          color: EkklisiaColors.textSecondary,
+                          color: ac.textSecondary,
                           fontSize: 11),
                     ),
                   ]),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextField(
                     controller: _pdfUrlCtrl,
-                    style: const TextStyle(
-                        color: EkklisiaColors.textPrimary, fontSize: 11),
+                    style: TextStyle(
+                        color: ac.textPrimary, fontSize: 11),
                     decoration: InputDecoration(
                       hintText: 'https://res.cloudinary.com/…',
-                      hintStyle: const TextStyle(
-                          color: EkklisiaColors.textSecondary, fontSize: 11),
+                      hintStyle: TextStyle(
+                          color: ac.textSecondary, fontSize: 11),
                       filled: true,
-                      fillColor: EkklisiaColors.bgElevated,
+                      fillColor: ac.bgElevated,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       suffixIcon: _pdfUrlCtrl.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.close,
+                              icon: Icon(Icons.close,
                                   size: 14,
-                                  color: EkklisiaColors.textSecondary),
+                                  color: ac.textSecondary),
                               onPressed: () {
                                 _pdfUrlCtrl.clear();
                                 setState(() {
@@ -1266,14 +1279,14 @@ class _EditViewState extends State<_EditView> {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
                             color: _pdfUrl.isNotEmpty
-                                ? EkklisiaColors.tealMid.withOpacity(0.5)
-                                : EkklisiaColors.goldBorder,
+                                ? ac.tealMid.withOpacity(0.5)
+                                : ac.goldBorder,
                             width: 0.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                            color: EkklisiaColors.gold, width: 1),
+                        borderSide: BorderSide(
+                            color: ac.gold, width: 1),
                       ),
                     ),
                   ),
@@ -1291,7 +1304,7 @@ class _EditViewState extends State<_EditView> {
                     Text(
                       'Optional. Upload a video file or paste a YouTube / Cloudinary URL.',
                       style: TextStyle(
-                        color: EkklisiaColors.textSecondary
+                        color: ac.textSecondary
                             .withValues(alpha: 0.7),
                         fontSize: 11,
                       ),
@@ -1301,23 +1314,23 @@ class _EditViewState extends State<_EditView> {
                     // URL paste field
                     TextField(
                       controller: _videoUrlCtrl,
-                      style: const TextStyle(
-                          color: EkklisiaColors.textPrimary, fontSize: 12),
+                      style: TextStyle(
+                          color: ac.textPrimary, fontSize: 12),
                       decoration: InputDecoration(
                         hintText:
                             'https://youtube.com/... or https://res.cloudinary.com/...',
-                        hintStyle: const TextStyle(
-                            color: EkklisiaColors.textSecondary,
+                        hintStyle: TextStyle(
+                            color: ac.textSecondary,
                             fontSize: 11),
                         filled: true,
-                        fillColor: EkklisiaColors.bgElevated,
+                        fillColor: ac.bgElevated,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         suffixIcon: _videoUrlCtrl.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.close,
+                                icon: Icon(Icons.close,
                                     size: 14,
-                                    color: EkklisiaColors.textSecondary),
+                                    color: ac.textSecondary),
                                 onPressed: () {
                                   _videoUrlCtrl.clear();
                                   setState(() {
@@ -1331,14 +1344,14 @@ class _EditViewState extends State<_EditView> {
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
                               color: _videoUrl.isNotEmpty
-                                  ? EkklisiaColors.tealMid.withOpacity(0.5)
-                                  : EkklisiaColors.goldBorder,
+                                  ? ac.tealMid.withOpacity(0.5)
+                                  : ac.goldBorder,
                               width: 0.5),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(
-                              color: EkklisiaColors.gold, width: 1),
+                          borderSide: BorderSide(
+                              color: ac.gold, width: 1),
                         ),
                       ),
                     ),
@@ -1346,20 +1359,20 @@ class _EditViewState extends State<_EditView> {
 
                     // OR divider
                     Row(children: [
-                      const Expanded(
+                      Expanded(
                           child:
-                              Divider(color: EkklisiaColors.goldBorder)),
+                              Divider(color: ac.goldBorder)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text('OR',
                             style: TextStyle(
-                                color: EkklisiaColors.textSecondary
+                                color: ac.textSecondary
                                     .withValues(alpha: 0.6),
                                 fontSize: 11)),
                       ),
-                      const Expanded(
+                      Expanded(
                           child:
-                              Divider(color: EkklisiaColors.goldBorder)),
+                              Divider(color: ac.goldBorder)),
                     ]),
                     const SizedBox(height: 8),
 
@@ -1373,17 +1386,17 @@ class _EditViewState extends State<_EditView> {
                             child: LinearProgressIndicator(
                               value: _videoUploadProgress,
                               minHeight: 5,
-                              backgroundColor: EkklisiaColors.bgElevated,
-                              valueColor: const AlwaysStoppedAnimation(
-                                  EkklisiaColors.gold),
+                              backgroundColor: ac.bgElevated,
+                              valueColor: AlwaysStoppedAnimation(
+                                  ac.gold),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             'Uploading… ${((_videoUploadProgress ?? 0) * 100).toStringAsFixed(0)}%',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: EkklisiaColors.textSecondary,
+                            style: TextStyle(
+                                color: ac.textSecondary,
                                 fontSize: 11),
                           ),
                         ],
@@ -1412,7 +1425,7 @@ class _EditViewState extends State<_EditView> {
                           titleAr: 'اختر ملف فيديو',
                           subtitle: 'MP4 / MOV / MKV',
                           hasFile: false,
-                          borderColor: EkklisiaColors.goldBorder,
+                          borderColor: ac.goldBorder,
                           onTap: _saving ? null : _pickVideo,
                         ),
                     ],
@@ -1451,34 +1464,6 @@ class _EditViewState extends State<_EditView> {
     ]);
   }
 
-  InputDecoration _inputDec({String hint = ''}) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 13),
-        filled: true,
-        fillColor: EkklisiaColors.bgElevated,
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(
-              color: EkklisiaColors.goldBorder, width: 0.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:
-              const BorderSide(color: EkklisiaColors.gold, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-      );
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1570,6 +1555,7 @@ class _SectionsEditor extends StatefulWidget {
 class _SectionsEditorState extends State<_SectionsEditor> {
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _AdminCard(
       title: 'Prayer Sections',
       titleAr: 'أقسام الصلاة',
@@ -1593,15 +1579,15 @@ class _SectionsEditorState extends State<_SectionsEditor> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: widget.onAdd,
-            icon: const Icon(Icons.add,
-                size: 16, color: EkklisiaColors.gold),
-            label: const Text('Add Section  |  أضف قسم',
+            icon: Icon(Icons.add,
+                size: 16, color: ac.gold),
+            label: Text('Add Section  |  أضف قسم',
                 style: TextStyle(
-                    color: EkklisiaColors.gold, fontSize: 13)),
+                    color: ac.gold, fontSize: 13)),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              side: const BorderSide(
-                  color: EkklisiaColors.goldBorder, width: 0.5),
+              side: BorderSide(
+                  color: ac.goldBorder, width: 0.5),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
@@ -1626,13 +1612,14 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: EkklisiaColors.goldBorder, width: 0.5),
+            color: ac.goldBorder, width: 0.5),
       ),
       child: Column(children: [
         // ── Header ────────────────────────────────────────────────────
@@ -1648,15 +1635,15 @@ class _SectionCard extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.bgMid,
+                  color: ac.bgMid,
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: EkklisiaColors.goldBorder, width: 0.5),
+                      color: ac.goldBorder, width: 0.5),
                 ),
                 child: Center(
                   child: Text('${index + 1}',
-                      style: const TextStyle(
-                          color: EkklisiaColors.gold,
+                      style: TextStyle(
+                          color: ac.gold,
                           fontSize: 10,
                           fontWeight: FontWeight.w700)),
                 ),
@@ -1668,9 +1655,9 @@ class _SectionCard extends StatelessWidget {
                       ? draft.titleAr.text
                       : 'Section ${index + 1}',
                   textDirection: TextDirection.rtl,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Scheherazade',
-                      color: EkklisiaColors.textPrimary,
+                      color: ac.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600),
                   maxLines: 1,
@@ -1681,14 +1668,14 @@ class _SectionCard extends StatelessWidget {
                 draft.expanded
                     ? Icons.keyboard_arrow_up
                     : Icons.keyboard_arrow_down,
-                color: EkklisiaColors.goldDim,
+                color: ac.goldDim,
                 size: 18,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               GestureDetector(
                 onTap: onRemove,
-                child: const Icon(Icons.close,
-                    color: EkklisiaColors.maroonMid, size: 16),
+                child: Icon(Icons.close,
+                    color: ac.maroonMid, size: 16),
               ),
             ]),
           ),
@@ -1696,7 +1683,7 @@ class _SectionCard extends StatelessWidget {
 
         // ── Expanded fields ───────────────────────────────────────────
         if (draft.expanded) ...[
-          const Divider(height: 1, color: EkklisiaColors.goldBorder),
+          Divider(height: 1, color: ac.goldBorder),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(children: [
@@ -1771,13 +1758,14 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: EkklisiaColors.goldBorder, width: 0.5),
+            color: ac.goldBorder, width: 0.5),
       ),
       child:
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1786,19 +1774,19 @@ class _AdminCard extends StatelessWidget {
               width: 3,
               height: 14,
               decoration: BoxDecoration(
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   borderRadius: BorderRadius.circular(2))),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(title,
-              style: const TextStyle(
-                  color: EkklisiaColors.textPrimary,
+              style: TextStyle(
+                  color: ac.textPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w700)),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(titleAr,
-              style: const TextStyle(
+              style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary,
+                  color: ac.textSecondary,
                   fontSize: 11)),
         ]),
         const SizedBox(height: 14),
@@ -1826,19 +1814,20 @@ class _ArabicField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Text(label,
-            style: const TextStyle(
-                color: EkklisiaColors.textSecondary,
+            style: TextStyle(
+                color: ac.textSecondary,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8)),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(labelAr,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkklisiaColors.textSecondary,
+                color: ac.textSecondary,
                 fontSize: 11)),
       ]),
       const SizedBox(height: 6),
@@ -1846,37 +1835,37 @@ class _ArabicField extends StatelessWidget {
         controller: controller,
         textDirection: TextDirection.rtl,
         maxLines: maxLines,
-        style: const TextStyle(
+        style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
             fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               fontSize: 14),
           filled: true,
-          fillColor: EkklisiaColors.bgElevated,
+          fillColor: ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.5),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.redAccent),
+            borderSide: BorderSide(color: Colors.redAccent),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
+            borderSide: BorderSide(
                 color: Colors.redAccent, width: 1.5),
           ),
         ),
@@ -1908,10 +1897,11 @@ class _AdminField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label,
-          style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+          style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.8)),
@@ -1923,25 +1913,25 @@ class _AdminField extends StatelessWidget {
         textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
         style: TextStyle(
             fontFamily: rtl ? 'Scheherazade' : null,
-            color: EkklisiaColors.textPrimary,
+            color: ac.textPrimary,
             fontSize: fontSize),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 12),
+          hintStyle: TextStyle(
+              color: ac.textSecondary, fontSize: 12),
           filled: true,
-          fillColor: EkklisiaColors.bgElevated,
+          fillColor: ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 11),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.5),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.5),
           ),
         ),
       ),
@@ -1965,26 +1955,27 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Text(label,
-                style: const TextStyle(
-                    color: EkklisiaColors.textPrimary,
+                style: TextStyle(
+                    color: ac.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600)),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(labelAr,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                     fontSize: 12)),
           ]),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(sub,
-              style: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 11)),
+              style: TextStyle(
+                  color: ac.textSecondary, fontSize: 11)),
         ]),
       ),
       const SizedBox(width: 16),
@@ -1997,12 +1988,12 @@ class _ToggleRow extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: value
-                ? EkklisiaColors.gold
-                : EkklisiaColors.bgElevated,
+                ? ac.gold
+                : ac.bgElevated,
             border: Border.all(
                 color: value
-                    ? EkklisiaColors.gold
-                    : EkklisiaColors.goldBorder,
+                    ? ac.gold
+                    : ac.goldBorder,
                 width: 0.5),
           ),
           child: Stack(children: [
@@ -2016,8 +2007,8 @@ class _ToggleRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: value
-                      ? EkklisiaColors.bgDeep
-                      : EkklisiaColors.textSecondary,
+                      ? ac.bgDeep
+                      : ac.textSecondary,
                 ),
               ),
             ),
@@ -2050,13 +2041,14 @@ class _DropZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgMid,
+          color: ac.bgMid,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor, width: hasFile ? 1.0 : 0.5),
         ),
@@ -2065,8 +2057,8 @@ class _DropZone extends StatelessWidget {
             hasFile ? Icons.check_circle_outline : icon,
             size: 26,
             color: hasFile
-                ? EkklisiaColors.tealMid
-                : EkklisiaColors.goldDim,
+                ? ac.tealMid
+                : ac.goldDim,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2075,23 +2067,23 @@ class _DropZone extends StatelessWidget {
                 hasFile ? (fileName ?? title) : title,
                 style: TextStyle(
                     color: hasFile
-                        ? EkklisiaColors.textPrimary
-                        : EkklisiaColors.textSecondary,
+                        ? ac.textPrimary
+                        : ac.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600),
               ),
               Text(subtitle,
-                  style: const TextStyle(
-                      color: EkklisiaColors.textSecondary, fontSize: 10)),
+                  style: TextStyle(
+                      color: ac.textSecondary, fontSize: 10)),
               Text(titleAr,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Scheherazade',
-                      color: EkklisiaColors.textSecondary,
+                      color: ac.textSecondary,
                       fontSize: 10)),
             ]),
           ),
-          const Icon(Icons.chevron_right,
-              color: EkklisiaColors.goldDim, size: 16),
+          Icon(Icons.chevron_right,
+              color: ac.goldDim, size: 16),
         ]),
       ),
     );
@@ -2117,47 +2109,48 @@ class _UrlBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: EkklisiaColors.tealMid.withOpacity(0.08),
+        color: ac.tealMid.withOpacity(0.08),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: EkklisiaColors.tealMid.withOpacity(0.4), width: 0.8),
+            color: ac.tealMid.withOpacity(0.4), width: 0.8),
       ),
       child: Row(children: [
-        Icon(icon, color: EkklisiaColors.tealMid, size: 20),
-        const SizedBox(width: 10),
+        Icon(icon, color: ac.tealMid, size: 20),
+        SizedBox(width: 10),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(label,
-                style: const TextStyle(
-                    color: EkklisiaColors.tealMid,
+                style: TextStyle(
+                    color: ac.tealMid,
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
             Text(labelAr,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                     fontSize: 11)),
             Text(
               url.length > 40 ? '…${url.substring(url.length - 40)}' : url,
-              style: const TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 9),
+              style: TextStyle(
+                  color: ac.textSecondary, fontSize: 9),
             ),
           ]),
         ),
         IconButton(
-          icon: const Icon(Icons.swap_horiz,
-              color: EkklisiaColors.gold, size: 18),
+          icon: Icon(Icons.swap_horiz,
+              color: ac.gold, size: 18),
           tooltip: 'Replace',
           onPressed: onReplace,
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          constraints: BoxConstraints(minWidth: 28, minHeight: 28),
         ),
         IconButton(
-          icon: const Icon(Icons.close,
-              color: EkklisiaColors.maroonMid, size: 16),
+          icon: Icon(Icons.close,
+              color: ac.maroonMid, size: 16),
           tooltip: 'Remove',
           onPressed: onClear,
           padding: EdgeInsets.zero,
@@ -2175,7 +2168,9 @@ class _Chip extends StatelessWidget {
   final String label;
   final Color  color;
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
           color: color.withOpacity(0.15),
@@ -2184,6 +2179,7 @@ class _Chip extends StatelessWidget {
         child: Text(label,
             style: TextStyle(color: color, fontSize: 9)),
       );
+  }
 }
 
 class _IconBtn extends StatelessWidget {
@@ -2193,7 +2189,9 @@ class _IconBtn extends StatelessWidget {
   final Color    color;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return GestureDetector(
         onTap: onTap,
         child: Container(
           width: 28,
@@ -2206,37 +2204,40 @@ class _IconBtn extends StatelessWidget {
           child: Icon(icon, size: 14, color: color),
         ),
       );
+  }
 }
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onAdd});
   final VoidCallback onAdd;
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.auto_stories_outlined,
-              size: 52, color: EkklisiaColors.goldDim),
-          const SizedBox(height: 16),
-          const Text('No hours yet',
+          Icon(Icons.auto_stories_outlined,
+              size: 52, color: ac.goldDim),
+          SizedBox(height: 16),
+          Text('No hours yet',
               style: TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 16)),
-          const SizedBox(height: 8),
-          const Text('لا توجد ساعات بعد',
+                  color: ac.textSecondary, fontSize: 16)),
+          SizedBox(height: 8),
+          Text('لا توجد ساعات بعد',
               style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary,
+                  color: ac.textSecondary,
                   fontSize: 14)),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add,
-                size: 18, color: EkklisiaColors.bgDeep),
-            label: const Text('Add First Hour',
+            icon: Icon(Icons.add,
+                size: 18, color: ac.bgDeep),
+            label: Text('Add First Hour',
                 style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: EkklisiaColors.bgDeep)),
+                    color: ac.bgDeep)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: EkklisiaColors.gold,
+              backgroundColor: ac.gold,
               padding: const EdgeInsets.symmetric(
                   horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -2245,6 +2246,7 @@ class _EmptyState extends StatelessWidget {
           ),
         ]),
       );
+  }
 }
 
 class _DeleteDialog extends StatelessWidget {
@@ -2253,7 +2255,9 @@ class _DeleteDialog extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return GestureDetector(
         onTap: onCancel,
         child: Container(
           color: Colors.black54,
@@ -2264,27 +2268,27 @@ class _DeleteDialog extends StatelessWidget {
                 margin: const EdgeInsets.all(32),
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.bgMid,
+                  color: ac.bgMid,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: EkklisiaColors.maroon, width: 0.5),
+                      color: ac.maroon, width: 0.5),
                 ),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      color: EkklisiaColors.maroonMid, size: 40),
-                  const SizedBox(height: 12),
-                  const Text('Delete Hour',
+                  Icon(Icons.warning_amber_rounded,
+                      color: ac.maroonMid, size: 40),
+                  SizedBox(height: 12),
+                  Text('Delete Hour',
                       style: TextStyle(
-                          color: EkklisiaColors.textPrimary,
+                          color: ac.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'This permanently removes the hour and its sections '
                     'from Firestore. Delete the Cloudinary audio asset separately.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: EkklisiaColors.textSecondary,
+                        color: ac.textSecondary,
                         fontSize: 12,
                         height: 1.5),
                   ),
@@ -2294,21 +2298,21 @@ class _DeleteDialog extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: onCancel,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: EkklisiaColors.textSecondary,
-                          side: const BorderSide(
-                              color: EkklisiaColors.goldBorder, width: 0.5),
+                          foregroundColor: ac.textSecondary,
+                          side: BorderSide(
+                              color: ac.goldBorder, width: 0.5),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text('Cancel'),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: onConfirm,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: EkklisiaColors.maroon,
+                          backgroundColor: ac.maroon,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
@@ -2324,4 +2328,5 @@ class _DeleteDialog extends StatelessWidget {
           ),
         ),
       );
+  }
 }

@@ -13,6 +13,7 @@ import '../../data/models/content_models.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../components/admin_data_table.dart';
 import '../components/content_form.dart';
+import '../utils/admin_colors.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
 // BIBLES MANAGEMENT SCREEN
@@ -33,12 +34,15 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _editingItem != null
         ? _buildForm()
         : _buildTable();
   }
 
   Widget _buildTable() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<QuerySnapshot>(
       stream: _fb
           .collection(AppConstants.biblesCollection)
@@ -61,16 +65,16 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
           items: _bibles,
           columns: ['Title', 'Version', 'Language', 'Status'],
           rowBuilder: (bible, idx) => [
-            Text(bible.titleEn, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+            Text(bible.titleEn, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 12,
             )),
-            Text(bible.version, style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+            Text(bible.version, style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 11,
             )),
-            Text(bible.language, style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+            Text(bible.language, style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 11,
             )),
             _StatusBadge(bible.isPublished),
@@ -202,10 +206,11 @@ class _BiblesManagerScreenState extends State<BiblesManagerScreen> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
+      isError ? ac.maroon : ac.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -230,10 +235,13 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return _editingItem != null ? _buildForm() : _buildTable();
   }
 
   Widget _buildTable() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return StreamBuilder<QuerySnapshot>(
       stream: _fb
           .collection(AppConstants.hymnsCollection)
@@ -256,12 +264,12 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
           items: _hymns,
           columns: ['Title (EN)', 'Title (AR)', 'Categories', 'Status'],
           rowBuilder: (hymn, idx) => [
-            Text(hymn.titleEn, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+            Text(hymn.titleEn, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 12,
             )),
-            Text(hymn.titleAr, style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+            Text(hymn.titleAr, style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 11,
               fontFamily: 'Scheherazade',
             )),
@@ -396,10 +404,11 @@ class _HymnsManagerScreenState extends State<HymnsManagerScreen> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor:
-      isError ? EkklisiaColors.maroon : EkklisiaColors.gold,
+      isError ? ac.maroon : ac.gold,
       duration: const Duration(seconds: 2),
     ));
   }
@@ -413,15 +422,17 @@ class _StatusBadge extends StatelessWidget {
   final bool isPublished;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
+      color: (isPublished ? ac.tealMid : ac.goldDim)
           .withOpacity(0.12),
       borderRadius: BorderRadius.circular(4),
       border: Border.all(
         color:
-        (isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim)
+        (isPublished ? ac.tealMid : ac.goldDim)
             .withOpacity(0.4),
         width: 0.5,
       ),
@@ -429,12 +440,13 @@ class _StatusBadge extends StatelessWidget {
     child: Text(
       isPublished ? 'Published' : 'Draft',
       style: TextStyle(
-        color: isPublished ? EkklisiaColors.tealMid : EkklisiaColors.goldDim,
+        color: isPublished ? ac.tealMid : ac.goldDim,
         fontSize: 9,
         fontWeight: FontWeight.w700,
       ),
     ),
   );
+  }
 }
 
 class _CategoryTag extends StatelessWidget {
@@ -442,23 +454,26 @@ class _CategoryTag extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-      color: EkklisiaColors.goldSubtle,
+      color: ac.goldSubtle,
       borderRadius: BorderRadius.circular(3),
       border: Border.all(
-        color: EkklisiaColors.goldBorder,
+        color: ac.goldBorder,
         width: 0.5,
       ),
     ),
     child: Text(
       label,
-      style: const TextStyle(
-        color: EkklisiaColors.gold,
+      style: TextStyle(
+        color: ac.gold,
         fontSize: 8,
         fontWeight: FontWeight.w600,
       ),
     ),
   );
+  }
 }

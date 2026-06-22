@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/theme.dart';
+import '../utils/admin_colors.dart';
 
 /// Form field configuration
 class FormFieldConfig {
@@ -86,6 +87,7 @@ class _ContentFormState extends State<ContentForm> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       color: EkklisiaColors.bgPrimary,
       child: Column(
@@ -93,11 +95,11 @@ class _ContentFormState extends State<ContentForm> {
           // ── Header ───────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: EkklisiaColors.bgDeep,
+            decoration: BoxDecoration(
+              color: ac.bgDeep,
               border: Border(
                 bottom: BorderSide(
-                  color: EkklisiaColors.goldBorder,
+                  color: ac.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -108,11 +110,11 @@ class _ContentFormState extends State<ContentForm> {
                   widget.title,
                   style: EkklisiaTheme.headingMedium(Theme.of(context).brightness),
                 ),
-                const Spacer(),
+                Spacer(),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close,
-                    color: EkklisiaColors.textSecondary,
+                    color: ac.textSecondary,
                   ),
                   onPressed: widget.onCancel,
                 ),
@@ -149,11 +151,11 @@ class _ContentFormState extends State<ContentForm> {
           // ── Footer with actions ────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: EkklisiaColors.bgDeep,
+            decoration: BoxDecoration(
+              color: ac.bgDeep,
               border: Border(
                 top: BorderSide(
-                  color: EkklisiaColors.goldBorder,
+                  color: ac.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -164,7 +166,7 @@ class _ContentFormState extends State<ContentForm> {
                 OutlinedButton(
                   onPressed: widget.isLoading ? null : widget.onCancel,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: EkklisiaColors.textSecondary,
+                    foregroundColor: ac.textSecondary,
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -172,13 +174,13 @@ class _ContentFormState extends State<ContentForm> {
                 ElevatedButton(
                   onPressed: widget.isLoading ? null : _submitForm,
                   child: widget.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                     height: 16,
                     width: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation(
-                        EkklisiaColors.bgDeep,
+                        ac.bgDeep,
                       ),
                     ),
                   )
@@ -193,6 +195,8 @@ class _ContentFormState extends State<ContentForm> {
   }
 
   Widget _buildField(FormFieldConfig field) {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -204,17 +208,17 @@ class _ContentFormState extends State<ContentForm> {
               children: [
                 TextSpan(
                   text: field.labelEn,
-                  style: const TextStyle(
-                    color: EkklisiaColors.textPrimary,
+                  style: TextStyle(
+                    color: ac.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (field.required)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
                     style: TextStyle(
-                      color: EkklisiaColors.maroon,
+                      color: ac.maroon,
                     ),
                   ),
               ],
@@ -222,9 +226,9 @@ class _ContentFormState extends State<ContentForm> {
           ),
           Text(
             field.labelAr,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary,
+              color: ac.textSecondary,
               fontSize: 11,
             ),
           ),
@@ -243,40 +247,40 @@ class _ContentFormState extends State<ContentForm> {
               return null;
             }
                 : null,
-            style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+            style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: field.hintEn,
-              hintStyle: const TextStyle(
-                color: EkklisiaColors.textSecondary,
+              hintStyle: TextStyle(
+                color: ac.textSecondary,
                 fontSize: 12,
               ),
               filled: true,
-              fillColor: EkklisiaColors.bgElevated,
+              fillColor: ac.bgElevated,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 12,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: EkklisiaColors.goldBorder,
+                borderSide: BorderSide(
+                  color: ac.goldBorder,
                   width: 0.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: EkklisiaColors.gold,
+                borderSide: BorderSide(
+                  color: ac.gold,
                   width: 1.0,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: EkklisiaColors.maroon,
+                borderSide: BorderSide(
+                  color: ac.maroon,
                   width: 1.0,
                 ),
               ),
@@ -288,13 +292,15 @@ class _ContentFormState extends State<ContentForm> {
   }
 
   Widget _buildPublishToggle() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: EkklisiaColors.goldBorder,
+          color: ac.goldBorder,
           width: 0.5,
         ),
       ),
@@ -303,8 +309,8 @@ class _ContentFormState extends State<ContentForm> {
           Icon(
             _isPublished ? Icons.visibility : Icons.visibility_off,
             color: _isPublished
-                ? EkklisiaColors.gold
-                : EkklisiaColors.textSecondary,
+                ? ac.gold
+                : ac.textSecondary,
             size: 18,
           ),
           const SizedBox(width: 12),
@@ -312,18 +318,18 @@ class _ContentFormState extends State<ContentForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Publish Status',
                   style: TextStyle(
-                    color: EkklisiaColors.textPrimary,
+                    color: ac.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   _isPublished ? 'Published' : 'Draft',
-                  style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                  style: TextStyle(
+                    color: ac.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -333,8 +339,8 @@ class _ContentFormState extends State<ContentForm> {
           Switch(
             value: _isPublished,
             onChanged: (val) => setState(() => _isPublished = val),
-            activeColor: EkklisiaColors.gold,
-            inactiveThumbColor: EkklisiaColors.textSecondary,
+            activeColor: ac.gold,
+            inactiveThumbColor: ac.textSecondary,
           ),
         ],
       ),

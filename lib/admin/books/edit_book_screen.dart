@@ -12,6 +12,7 @@ import '../../data/models/book_model.dart';
 import '../../data/repositories/book_category_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../shared/widgets/cached_image.dart';
+import '../utils/admin_colors.dart';
 
 class EditBookScreen extends StatefulWidget {
   const EditBookScreen({super.key, required this.book});
@@ -39,17 +40,18 @@ class _EditBookScreenState extends State<EditBookScreen> {
   bool _catsLoading = true;
 
   static const _catColors = {
-    'bible':        EkklisiaColors.maroon,
-    'prayers':      EkklisiaColors.maroonMid,
-    'liturgy':      EkklisiaColors.bronze,
-    'hymns':        EkklisiaColors.tealDark,
-    'saints':       EkklisiaColors.plum,
-    'fathers':      EkklisiaColors.forest,
-    'commentaries': EkklisiaColors.ocean,
-    'studies':      EkklisiaColors.ocean,
+    'bible':         EkklisiaColors.darkMaroon,
+    'prayers':       EkklisiaColors.darkMaroonMid,
+    'liturgy':       EkklisiaColors.darkBronze,
+    'hymns':         EkklisiaColors.tealDark,
+    'saints':        EkklisiaColors.darkPlum,
+    'fathers':       EkklisiaColors.forest,
+    'commentaries':  EkklisiaColors.ocean,
+    'studies':       EkklisiaColors.ocean,
   };
 
-  Color get _catColor => _catColors[_category] ?? EkklisiaColors.bgElevated;
+  Color get _catColor =>
+      _catColors[_category] ?? EkklisiaColors.darkBgElevated;
 
   @override
   void initState() {
@@ -114,10 +116,12 @@ class _EditBookScreenState extends State<EditBookScreen> {
   }
 
   Future<void> _save() async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     if (_titleAr.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Arabic title is required'),
-        backgroundColor: EkklisiaColors.maroon,
+        backgroundColor: ac.maroon,
       ));
       return;
     }
@@ -155,9 +159,9 @@ class _EditBookScreenState extends State<EditBookScreen> {
       ));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Book updated successfully'),
-          backgroundColor: EkklisiaColors.bgElevated,
+          backgroundColor: ac.bgElevated,
           behavior: SnackBarBehavior.floating,
         ));
         context.pop();
@@ -169,19 +173,20 @@ class _EditBookScreenState extends State<EditBookScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgDeep,
+      backgroundColor: ac.bgDeep,
       appBar: AppBar(
-        backgroundColor: EkklisiaColors.bgDeep,
-        foregroundColor: EkklisiaColors.textPrimary,
+        backgroundColor: ac.bgDeep,
+        foregroundColor: ac.textPrimary,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        title: const Text('Edit Book', style: TextStyle(
-            color: EkklisiaColors.gold,
+        title: Text('Edit Book', style: TextStyle(
+            color: ac.gold,
             fontSize: 16, fontWeight: FontWeight.w700)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Container(height: 0.5, color: EkklisiaColors.goldBorder),
+          child: Container(height: 0.5, color: ac.goldBorder),
         ),
       ),
       body: Stack(children: [
@@ -204,23 +209,23 @@ class _EditBookScreenState extends State<EditBookScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.bgMid,
+                  color: ac.bgMid,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                      color: EkklisiaColors.goldBorder, width: 0.5),
+                      color: ac.goldBorder, width: 0.5),
                 ),
                 child: Row(children: [
                   Icon(_mediaIcon(widget.book.mediaType),
-                      size: 16, color: EkklisiaColors.goldDim),
-                  const SizedBox(width: 10),
+                      size: 16, color: ac.goldDim),
+                  SizedBox(width: 10),
                   Expanded(child: Text(
                     widget.book.pdfUrl.split('/').last,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: EkklisiaColors.textSecondary, fontSize: 11),
+                    style: TextStyle(
+                        color: ac.textSecondary, fontSize: 11),
                   )),
-                  Text(widget.book.formattedSize, style: const TextStyle(
-                      color: EkklisiaColors.textSecondary, fontSize: 11)),
+                  Text(widget.book.formattedSize, style: TextStyle(
+                      color: ac.textSecondary, fontSize: 11)),
                 ]),
               ),
               const SizedBox(height: 14),
@@ -298,14 +303,14 @@ class _EditBookScreenState extends State<EditBookScreen> {
               // ── Save ─────────────────────────────────────────────────────
               ElevatedButton.icon(
                 onPressed: _saving ? null : _save,
-                icon: const Icon(Icons.save_outlined,
-                    color: EkklisiaColors.bgDeep, size: 18),
-                label: const Text('Save Changes', style: TextStyle(
-                    color: EkklisiaColors.bgDeep,
+                icon: Icon(Icons.save_outlined,
+                    color: ac.bgDeep, size: 18),
+                label: Text('Save Changes', style: TextStyle(
+                    color: ac.bgDeep,
                     fontSize: 14, fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: EkklisiaColors.gold,
-                  disabledBackgroundColor: EkklisiaColors.goldDim,
+                  backgroundColor: ac.gold,
+                  disabledBackgroundColor: ac.goldDim,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
@@ -324,17 +329,17 @@ class _EditBookScreenState extends State<EditBookScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 28, vertical: 24),
               decoration: BoxDecoration(
-                color: EkklisiaColors.bgMid,
+                color: ac.bgMid,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: EkklisiaColors.goldBorder, width: 0.5),
+                    color: ac.goldBorder, width: 0.5),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold)),
-                const SizedBox(height: 14),
-                Text(_status, style: const TextStyle(
-                    color: EkklisiaColors.textPrimary, fontSize: 13)),
+                CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(ac.gold)),
+                SizedBox(height: 14),
+                Text(_status, style: TextStyle(
+                    color: ac.textPrimary, fontSize: 13)),
               ]),
             )),
           ),
@@ -361,6 +366,7 @@ class _CoverSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     Widget coverContent;
     if (newCoverBytes != null) {
       coverContent = Image.memory(newCoverBytes!, fit: BoxFit.cover,
@@ -374,12 +380,12 @@ class _CoverSection extends StatelessWidget {
         children: [
           Icon(_mediaIcon(mediaType), size: 36,
               color: catColor.withOpacity(0.6)),
-          const SizedBox(height: 8),
-          const Text('No cover image', style: TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 11)),
-          const SizedBox(height: 4),
-          const Text('Tap to add', style: TextStyle(
-              color: EkklisiaColors.gold, fontSize: 10)),
+          SizedBox(height: 8),
+          Text('No cover image', style: TextStyle(
+              color: ac.textSecondary, fontSize: 11)),
+          SizedBox(height: 4),
+          Text('Tap to add', style: TextStyle(
+              color: ac.gold, fontSize: 10)),
         ],
       );
     }
@@ -393,8 +399,8 @@ class _CoverSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: newCoverBytes != null
-                ? EkklisiaColors.tealMid
-                : EkklisiaColors.goldBorder,
+                ? ac.tealMid
+                : ac.goldBorder,
             width: newCoverBytes != null ? 1.0 : 0.5,
           ),
         ),
@@ -410,8 +416,8 @@ class _CoverSection extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.camera_alt_outlined,
-                        size: 13, color: EkklisiaColors.gold),
+                    Icon(Icons.camera_alt_outlined,
+                        size: 13, color: ac.gold),
                     const SizedBox(width: 6),
                     Text(
                       newCoverBytes != null
@@ -419,8 +425,8 @@ class _CoverSection extends StatelessWidget {
                           : existingUrl.isNotEmpty
                               ? 'Tap to change cover'
                               : 'Tap to add cover image',
-                      style: const TextStyle(
-                          color: EkklisiaColors.gold, fontSize: 11,
+                      style: TextStyle(
+                          color: ac.gold, fontSize: 11,
                           fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -458,32 +464,33 @@ class _CategoryDropdown extends StatelessWidget {
   final ValueChanged<String?> onChanged;
   final bool                loading;
 
-  static InputDecoration _decoration() => InputDecoration(
+  InputDecoration _decoration(AdminC ac) => InputDecoration(
     filled: true,
-    fillColor: EkklisiaColors.bgElevated,
+    fillColor: ac.bgElevated,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(
-          color: EkklisiaColors.goldBorder, width: 0.5),
+      borderSide: BorderSide(
+          color: ac.goldBorder, width: 0.5),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: EkklisiaColors.gold, width: 1),
+      borderSide: BorderSide(color: ac.gold, width: 1),
     ),
   );
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Row(children: [
+      Row(children: [
         Text('CATEGORY', style: TextStyle(
-            color: EkklisiaColors.textSecondary,
+            color: ac.textSecondary,
             fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
         SizedBox(width: 6),
         Text('الفئة', style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textSecondary, fontSize: 11)),
+            color: ac.textSecondary, fontSize: 11)),
       ]),
       const SizedBox(height: 6),
 
@@ -492,33 +499,33 @@ class _CategoryDropdown extends StatelessWidget {
         Container(
           height: 48,
           decoration: BoxDecoration(
-            color: EkklisiaColors.bgElevated,
+            color: ac.bgElevated,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+                color: ac.goldBorder, width: 0.5),
           ),
-          child: const Center(
+          child: Center(
             child: SizedBox(
               width: 18, height: 18,
               child: CircularProgressIndicator(strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold)),
+                  valueColor: AlwaysStoppedAnimation(ac.gold)),
             ),
           ),
         )
       else
         DropdownButtonFormField<String>(
           value: value,
-          dropdownColor: EkklisiaColors.bgElevated,
-          style: const TextStyle(
-              color: EkklisiaColors.textPrimary, fontSize: 13),
-          decoration: _decoration(),
+          dropdownColor: ac.bgElevated,
+          style: TextStyle(
+              color: ac.textPrimary, fontSize: 13),
+          decoration: _decoration(ac),
           items: categories.map((cat) => DropdownMenuItem(
             value: cat.id,
             child: Text(
               cat.nameAr,
-              style: const TextStyle(
+              style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textPrimary,
+                  color: ac.textPrimary,
                   fontSize: 14),
             ),
           )).toList(),
@@ -542,29 +549,30 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
             width: 3, height: 16,
             decoration: BoxDecoration(
-                color: EkklisiaColors.gold,
+                color: ac.gold,
                 borderRadius: BorderRadius.circular(2)),
           ),
-          const SizedBox(width: 8),
-          Text(title, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+          SizedBox(width: 8),
+          Text(title, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 13, fontWeight: FontWeight.w700)),
-          const SizedBox(width: 6),
-          Text(titleAr, style: const TextStyle(
+          SizedBox(width: 6),
+          Text(titleAr, style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary, fontSize: 12)),
+              color: ac.textSecondary, fontSize: 12)),
         ]),
         const SizedBox(height: 16),
         child,
@@ -593,19 +601,20 @@ class _ArabicField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Text(label, style: const TextStyle(
-            color: EkklisiaColors.textSecondary,
+        Text(label, style: TextStyle(
+            color: ac.textSecondary,
             fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-        const SizedBox(width: 6),
-        Text(labelAr, style: const TextStyle(
+        SizedBox(width: 6),
+        Text(labelAr, style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textSecondary, fontSize: 11)),
+            color: ac.textSecondary, fontSize: 11)),
         if (required) ...[
-          const SizedBox(width: 4),
-          const Text(' *', style: TextStyle(
-              color: EkklisiaColors.maroonMid, fontSize: 11)),
+          SizedBox(width: 4),
+          Text(' *', style: TextStyle(
+              color: ac.maroonMid, fontSize: 11)),
         ],
       ]),
       const SizedBox(height: 6),
@@ -613,27 +622,27 @@ class _ArabicField extends StatelessWidget {
         controller:    controller,
         textDirection: TextDirection.rtl,
         maxLines:      maxLines,
-        style: const TextStyle(
+        style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textPrimary, fontSize: 15),
+            color: ac.textPrimary, fontSize: 15),
         decoration: InputDecoration(
           hintText:  hint,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary, fontSize: 14),
+              color: ac.textSecondary, fontSize: 14),
           filled:     true,
-          fillColor:  EkklisiaColors.bgElevated,
+          fillColor:  ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.0),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.0),
           ),
         ),
       ),
@@ -655,32 +664,33 @@ class _AdminField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(
-          color: EkklisiaColors.textSecondary,
+      Text(label, style: TextStyle(
+          color: ac.textSecondary,
           fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-      const SizedBox(height: 6),
+      SizedBox(height: 6),
       TextFormField(
         controller: controller,
-        style: const TextStyle(
-            color: EkklisiaColors.textPrimary, fontSize: 13),
+        style: TextStyle(
+            color: ac.textPrimary, fontSize: 13),
         decoration: InputDecoration(
           hintText:  hint,
-          hintStyle: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 12),
+          hintStyle: TextStyle(
+              color: ac.textSecondary, fontSize: 12),
           filled:     true,
-          fillColor:  EkklisiaColors.bgElevated,
+          fillColor:  ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.0),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.0),
           ),
         ),
       ),
@@ -704,22 +714,23 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(children: [
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+          Text(label, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 13, fontWeight: FontWeight.w600)),
-          Text(labelAr, style: const TextStyle(
+          Text(labelAr, style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary, fontSize: 12)),
+              color: ac.textSecondary, fontSize: 12)),
         ],
       )),
       Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: EkklisiaColors.gold,
+        activeColor: ac.gold,
       ),
     ]);
   }

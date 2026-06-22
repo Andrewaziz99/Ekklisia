@@ -21,15 +21,15 @@ import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/game_model.dart';
 import '../../data/repositories/game_repository.dart';
 import '../../shared/widgets/cached_image.dart';
+import '../utils/admin_colors.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const _kNavy    = Color(0xFF1B2A4A);
-const _kGold    = EkklisiaColors.gold;
+const _kGold    = EkklisiaColors.darkGold;
 const _kBg      = EkklisiaColors.bgPrimary;
-const _kBgDeep  = EkklisiaColors.bgDeep;
-const _kBorder  = EkklisiaColors.goldBorder;
-const _kText    = EkklisiaColors.textPrimary;
-const _kTextSub = EkklisiaColors.textSecondary;
+const _kBgDeep  = EkklisiaColors.darkBgDeep;
+const _kText    = EkklisiaColors.darkTextPrimary;
+const _kTextSub = EkklisiaColors.darkTextSecondary;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN
@@ -40,6 +40,7 @@ class GameManagerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -109,6 +110,7 @@ class GameManagerScreen extends StatelessWidget {
 class _AddFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final controller = DefaultTabController.of(context);
     return AnimatedBuilder(
       animation: controller,
@@ -123,7 +125,7 @@ class _AddFab extends StatelessWidget {
           icon: const Icon(Icons.add),
           label: Text(
             type == GameType.guessWho ? 'Add Guess Who' : 'Add MCQ',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12, fontWeight: FontWeight.w600),
           ),
           onPressed: () => Navigator.push(
@@ -148,6 +150,7 @@ class _QuestionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final repo = sl<GameRepository>();
 
     return StreamBuilder<List<GameQuestion>>(
@@ -183,6 +186,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -199,7 +203,7 @@ class _EmptyState extends StatelessWidget {
             type == GameType.guessWho
                 ? 'No "Guess Who" questions yet'
                 : 'No MCQ questions yet',
-            style: const TextStyle(
+            style: TextStyle(
                 color: _kTextSub, fontSize: 13),
           ),
           const SizedBox(height: 6),
@@ -221,6 +225,7 @@ class _QuestionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final repo         = sl<GameRepository>();
     final correctChoice = question.correctChoice;
 
@@ -229,7 +234,7 @@ class _QuestionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: _kBgDeep,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: ListTile(
         contentPadding:
@@ -256,7 +261,7 @@ class _QuestionTile extends StatelessWidget {
               : (question.questionEl.isNotEmpty
                   ? question.questionEl
                   : '(no question text)'),
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Scheherazade',
             color: _kText,
             fontSize: 14,
@@ -280,7 +285,7 @@ class _QuestionTile extends StatelessWidget {
                     correctChoice.textAr.isNotEmpty
                         ? correctChoice.textAr
                         : correctChoice.textEl,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Scheherazade',
                       color: Color(0xFF3A8C5A),
                       fontSize: 12,
@@ -291,7 +296,7 @@ class _QuestionTile extends StatelessWidget {
             if (question.category.isNotEmpty)
               Text(
                 question.category,
-                style: const TextStyle(
+                style: TextStyle(
                     color: _kTextSub, fontSize: 10),
               ),
           ],
@@ -311,7 +316,7 @@ class _QuestionTile extends StatelessWidget {
                       ? _kGold.withValues(alpha: 0.12)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder, width: 0.5),
+                  border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
                 child: Icon(
                   question.isVisible
@@ -339,7 +344,7 @@ class _QuestionTile extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder, width: 0.5),
+                  border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
                 child: const Icon(Icons.edit_outlined,
                     size: 14, color: _kTextSub),
@@ -354,7 +359,7 @@ class _QuestionTile extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _kBorder, width: 0.5),
+                  border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
                 child: const Icon(Icons.delete_outline,
                     size: 14, color: Color(0xFF8B3535)),
@@ -412,10 +417,11 @@ class _FallbackIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       width: 52, height: 52,
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgElevated,
+        color: ac.bgElevated,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
@@ -647,6 +653,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     final typeLabel = widget.type == GameType.guessWho
         ? 'Guess Who — من هو؟'
         : 'MCQ — اختبار';
@@ -661,11 +668,11 @@ class _GameFormScreenState extends State<_GameFormScreen> {
           children: [
             Text(
               _isEdit ? 'Edit Question' : 'New Question',
-              style: const TextStyle(
+              style: TextStyle(
                   color: _kGold, fontSize: 15, fontWeight: FontWeight.w700),
             ),
             Text(typeLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: 'Scheherazade',
                     color: _kTextSub, fontSize: 11)),
           ],
@@ -709,7 +716,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                     color: const Color(0xFF8C2B2B).withValues(alpha: 0.4)),
               ),
               child: Text(_saveError,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: Color(0xFFE57373), fontSize: 12)),
             ),
 
@@ -785,7 +792,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                             _imageBytes != null
                         ? 'Change Image'
                         : 'Pick Image',
-                    style: const TextStyle(fontSize: 12),
+                    style: TextStyle(fontSize: 12),
                   ),
                   onPressed: _pickImage,
                 ),
@@ -840,8 +847,8 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isCorrect
-                          ? const Color(0xFF2E7D52)
-                          : _kBorder,
+                          ? Color(0xFF2E7D52)
+                          : ac.goldBorder,
                       width: isCorrect ? 1.2 : 0.5,
                     ),
                   ),
@@ -856,12 +863,12 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isCorrect
-                                  ? const Color(0xFF2E7D52)
+                                  ? Color(0xFF2E7D52)
                                   : _kBgDeep,
                               border: Border.all(
                                   color: isCorrect
-                                      ? const Color(0xFF2E7D52)
-                                      : _kBorder),
+                                      ? Color(0xFF2E7D52)
+                                      : ac.goldBorder),
                             ),
                             child: Center(
                               child: Text(letter,
@@ -994,7 +1001,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                     )
                   : Text(
                       _isEdit ? 'Update Question' : 'Add Question',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14, fontWeight: FontWeight.w700),
                     ),
             ),
@@ -1014,19 +1021,20 @@ class _FormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
       decoration: BoxDecoration(
         color: _kBgDeep,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               color: _kGold,
               fontSize: 9,
               fontWeight: FontWeight.w700,
@@ -1064,11 +1072,12 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 color: _kTextSub, fontSize: 10, letterSpacing: 0.5)),
         const SizedBox(height: 4),
         TextFormField(
@@ -1097,16 +1106,16 @@ class _Field extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(7),
               borderSide: BorderSide(
-                  color: _kBorder, width: 0.5),
+                  color: ac.goldBorder, width: 0.5),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(7),
               borderSide: BorderSide(
-                  color: _kBorder, width: 0.5),
+                  color: ac.goldBorder, width: 0.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(7),
-              borderSide: const BorderSide(
+              borderSide: BorderSide(
                   color: _kGold, width: 1),
             ),
           ),

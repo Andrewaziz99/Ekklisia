@@ -153,6 +153,11 @@ const _cmsItems = <_NavItem>[
     icon: Icons.video_library_outlined, activeIcon: Icons.video_library,
     labelAr: 'المكتبة الالكترونية', labelEl: 'Ηλ. Βιβλιοθήκη',
   ),
+  _NavItem(
+    path: Routes.adminCmsChurches,
+    icon: Icons.church_outlined, activeIcon: Icons.church,
+    labelAr: 'الكنائس', labelEl: 'Εκκλησίες',
+  ),
 ];
 
 // ════════════════════════════════════════════════════════════════════════════

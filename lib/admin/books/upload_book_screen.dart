@@ -16,6 +16,7 @@ import '../../data/repositories/book_category_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../services/notification_service.dart';
+import '../utils/admin_colors.dart';
 
 class UploadBookScreen extends StatefulWidget {
   const UploadBookScreen({super.key});
@@ -212,6 +213,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // ── Upload ───────────────────────────────────────────────────────────────
 
   Future<void> _upload() async {
+    final ac = AdminC(Theme.of(context).brightness);
+
     setState(() { _uploading = true; _progressStep = 'Preparing…'; });
 
     final authState = context.read<AuthCubit>().state;
@@ -268,8 +271,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Upload failed: $e',
-              style: const TextStyle(fontFamily: 'Scheherazade')),
-          backgroundColor: EkklisiaColors.maroon,
+              style: TextStyle(fontFamily: 'Scheherazade')),
+          backgroundColor: ac.maroon,
           behavior: SnackBarBehavior.floating,
         ));
       }
@@ -278,6 +281,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(children: [
@@ -294,6 +298,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // STEP 0 — FILES
   // ════════════════════════════════════════════════════════════════════════
   Widget _filesStep() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     final hasDriveUrl =
         _useDriveUrl && _toDriveDownloadUrl(_driveUrlCtrl.text) != null;
 
@@ -301,9 +307,9 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
       // ── PDF source toggle ────────────────────────────────────────────────
       Container(
         decoration: BoxDecoration(
-          color: EkklisiaColors.bgElevated,
+          color: ac.bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+          border: Border.all(color: ac.goldBorder, width: 0.5),
         ),
         child: Row(children: [
           Expanded(child: _ToggleTab(
@@ -316,7 +322,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
               _driveUrlError = null;
             }),
           )),
-          Container(width: 0.5, height: 44, color: EkklisiaColors.goldBorder),
+          Container(width: 0.5, height: 44, color: ac.goldBorder),
           Expanded(child: _ToggleTab(
             label: 'Google Drive',
             labelAr: 'Google Drive',
@@ -348,8 +354,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
               ? '${_pdfSizeMb!.toStringAsFixed(2)} MB'
               : null,
           borderColor: (_pdfFile != null || _pdfBytes != null)
-              ? EkklisiaColors.tealMid
-              : EkklisiaColors.goldBorder,
+              ? ac.tealMid
+              : ac.goldBorder,
           onTap: _pickPdf,
         ),
       ] else ...[
@@ -357,53 +363,53 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: EkklisiaColors.bgElevated,
+            color: ac.bgElevated,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: hasDriveUrl
-                  ? EkklisiaColors.tealMid
-                  : EkklisiaColors.goldBorder,
+                  ? ac.tealMid
+                  : ac.goldBorder,
               width: hasDriveUrl ? 1.5 : 0.5,
             ),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              const Icon(Icons.drive_folder_upload_outlined,
-                  color: EkklisiaColors.gold, size: 18),
-              const SizedBox(width: 8),
-              const Text('Google Drive Link',
+              Icon(Icons.drive_folder_upload_outlined,
+                  color: ac.gold, size: 18),
+              SizedBox(width: 8),
+              Text('Google Drive Link',
                   style: TextStyle(
-                      color: EkklisiaColors.textPrimary,
+                      color: ac.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 13)),
-              const Spacer(),
+              Spacer(),
               if (hasDriveUrl)
-                const Icon(Icons.check_circle_outline,
-                    color: EkklisiaColors.tealMid, size: 16),
+                Icon(Icons.check_circle_outline,
+                    color: ac.tealMid, size: 16),
             ]),
-            const SizedBox(height: 4),
-            const Text(
+            SizedBox(height: 4),
+            Text(
               'Paste a "Anyone with link" sharing URL — no size limit',
               style: TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 11),
+                  color: ac.textSecondary, fontSize: 11),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextField(
               controller: _driveUrlCtrl,
-              style: const TextStyle(
-                  color: EkklisiaColors.textPrimary, fontSize: 13),
+              style: TextStyle(
+                  color: ac.textPrimary, fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'https://drive.google.com/file/d/…/view',
-                hintStyle: const TextStyle(
-                    color: EkklisiaColors.textSecondary, fontSize: 12),
+                hintStyle: TextStyle(
+                    color: ac.textSecondary, fontSize: 12),
                 errorText: _driveUrlError,
-                prefixIcon: const Icon(Icons.link,
-                    color: EkklisiaColors.goldDim, size: 18),
+                prefixIcon: Icon(Icons.link,
+                    color: ac.goldDim, size: 18),
                 suffixIcon: _driveUrlCtrl.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close,
+                        icon: Icon(Icons.close,
                             size: 16,
-                            color: EkklisiaColors.textSecondary),
+                            color: ac.textSecondary),
                         onPressed: () => setState(() {
                           _driveUrlCtrl.clear();
                           _driveUrlError = null;
@@ -411,28 +417,28 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: EkklisiaColors.bgMid,
+                fillColor: ac.bgMid,
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 10),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                      color: EkklisiaColors.goldBorder, width: 0.5),
+                  borderSide: BorderSide(
+                      color: ac.goldBorder, width: 0.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                      color: EkklisiaColors.gold, width: 1.2),
+                  borderSide: BorderSide(
+                      color: ac.gold, width: 1.2),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide:
-                      const BorderSide(color: Colors.redAccent, width: 1),
+                      BorderSide(color: Colors.redAccent, width: 1),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide:
-                      const BorderSide(color: Colors.redAccent, width: 1.2),
+                      BorderSide(color: Colors.redAccent, width: 1.2),
                 ),
               ),
               onChanged: (v) {
@@ -455,14 +461,14 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.check,
-                      color: EkklisiaColors.tealMid, size: 13),
-                  const SizedBox(width: 6),
+                  Icon(Icons.check,
+                      color: ac.tealMid, size: 13),
+                  SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       _toDriveDownloadUrl(_driveUrlCtrl.text)!,
-                      style: const TextStyle(
-                          color: EkklisiaColors.tealMid,
+                      style: TextStyle(
+                          color: ac.tealMid,
                           fontSize: 10),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -489,8 +495,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             ? 'Cover selected'
             : null,
         borderColor: (_coverFile != null || _coverBytes != null)
-            ? EkklisiaColors.tealMid
-            : EkklisiaColors.goldBorder,
+            ? ac.tealMid
+            : ac.goldBorder,
         leadingWidget: (_coverFile != null || _coverBytes != null)
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(6),
@@ -517,6 +523,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // STEP 1 — METADATA
   // ════════════════════════════════════════════════════════════════════════
   Widget _metadataStep() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return Form(
       key: _formKey,
       child: Column(children: [
@@ -558,12 +566,12 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             _label('Category *'),
             const SizedBox(height: 6),
             _categoriesLoading
-                ? const SizedBox(
+                ? SizedBox(
                     height: 48,
                     child: Center(
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: EkklisiaColors.gold),
+                          color: ac.gold),
                     ),
                   )
                 : DropdownButtonFormField<String>(
@@ -571,9 +579,9 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                             _categories.any((c) => c.id == _category)
                         ? _category
                         : null,
-                    dropdownColor: EkklisiaColors.bgElevated,
-                    style: const TextStyle(
-                        color: EkklisiaColors.textPrimary, fontSize: 14),
+                    dropdownColor: ac.bgElevated,
+                    style: TextStyle(
+                        color: ac.textPrimary, fontSize: 14),
                     decoration: _inputDec(hint: 'Select a category'),
                     items: {for (final c in _categories) c.id: c}
                         .values
@@ -581,9 +589,9 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                               value: c.id,
                               child: Text(
                                 c.nameAr,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontFamily: 'Scheherazade',
-                                    color: EkklisiaColors.textPrimary),
+                                    color: ac.textPrimary),
                               ),
                             ))
                         .toList(),
@@ -630,7 +638,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
               value:   _publishNow,
               onChange:(v) => setState(() => _publishNow = v),
             ),
-            const Divider(height: 20, color: EkklisiaColors.goldBorder),
+            Divider(height: 20, color: ac.goldBorder),
             _ToggleRow(
               label:   'Send Push Notification',
               labelAr: 'إرسال إشعار',
@@ -659,6 +667,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // STEP 2 — REVIEW
   // ════════════════════════════════════════════════════════════════════════
   Widget _reviewStep() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     if (_uploading || _done) return _uploadProgress();
 
     return Column(children: [
@@ -681,20 +691,20 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: EkklisiaColors.goldSubtle,
+            color: ac.goldSubtle,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+                color: ac.goldBorder, width: 0.5),
           ),
-          child: const Row(children: [
+          child: Row(children: [
             Icon(Icons.notifications_active_outlined,
-                size: 18, color: EkklisiaColors.gold),
+                size: 18, color: ac.gold),
             SizedBox(width: 10),
             Expanded(child: Text(
               'A push notification will be sent to all registered devices '
                   'via the Supabase send-notifications edge function.',
               style: TextStyle(
-                  color: EkklisiaColors.textSecondary, fontSize: 12,
+                  color: ac.textSecondary, fontSize: 12,
                   height: 1.5),
             )),
           ]),
@@ -706,7 +716,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
         onNext: _upload,
         nextLabel: 'Upload & Publish',
         nextIcon: Icons.upload,
-        nextColor: EkklisiaColors.gold,
+        nextColor: ac.gold,
       ),
     ]);
   }
@@ -714,6 +724,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
   // ── Upload Progress ───────────────────────────────────────────────────────
 
   Widget _uploadProgress() {
+    final ac = AdminC(Theme.of(context).brightness);
+
     return _AdminCard(
       title: _done ? '✓  Upload Complete' : 'Uploading…',
       titleAr: _done ? 'اكتمل الرفع' : 'جارٍ الرفع…',
@@ -733,11 +745,11 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             progress: _dbProgress, done: _dbProgress >= 1),
         const SizedBox(height: 16),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: Duration(milliseconds: 300),
           child: Text(_progressStep,
               key: ValueKey(_progressStep),
-              style: const TextStyle(
-                  color: EkklisiaColors.textSecondary,
+              style: TextStyle(
+                  color: ac.textSecondary,
                   fontSize: 12, fontStyle: FontStyle.italic)),
         ),
         if (_done) ...[
@@ -747,8 +759,8 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
             child: ElevatedButton(
               onPressed: () => context.go(Routes.adminBooks),
               style: ElevatedButton.styleFrom(
-                backgroundColor: EkklisiaColors.gold,
-                foregroundColor: EkklisiaColors.bgDeep,
+                backgroundColor: ac.gold,
+                foregroundColor: ac.bgDeep,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
@@ -764,39 +776,22 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  Widget _label(String text) => Padding(
+  InputDecoration _inputDec({required String hint, bool counter = false}) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return ac.inputDeco(hint);
+  }
+
+  Widget _label(String text) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Padding(
     padding: const EdgeInsets.only(bottom: 0),
-    child: Text(text, style: const TextStyle(
-      color: EkklisiaColors.textSecondary,
+    child: Text(text, style: TextStyle(
+      color: ac.textSecondary,
       fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8,
     )),
-  );
+    );
+  }
 
-  InputDecoration _inputDec({String hint = ''}) => InputDecoration(
-    hintText:       hint,
-    hintStyle:      const TextStyle(
-        color: EkklisiaColors.textSecondary, fontSize: 13),
-    filled:         true,
-    fillColor:      EkklisiaColors.bgElevated,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    enabledBorder:  OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(
-          color: EkklisiaColors.goldBorder, width: 0.5),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: EkklisiaColors.gold, width: 1.5),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Colors.redAccent),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-    ),
-  );
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -811,6 +806,7 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(children: List.generate(_steps.length * 2 - 1, (i) {
       if (i.isOdd) {
         // Connector line
@@ -818,44 +814,44 @@ class _Stepper extends StatelessWidget {
         return Expanded(child: Container(
             height: 1,
             color: filled
-                ? EkklisiaColors.gold
-                : EkklisiaColors.goldBorder));
+                ? ac.gold
+                : ac.goldBorder));
       }
       final idx  = i ~/ 2;
       final done = idx < current;
       final active = idx == current;
       return Column(mainAxisSize: MainAxisSize.min, children: [
         AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: Duration(milliseconds: 250),
           width: 28, height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: done
-                ? EkklisiaColors.gold
+                ? ac.gold
                 : active
-                ? EkklisiaColors.goldSubtle
+                ? ac.goldSubtle
                 : Colors.transparent,
             border: Border.all(
               color: (done || active)
-                  ? EkklisiaColors.gold
-                  : EkklisiaColors.goldBorder,
+                  ? ac.gold
+                  : ac.goldBorder,
               width: 1.5,
             ),
           ),
           child: Center(child: done
-              ? const Icon(Icons.check,
-              size: 14, color: EkklisiaColors.bgDeep)
+              ? Icon(Icons.check,
+              size: 14, color: ac.bgDeep)
               : Text('${idx + 1}', style: TextStyle(
               color: active
-                  ? EkklisiaColors.gold
-                  : EkklisiaColors.textSecondary,
+                  ? ac.gold
+                  : ac.textSecondary,
               fontSize: 11, fontWeight: FontWeight.w700))),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(_steps[idx], style: TextStyle(
           color: active
-              ? EkklisiaColors.textPrimary
-              : EkklisiaColors.textSecondary,
+              ? ac.textPrimary
+              : ac.textSecondary,
           fontSize: 9, fontWeight: FontWeight.w500,
         )),
       ]);
@@ -882,6 +878,7 @@ class _ToggleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -889,7 +886,7 @@ class _ToggleTab extends StatelessWidget {
         height: 44,
         decoration: BoxDecoration(
           color: selected
-              ? EkklisiaColors.goldSubtle
+              ? ac.goldSubtle
               : Colors.transparent,
           borderRadius: BorderRadius.circular(9),
         ),
@@ -897,15 +894,15 @@ class _ToggleTab extends StatelessWidget {
           Icon(icon,
               size: 15,
               color: selected
-                  ? EkklisiaColors.gold
-                  : EkklisiaColors.textSecondary),
+                  ? ac.gold
+                  : ac.textSecondary),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               color: selected
-                  ? EkklisiaColors.goldLight
-                  : EkklisiaColors.textSecondary,
+                  ? ac.goldLight
+                  : ac.textSecondary,
               fontSize: 12,
               fontWeight:
                   selected ? FontWeight.w700 : FontWeight.w400,
@@ -945,13 +942,14 @@ class _DropZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color:        EkklisiaColors.bgMid,
+          color:        ac.bgMid,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: borderColor, width: hasFile ? 1.0 : 0.5,
@@ -960,13 +958,13 @@ class _DropZone extends StatelessWidget {
         child: Row(children: [
           if (leadingWidget != null) ...[
             leadingWidget!,
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
           ] else ...[
             Icon(hasFile ? Icons.check_circle_outline : icon,
                 size: 28,
                 color: hasFile
-                    ? EkklisiaColors.tealMid
-                    : EkklisiaColors.goldDim),
+                    ? ac.tealMid
+                    : ac.goldDim),
             const SizedBox(width: 14),
           ],
           Expanded(child: Column(
@@ -975,25 +973,25 @@ class _DropZone extends StatelessWidget {
               Text(hasFile ? (fileName ?? title) : title,
                   style: TextStyle(
                       color: hasFile
-                          ? EkklisiaColors.textPrimary
-                          : EkklisiaColors.textSecondary,
+                          ? ac.textPrimary
+                          : ac.textSecondary,
                       fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Text(
                 hasFile
                     ? (fileInfo ?? 'Tap to change')
                     : subtitle,
-                style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
+                style: TextStyle(
+                    color: ac.textSecondary,
                     fontSize: 11),
               ),
-              Text(titleAr, style: const TextStyle(
+              Text(titleAr, style: TextStyle(
                   fontFamily: 'Scheherazade',
-                  color: EkklisiaColors.textSecondary, fontSize: 11)),
+                  color: ac.textSecondary, fontSize: 11)),
             ],
           )),
           Icon(Icons.chevron_right,
-              color: EkklisiaColors.goldDim, size: 18),
+              color: ac.goldDim, size: 18),
         ]),
       ),
     );
@@ -1009,27 +1007,28 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgMid,
+        color: ac.bgMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: EkklisiaColors.goldBorder, width: 0.5),
+        border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(width: 3, height: 16,
               decoration: BoxDecoration(
-                  color: EkklisiaColors.gold,
+                  color: ac.gold,
                   borderRadius: BorderRadius.circular(2))),
-          const SizedBox(width: 8),
-          Text(title, style: const TextStyle(
-              color: EkklisiaColors.textPrimary,
+          SizedBox(width: 8),
+          Text(title, style: TextStyle(
+              color: ac.textPrimary,
               fontSize: 13, fontWeight: FontWeight.w700)),
-          const SizedBox(width: 6),
-          Text(titleAr, style: const TextStyle(
+          SizedBox(width: 6),
+          Text(titleAr, style: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary, fontSize: 12)),
+              color: ac.textSecondary, fontSize: 12)),
         ]),
         const SizedBox(height: 16),
         child,
@@ -1056,50 +1055,51 @@ class _ArabicField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Text(label, style: const TextStyle(
-            color: EkklisiaColors.textSecondary,
+        Text(label, style: TextStyle(
+            color: ac.textSecondary,
             fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-        const SizedBox(width: 6),
-        Text(labelAr, style: const TextStyle(
+        SizedBox(width: 6),
+        Text(labelAr, style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textSecondary, fontSize: 11)),
+            color: ac.textSecondary, fontSize: 11)),
       ]),
       const SizedBox(height: 6),
       TextFormField(
         controller:    controller,
         textDirection: TextDirection.rtl,
         maxLines:      maxLines,
-        style: const TextStyle(
+        style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textPrimary, fontSize: 15),
+            color: ac.textPrimary, fontSize: 15),
         decoration: InputDecoration(
           hintText:  hint,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
               fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textSecondary, fontSize: 14),
+              color: ac.textSecondary, fontSize: 14),
           filled:    true,
-          fillColor: EkklisiaColors.bgElevated,
+          fillColor: ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.5),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.redAccent),
+            borderSide: BorderSide(color: Colors.redAccent),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
+            borderSide: BorderSide(
                 color: Colors.redAccent, width: 1.5),
           ),
         ),
@@ -1122,32 +1122,33 @@ class _AdminField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(
-          color: EkklisiaColors.textSecondary,
+      Text(label, style: TextStyle(
+          color: ac.textSecondary,
           fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
-      const SizedBox(height: 6),
+      SizedBox(height: 6),
       TextField(
         controller: controller,
-        style: const TextStyle(
-            color: EkklisiaColors.textPrimary, fontSize: 13),
+        style: TextStyle(
+            color: ac.textPrimary, fontSize: 13),
         decoration: InputDecoration(
           hintText:  hint,
-          hintStyle: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 12),
+          hintStyle: TextStyle(
+              color: ac.textSecondary, fontSize: 12),
           filled:    true,
-          fillColor: EkklisiaColors.bgElevated,
+          fillColor: ac.bgElevated,
           contentPadding: const EdgeInsets.symmetric(
               horizontal: 12, vertical: 11),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            borderSide: BorderSide(
+                color: ac.goldBorder, width: 0.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-                color: EkklisiaColors.gold, width: 1.5),
+            borderSide: BorderSide(
+                color: ac.gold, width: 1.5),
           ),
         ),
       ),
@@ -1169,33 +1170,34 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(children: [
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Text(label, style: const TextStyle(
-                color: EkklisiaColors.textPrimary,
+            Text(label, style: TextStyle(
+                color: ac.textPrimary,
                 fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(width: 6),
-            Text(labelAr, style: const TextStyle(
+            SizedBox(width: 6),
+            Text(labelAr, style: TextStyle(
                 fontFamily: 'Scheherazade',
-                color: EkklisiaColors.textSecondary, fontSize: 12)),
+                color: ac.textSecondary, fontSize: 12)),
           ]),
-          const SizedBox(height: 2),
-          Text(sub, style: const TextStyle(
-              color: EkklisiaColors.textSecondary, fontSize: 11)),
+          SizedBox(height: 2),
+          Text(sub, style: TextStyle(
+              color: ac.textSecondary, fontSize: 11)),
         ],
       )),
       const SizedBox(width: 16),
       GestureDetector(
         onTap: () => onChange(!value),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: Duration(milliseconds: 200),
           width: 44, height: 24,
           color: value
-              ? EkklisiaColors.gold
-              : EkklisiaColors.bgElevated,
+              ? ac.gold
+              : ac.bgElevated,
           child: Stack(children: [
             AnimatedPositioned(
               duration: const Duration(milliseconds: 200),
@@ -1204,8 +1206,8 @@ class _ToggleRow extends StatelessWidget {
                   width: 18, height: 18, decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: value
-                    ? EkklisiaColors.bgDeep
-                    : EkklisiaColors.textSecondary,
+                    ? ac.bgDeep
+                    : ac.textSecondary,
               )),
             ),
           ]),
@@ -1223,20 +1225,21 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SizedBox(
           width: 110,
-          child: Text(label, style: const TextStyle(
-              color: EkklisiaColors.textSecondary,
+          child: Text(label, style: TextStyle(
+              color: ac.textSecondary,
               fontSize: 11, fontWeight: FontWeight.w500)),
         ),
         Expanded(child: Text(value,
             textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
             style: TextStyle(
               fontFamily: rtl ? 'Scheherazade' : null,
-              color: EkklisiaColors.textPrimary,
+              color: ac.textPrimary,
               fontSize: rtl ? 14 : 12,
             ))),
       ]),
@@ -1255,16 +1258,17 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(label, style: const TextStyle(
-            color: EkklisiaColors.textSecondary, fontSize: 12)),
+        Text(label, style: TextStyle(
+            color: ac.textSecondary, fontSize: 12)),
         Text(
           done ? 'Done ✓' : '${(progress * 100).round()}%',
           style: TextStyle(
             color: done
-                ? EkklisiaColors.tealMid
-                : EkklisiaColors.gold,
+                ? ac.tealMid
+                : ac.gold,
             fontSize: 11, fontWeight: FontWeight.w700,
           ),
         ),
@@ -1275,9 +1279,9 @@ class _ProgressBar extends StatelessWidget {
         child: LinearProgressIndicator(
           value: progress,
           minHeight: 6,
-          backgroundColor: EkklisiaColors.bgElevated,
+          backgroundColor: ac.bgElevated,
           valueColor: AlwaysStoppedAnimation(
-              done ? EkklisiaColors.tealMid : EkklisiaColors.gold),
+              done ? ac.tealMid : ac.gold),
         ),
       ),
     ]);
@@ -1285,12 +1289,12 @@ class _ProgressBar extends StatelessWidget {
 }
 
 class _StepNavRow extends StatelessWidget {
-  const _StepNavRow({
+  _StepNavRow({
     this.onBack,
     this.onNext,
     this.nextLabel = 'Continue',
     this.nextIcon,
-    this.nextColor = EkklisiaColors.gold,
+    this.nextColor = EkklisiaColors.darkGold,
   });
   final VoidCallback? onBack;
   final VoidCallback? onNext;
@@ -1300,14 +1304,15 @@ class _StepNavRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
     return Row(children: [
       if (onBack != null) ...[
         OutlinedButton(
           onPressed: onBack,
           style: OutlinedButton.styleFrom(
-            foregroundColor: EkklisiaColors.textSecondary,
-            side: const BorderSide(
-                color: EkklisiaColors.goldBorder, width: 0.5),
+            foregroundColor: ac.textSecondary,
+            side: BorderSide(
+                color: ac.goldBorder, width: 0.5),
             padding: const EdgeInsets.symmetric(
                 horizontal: 20, vertical: 13),
             shape: RoundedRectangleBorder(
@@ -1324,16 +1329,16 @@ class _StepNavRow extends StatelessWidget {
           icon: Icon(nextIcon ?? Icons.arrow_forward,
               size: 18,
               color: onNext == null
-                  ? EkklisiaColors.textSecondary
-                  : EkklisiaColors.bgDeep),
+                  ? ac.textSecondary
+                  : ac.bgDeep),
           label: Text(nextLabel,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14, fontWeight: FontWeight.w700)),
           style: ElevatedButton.styleFrom(
             backgroundColor: onNext == null
-                ? EkklisiaColors.goldDim.withOpacity(0.4)
+                ? ac.goldDim.withOpacity(0.4)
                 : nextColor,
-            foregroundColor: EkklisiaColors.bgDeep,
+            foregroundColor: ac.bgDeep,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
