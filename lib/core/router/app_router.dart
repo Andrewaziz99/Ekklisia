@@ -144,12 +144,15 @@ class AppRouter {
       }
 
       // ── Splash: check first-launch language selection ──────────────
+      // Return null here — the SplashScreen navigates to home itself
+      // after its animation finishes. Returning Routes.home would jump
+      // away the moment Firebase resolves auth, skipping the animation.
       if (loc == Routes.splash) {
         final settingsService = sl<SettingsService>();
         if (!settingsService.isLanguageSelected) {
           return Routes.languageSelection;
         }
-        return Routes.home;
+        return null; // stay on splash; SplashScreen._runSequence navigates away
       }
 
       // ── Language selection: skip if already done ───────────────────

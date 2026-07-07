@@ -77,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 200));
     await _textCtrl.forward();
     // Stay for a moment then navigate
-    await Future.delayed(const Duration(milliseconds: 1800));
+    await Future.delayed(const Duration(milliseconds: 4500));
     if (mounted) context.go(Routes.home);
   }
 

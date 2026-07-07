@@ -82,9 +82,11 @@ dependencies:
   http: ^1.2.2
 
 
-  # ── PDF Viewer + programmatic PDF ────────────────────────────
-  # Community free license — no registration needed for basic usage
-  syncfusion_flutter_pdfviewer: ^29.1.38
+  # ── PDF Viewer ────────────────────────────────────────────────
+  # pdfx uses platform-native rendering (PDFKit/PdfRenderer) — no inter-page lag
+  pdfx: ^2.8.0
+
+  # ── Programmatic PDF (page counting on upload) ────────────────
   syncfusion_flutter_pdf: ^29.1.38       # page counting without a UI widget
   syncfusion_flutter_core: ^29.2.11
 

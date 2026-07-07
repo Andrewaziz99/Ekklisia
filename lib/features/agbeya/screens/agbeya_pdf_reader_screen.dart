@@ -1,18 +1,16 @@
 // lib/features/agbeya/screens/agbeya_pdf_reader_screen.dart
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase 1 reader: PDF viewer + persistent audio strip.
+// Phase 1 reader: PDF viewer (pdfx) + persistent audio strip.
 //
 // Layout:
-//   • Full-screen Syncfusion PDF viewer (same as existing PdfViewerScreen)
-//   • Auto-starts the hour's audio on open (if not already playing)
-//   • Persistent audio strip pinned at the bottom — always visible so the
-//     user can control playback without leaving the PDF
+//   • Full-screen pdfx PDF viewer — platform-native bitmap rendering, no lag
+//   • Auto-starts the hour's audio on open (if not already playing it)
+//   • Persistent audio strip pinned at the bottom — always visible
 //   • Tap the audio strip → opens FullAudioPlayerSheet for full controls
 //   • Navigating away (back) leaves audio running in the background
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../data/models/agbeya_model.dart';
@@ -37,27 +35,26 @@ class AgbeyaPdfReaderScreen extends StatefulWidget {
 }
 
 class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
-  late final PdfViewerController _pdfCtrl;
-  final _pdfKey = GlobalKey<SfPdfViewerState>();
+  // Set by CachedPdfViewer once document is open
+  PdfScrollController? _pdfCtrl;
+
+  // Page tracking — ValueNotifier avoids full-screen rebuilds on every scroll
+  final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(1);
 
   bool _showToolbar = true;
-  bool _isLoading = true;
-  bool _hasError = false;
-  int _currentPage = 1;
   int _totalPages = 0;
   _ReadingMode _mode = _ReadingMode.dark;
 
   @override
   void initState() {
     super.initState();
-    _pdfCtrl = PdfViewerController();
-    // Auto-start audio for this hour if not already playing it
     WidgetsBinding.instance.addPostFrameCallback((_) => _autoStartAudio());
   }
 
   @override
   void dispose() {
-    _pdfCtrl.dispose();
+    // _pdfCtrl lifecycle owned by CachedPdfViewer
+    _pageNotifier.dispose();
     super.dispose();
   }
 
@@ -67,7 +64,6 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
     final isCurrent =
         cubit.state.currentItem?.extras?['hourId'] == widget.hour.id;
     if (!isCurrent) {
-      // Use playOrPickTrack — shows picker when multi-track, plays directly otherwise
       await playOrPickTrack(context, widget.hour, cubit);
     }
   }
@@ -88,7 +84,8 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
     return Scaffold(
       backgroundColor: _bgColor,
       body: GestureDetector(
-        onTap: () => setState(() => _showToolbar = !_showToolbar),
+        behavior: HitTestBehavior.translucent,
+        onTapUp: (_) => setState(() => _showToolbar = !_showToolbar),
         child: Stack(
           children: [
             // ── PDF Viewer ──────────────────────────────────────────────────
@@ -98,43 +95,31 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                 padding: const EdgeInsets.only(bottom: _AudioStrip.height),
                 child: CachedPdfViewer(
                   url: widget.hour.pdfUrl,
-                  pdfKey: _pdfKey,
-                  controller: _pdfCtrl,
-                  enableDoubleTapZooming: true,
-                  enableTextSelection: true,
-                  canShowScrollHead: true,
-                  canShowScrollStatus: true,
-                  scrollDirection: PdfScrollDirection.vertical,
-                  pageLayoutMode: PdfPageLayoutMode.continuous,
-                  initialZoomLevel: 1.0,
-                  onDocumentLoaded: (d) => setState(() {
-                    _isLoading = false;
-                    _totalPages = d.document.pages.count;
-                  }),
-                  onDocumentLoadFailed: (d) {
-                    setState(() {
-                      _isLoading = false;
-                      _hasError = true;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(d.description),
-                        backgroundColor: EkklisiaColors.maroon,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                  scrollDirection: Axis.vertical,
+                  pageSnapping: false,
+                  onControllerReady: (ctrl) {
+                    _pdfCtrl = ctrl;
                   },
-                  onPageChanged: (d) =>
-                      setState(() => _currentPage = d.newPageNumber),
+                  onDocumentLoaded: (totalPages) {
+                    setState(() => _totalPages = totalPages);
+                  },
+                  onDocumentLoadFailed: (error) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(error.toString()),
+                          backgroundColor: EkklisiaColors.maroon,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  onPageChanged: (page) {
+                    _pageNotifier.value = page;
+                  },
                 ),
               ),
             ),
-
-            // ── Loading overlay ─────────────────────────────────────────────
-            if (_isLoading) _buildLoadingOverlay(),
-
-            // ── Error overlay ───────────────────────────────────────────────
-            if (_hasError) _buildErrorOverlay(),
 
             // ── Top toolbar (auto-hides on tap) ─────────────────────────────
             AnimatedSlide(
@@ -154,7 +139,10 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                   offset: _showToolbar ? Offset.zero : const Offset(0, 1),
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOut,
-                  child: _buildPageBar(),
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _pageNotifier,
+                    builder: (_, page, __) => _buildPageBar(page),
+                  ),
                 ),
               ),
 
@@ -232,11 +220,6 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                   .values[(_mode.index + 1) % _ReadingMode.values.length];
             }),
           ),
-          IconButton(
-            tooltip: 'بحث',
-            icon: const Icon(Icons.search, color: EkklisiaColors.gold),
-            onPressed: () => _pdfKey.currentState?.openBookmarkView(),
-          ),
         ],
       ),
     );
@@ -244,7 +227,7 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
 
   // ── Page navigation bar ────────────────────────────────────────────────────
 
-  Widget _buildPageBar() {
+  Widget _buildPageBar(int page) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -258,14 +241,19 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left, color: EkklisiaColors.gold),
-            onPressed: _currentPage > 1 ? () => _pdfCtrl.previousPage() : null,
+            onPressed: (_pdfCtrl != null && page > 1)
+                ? () => _pdfCtrl!.previousPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    )
+                : null,
           ),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '$_currentPage / $_totalPages',
+                  '$page / $_totalPages',
                   style: const TextStyle(
                     color: EkklisiaColors.textSecondary,
                     fontSize: 11,
@@ -284,10 +272,12 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                     ),
                   ),
                   child: Slider(
-                    value: _currentPage.toDouble(),
+                    value: page.toDouble(),
                     min: 1,
                     max: _totalPages.toDouble(),
-                    onChanged: (v) => _pdfCtrl.jumpToPage(v.round()),
+                    // Visual-only during drag — jumpToPage only on release
+                    onChanged: (_) {},
+                    onChangeEnd: (v) => _pdfCtrl?.jumpToPage(v.round()),
                   ),
                 ),
               ],
@@ -295,75 +285,17 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right, color: EkklisiaColors.gold),
-            onPressed: _currentPage < _totalPages
-                ? () => _pdfCtrl.nextPage()
+            onPressed: (_pdfCtrl != null && page < _totalPages)
+                ? () => _pdfCtrl!.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    )
                 : null,
           ),
         ],
       ),
     );
   }
-
-  // ── Overlays ───────────────────────────────────────────────────────────────
-
-  Widget _buildLoadingOverlay() => Container(
-    color: EkklisiaColors.bgPrimary,
-    child: const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          '✦',
-          style: TextStyle(color: EkklisiaColors.goldDim, fontSize: 32),
-        ),
-        SizedBox(height: 24),
-        CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation(EkklisiaColors.gold),
-          strokeWidth: 2,
-        ),
-        SizedBox(height: 16),
-        Text(
-          'جاري تحميل الأجبية…',
-          style: TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkklisiaColors.textSecondary,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildErrorOverlay() => Container(
-    color: EkklisiaColors.bgPrimary,
-    child: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline, size: 56, color: Colors.redAccent),
-          const SizedBox(height: 16),
-          const Text(
-            'تعذّر تحميل الملف',
-            style: TextStyle(
-              fontFamily: 'Scheherazade',
-              color: EkklisiaColors.textPrimary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: () => setState(() {
-              _hasError = false;
-              _isLoading = true;
-            }),
-            child: const Text(
-              'إعادة المحاولة',
-              style: TextStyle(fontFamily: 'Scheherazade'),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 
   IconData get _modeIcon {
     switch (_mode) {
@@ -378,14 +310,11 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
 }
 
 // ── Audio Strip ────────────────────────────────────────────────────────────────
-// Persistent bar pinned at the very bottom of the screen.
-// Always visible so audio can be controlled without exiting the reader.
 
 class _AudioStrip extends StatelessWidget {
   const _AudioStrip({required this.hour});
   final AgbeyaHour hour;
 
-  // Fixed height used by the PDF viewer padding above
   static const double height = 72;
 
   @override
@@ -439,7 +368,6 @@ class _AudioStrip extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Progress micro-bar (only when this hour is playing)
         if (isCurrent && state.duration > Duration.zero)
           LinearProgressIndicator(
             value: state.progress,
@@ -453,7 +381,6 @@ class _AudioStrip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: [
-                // Cross / cover thumbnail
                 Container(
                   width: 36,
                   height: 36,
@@ -478,7 +405,6 @@ class _AudioStrip extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
 
-                // Title + time
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -517,13 +443,11 @@ class _AudioStrip extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
 
-                // ⏪ -10s
                 _StripBtn(
                   icon: Icons.replay_10,
                   onTap: isCurrent ? cubit.skipBackward : null,
                 ),
 
-                // ▶ / ❚❚
                 _PlayPauseBtn(
                   state: state,
                   isCurrent: isCurrent,
@@ -536,13 +460,11 @@ class _AudioStrip extends StatelessWidget {
                   },
                 ),
 
-                // ⏩ +30s
                 _StripBtn(
                   icon: Icons.forward_30,
                   onTap: isCurrent ? cubit.skipForward : null,
                 ),
 
-                // Expand chevron (hint to tap for full player)
                 const Icon(Icons.expand_less, color: _kGold, size: 18),
               ],
             ),

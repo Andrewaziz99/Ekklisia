@@ -11,7 +11,6 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../core/theme/brightness_colors.dart';
 import '../../shared/widgets/cached_pdf_viewer.dart';
@@ -54,25 +53,17 @@ class GenericPdfViewerScreen extends StatefulWidget {
 }
 
 class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
-  late final PdfViewerController _pdfController;
-  final GlobalKey<SfPdfViewerState> _pdfKey = GlobalKey();
+  // Set by CachedPdfViewer once the document is open
+  PdfScrollController? _pdfCtrl;
 
   bool _showToolbar = true;
-  // _isLoading removed — CachedPdfViewer renders its own loading/error overlay.
-  // We only track page count (set once the document is parsed by SfPdfViewer).
-  int _currentPage = 1;
-  int _totalPages  = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pdfController = PdfViewerController();
-    // System UI overlay is managed globally by app.dart based on theme mode.
-  }
+  final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(1);
+  int _totalPages = 0;
 
   @override
   void dispose() {
-    _pdfController.dispose();
+    // _pdfCtrl lifecycle owned by CachedPdfViewer
+    _pageNotifier.dispose();
     super.dispose();
   }
 
@@ -110,26 +101,16 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
                       : _NoPdfPlaceholder(hasVideo: false))
                   : CachedPdfViewer(
                       url: widget.url,
-                      pdfKey: _pdfKey,
-                      controller: _pdfController,
-                      enableDoubleTapZooming: true,
-                      enableTextSelection: true,
-                      canShowScrollHead: true,
-                      canShowScrollStatus: false,
-                      scrollDirection: PdfScrollDirection.vertical,
-                      pageLayoutMode: PdfPageLayoutMode.continuous,
-                      initialZoomLevel: 1.0,
-                      onDocumentLoaded: (d) {
-                        if (mounted) {
-                          setState(() {
-                            _totalPages = d.document.pages.count;
-                          });
-                        }
+                      scrollDirection: Axis.vertical,
+                      pageSnapping: false,
+                      onControllerReady: (ctrl) {
+                        _pdfCtrl = ctrl;
                       },
-                      onPageChanged: (d) {
-                        if (mounted) {
-                          setState(() => _currentPage = d.newPageNumber);
-                        }
+                      onDocumentLoaded: (totalPages) {
+                        if (mounted) setState(() => _totalPages = totalPages);
+                      },
+                      onPageChanged: (page) {
+                        _pageNotifier.value = page;
                       },
                     ),
             ),
@@ -153,7 +134,11 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
                   duration: const Duration(milliseconds: 250),
                   child: IgnorePointer(
                     ignoring: !_showToolbar,
-                    child: _buildPageIndicator(context),
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _pageNotifier,
+                      builder: (ctx, page, _) =>
+                          _buildPageIndicator(ctx, page),
+                    ),
                   ),
                 ),
               ),
@@ -272,7 +257,7 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
 
   // ── Page Indicator ───────────────────────────────────────────────────────
 
-  Widget _buildPageIndicator(BuildContext context) {
+  Widget _buildPageIndicator(BuildContext context, int page) {
     final brightness    = Theme.of(context).brightness;
     final bgDeep        = BrightnessColors.bgDeep(brightness);
     final goldBorder    = BrightnessColors.goldBorder(brightness);
@@ -298,8 +283,11 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
         children: [
           _PageNavButton(
             icon: Icons.chevron_left,
-            enabled: _currentPage > 1,
-            onPressed: () => _pdfController.previousPage(),
+            enabled: _pdfCtrl != null && page > 1,
+            onPressed: () => _pdfCtrl?.previousPage(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+            ),
           ),
           const SizedBox(width: 16),
           Container(
@@ -310,7 +298,7 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
               border: Border.all(color: goldBorder, width: 0.5),
             ),
             child: Text(
-              'صفحة $_currentPage / $_totalPages',
+              'صفحة $page / $_totalPages',
               style: TextStyle(
                 fontFamily: 'Scheherazade',
                 color: textSecondary,
@@ -322,8 +310,11 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
           const SizedBox(width: 16),
           _PageNavButton(
             icon: Icons.chevron_right,
-            enabled: _currentPage < _totalPages,
-            onPressed: () => _pdfController.nextPage(),
+            enabled: _pdfCtrl != null && page < _totalPages,
+            onPressed: () => _pdfCtrl?.nextPage(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+            ),
           ),
         ],
       ),
