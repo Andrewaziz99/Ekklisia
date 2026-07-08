@@ -106,8 +106,8 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                   onDocumentLoadFailed: (error) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(error.toString()),
+                        const SnackBar(
+                          content: Text('تعذّر عرض هذه الصفحة، حاول مرة أخرى.'),
                           backgroundColor: EkklisiaColors.maroon,
                           behavior: SnackBarBehavior.floating,
                         ),

@@ -72,7 +72,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                   setState(() => _totalPages = totalPages);
                 },
                 onDocumentLoadFailed: (error) {
-                  _showErrorSnack(error.toString());
+                  _showErrorSnack('تعذّر عرض هذه الصفحة، حاول مرة أخرى.');
                 },
                 onPageChanged: (page) {
                   _pageNotifier.value = page;

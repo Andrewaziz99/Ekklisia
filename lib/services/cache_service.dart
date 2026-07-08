@@ -68,7 +68,11 @@ class CacheService {
   final CacheManager image = DefaultCacheManager();
 
   /// Total size of all caches in bytes.
+  ///
+  /// Always 0 on web: there's no local filesystem there (path_provider has
+  /// no web implementation), and the browser manages its own HTTP cache.
   Future<int> getSizeBytes() async {
+    if (kIsWeb) return 0;
     int total = 0;
     try {
       final dir = await getApplicationCacheDirectory();
@@ -91,7 +95,11 @@ class CacheService {
   }
 
   /// Clear all cached files (PDF, audio, image).
+  ///
+  /// No-op on web — flutter_cache_manager's disk cache (backed by
+  /// path_provider) doesn't exist there, so there's nothing to clear.
   Future<void> clearAll() async {
+    if (kIsWeb) return;
     await Future.wait([
       pdf.emptyCache(),
       audio.emptyCache(),
@@ -101,13 +109,15 @@ class CacheService {
   }
 
   /// Clear only PDF cache.
-  Future<void> clearPdf() => pdf.emptyCache();
+  Future<void> clearPdf() => kIsWeb ? Future<void>.value() : pdf.emptyCache();
 
   /// Clear only audio cache.
-  Future<void> clearAudio() => audio.emptyCache();
+  Future<void> clearAudio() =>
+      kIsWeb ? Future<void>.value() : audio.emptyCache();
 
   /// Clear only image cache.
-  Future<void> clearImages() => image.emptyCache();
+  Future<void> clearImages() =>
+      kIsWeb ? Future<void>.value() : image.emptyCache();
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 

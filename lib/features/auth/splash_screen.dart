@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/theme/brightness_colors.dart';
+
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/brightness_colors.dart';
 import '../../../core/widgets/app_logo.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,10 +34,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _crossScale = CurvedAnimation(
-      parent: _crossCtrl,
-      curve: Curves.elasticOut,
-    );
+    _crossScale = CurvedAnimation(parent: _crossCtrl, curve: Curves.elasticOut);
     _crossFade = CurvedAnimation(
       parent: _crossCtrl,
       curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
@@ -47,26 +45,21 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _textFade = CurvedAnimation(
-      parent: _textCtrl,
-      curve: Curves.easeIn,
-    );
+    _textFade = CurvedAnimation(parent: _textCtrl, curve: Curves.easeIn);
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _textCtrl,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _textCtrl, curve: Curves.easeOutCubic));
 
     // Ambient glow pulse
     _glowCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    _glowOpacity = Tween<double>(begin: 0.3, end: 0.7).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
-    );
+    _glowOpacity = Tween<double>(
+      begin: 0.3,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut));
 
     _runSequence();
   }
@@ -136,8 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: gold
-                          .withOpacity(_glowOpacity.value * 0.15),
+                      color: gold.withOpacity(_glowOpacity.value * 0.15),
                       blurRadius: 80,
                       spreadRadius: 30,
                     ),
@@ -177,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen>
 
           // ── Bottom ornamental band ────────────────────────────────────
           Positioned(
-            bottom: 0,
+            bottom: 100,
             left: 0,
             right: 0,
             child: FadeTransition(
@@ -195,11 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
     final goldDim = BrightnessColors.goldDim(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
 
-    final style = TextStyle(
-      color: goldDim,
-      fontSize: 18,
-      height: 1,
-    );
+    final style = TextStyle(color: goldDim, fontSize: 18, height: 1);
     final ornament = Text('❖', style: style);
 
     return [
@@ -245,9 +233,7 @@ class _AppTitle extends StatelessWidget {
             Container(width: 40, height: 0.5, color: goldDim),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text('✦',
-                  style: TextStyle(
-                      color: goldDim, fontSize: 10)),
+              child: Text('✦', style: TextStyle(color: goldDim, fontSize: 10)),
             ),
             Container(width: 40, height: 0.5, color: goldDim),
           ],
@@ -311,33 +297,36 @@ class _BottomBand extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [bgDeep, Colors.transparent],
-        ),
-      ),
       child: Column(
         children: [
           Text(
-            '✦  ✦  ✦',
-            style: TextStyle(
-              color: goldDim,
-              fontSize: 10,
-              letterSpacing: 8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'الكنيسة القبطية الأرثوذكسية',
+            'الكنيسة القبطية الأرثوذكسية للسيدة العذراء مريم\nوالقديس مار مرقس الرسول في اليونان',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Scheherazade',
               color: textSecondary,
               fontSize: 11,
             ),
           ),
+          const SizedBox(height: 5),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              'Η Κοπτορθόδοξη Εκκλησία της Παρθένου Μαρίας\nκαι του Αποστόλου Μάρκου εν Ελλάδι',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'GFSDidot',
+                color: textSecondary,
+                fontSize: 11,
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
+          Text(
+            '✦  ✦  ✦',
+            style: TextStyle(color: goldDim, fontSize: 10, letterSpacing: 8),
+          ),
+          const SizedBox(height: 8),
           // Clockfly copyright
           GestureDetector(
             behavior: HitTestBehavior.opaque,
