@@ -38,9 +38,87 @@ class ChurchesManagerScreen extends StatefulWidget {
   State<ChurchesManagerScreen> createState() => _ChurchesManagerScreenState();
 }
 
-class _ChurchesManagerScreenState extends State<ChurchesManagerScreen> {
+class _ChurchesManagerScreenState extends State<ChurchesManagerScreen> with TickerProviderStateMixin {
   final _repo = sl<ChurchesRepository>();
+  late TabController _tabController;
 
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+
+    return Column(
+      children: [
+        // ── Tab bar ─────────────────────────────────────────────────────
+        Container(
+          decoration: BoxDecoration(
+            color: ac.bgDeep,
+            border: Border(bottom: ac.borderSide),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(
+                text: l.churches,
+                height: 48,
+              ),
+              Tab(
+                text: 'Ιερείς • ${l.priests}',
+                height: 48,
+              ),
+            ],
+            labelColor: ac.gold,
+            unselectedLabelColor: ac.textSecondary,
+            indicatorColor: ac.gold,
+            labelStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
+        // ── Tab content ─────────────────────────────────────────────────
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              // Churches tab
+              _ChurchesTab(repo: _repo),
+              // Priests tab
+              _PriestsTab(repo: _repo),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CHURCHES TAB
+// ════════════════════════════════════════════════════════════════════════════
+
+class _ChurchesTab extends StatefulWidget {
+  const _ChurchesTab({required this.repo});
+  final ChurchesRepository repo;
+
+  @override
+  State<_ChurchesTab> createState() => _ChurchesTabState();
+}
+
+class _ChurchesTabState extends State<_ChurchesTab> {
   _ScreenMode _mode = _ScreenMode.list;
   ChurchModel? _editing;
 
@@ -53,9 +131,80 @@ class _ChurchesManagerScreenState extends State<ChurchesManagerScreen> {
   @override
   Widget build(BuildContext context) {
     if (_mode == _ScreenMode.edit) {
-      return _EditView(repo: _repo, initial: _editing, onDone: _backToList);
+      return _EditView(repo: widget.repo, initial: _editing, onDone: _backToList, showPriestSection: false);
     }
-    return _ListView(repo: _repo, onEdit: _openEdit);
+    return _ListView(repo: widget.repo, onEdit: _openEdit);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PRIESTS TAB
+// ════════════════════════════════════════════════════════════════════════════
+
+class _PriestsTab extends StatefulWidget {
+  const _PriestsTab({required this.repo});
+  final ChurchesRepository repo;
+
+  @override
+  State<_PriestsTab> createState() => _PriestTabState();
+}
+
+class _PriestTabState extends State<_PriestsTab> {
+  String _search = '';
+  ChurchModel? _selectedChurch;
+  ChurchModel? _editingPriest;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+
+    return StreamBuilder<List<ChurchModel>>(
+      stream: widget.repo.watchAll(),
+      builder: (context, snap) {
+        final churches = snap.data ?? [];
+        final filteredChurches = churches.where((c) {
+          final q = _search.toLowerCase();
+          return q.isEmpty ||
+              c.nameEn.toLowerCase().contains(q) ||
+              c.nameAr.contains(q);
+        }).toList();
+
+        return Column(
+          children: [
+            // ── Search toolbar ──────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              decoration: BoxDecoration(
+                color: ac.bgDeep,
+                border: Border(bottom: ac.borderSide),
+              ),
+              child: TextField(
+                onChanged: (q) => setState(() => _search = q),
+                style: TextStyle(color: ac.textPrimary, fontSize: 13),
+                decoration: ac.inputDeco('${l.search} ${l.churches}…'),
+              ),
+            ),
+
+            // ── Churches list with priest management ──────────────────
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                itemCount: filteredChurches.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, i) {
+                  final church = filteredChurches[i];
+                  return _ChurchPriestsCard(
+                    church: church,
+                    repo: widget.repo,
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -316,10 +465,12 @@ class _EditView extends StatefulWidget {
     required this.repo,
     required this.initial,
     required this.onDone,
+    this.showPriestSection = true,
   });
   final ChurchesRepository repo;
   final ChurchModel? initial;
   final VoidCallback onDone;
+  final bool showPriestSection;
 
   @override
   State<_EditView> createState() => _EditViewState();
@@ -561,6 +712,7 @@ class _EditViewState extends State<_EditView> {
               const SizedBox(height: 12),
 
               // ── Priests ────────────────────────────────────────────
+              if (widget.showPriestSection)
               _FormCard(
                 title: 'Ιερείς',
                 titleAr: 'الكهنة',
@@ -1604,6 +1756,291 @@ class _BishopAdminCardState extends State<_BishopAdminCard> {
           ),
         );
       },
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CHURCH PRIESTS CARD (for Priests Tab)
+// ════════════════════════════════════════════════════════════════════════════
+
+class _ChurchPriestsCard extends StatefulWidget {
+  const _ChurchPriestsCard({
+    required this.church,
+    required this.repo,
+  });
+
+  final ChurchModel church;
+  final ChurchesRepository repo;
+
+  @override
+  State<_ChurchPriestsCard> createState() => _ChurchPriestsCardState();
+}
+
+class _ChurchPriestsCardState extends State<_ChurchPriestsCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+    final church = widget.church;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ac.bgElevated,
+        borderRadius: _kRadius,
+        border: Border.all(color: ac.goldBorder, width: 0.5),
+      ),
+      child: Column(
+        children: [
+          // ── Church header ──────────────────────────────────────────
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // Church icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: ac.bgMid,
+                        borderRadius: BorderRadius.circular(6),
+                        border:
+                            Border.all(color: ac.goldBorder, width: 0.5),
+                      ),
+                      child: Center(
+                        child: Text('☩',
+                            style: TextStyle(
+                                color: ac.gold, fontSize: 22)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Church names + priest count
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            church.nameEn,
+                            style: TextStyle(
+                              color: ac.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            church.nameAr,
+                            style: TextStyle(
+                              color: ac.textSecondary,
+                              fontSize: 12,
+                              fontFamily: 'Scheherazade',
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          _Chip(
+                            label:
+                                '${church.priests.length} ${l.priests}',
+                            color: ac.tealMid,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Expand/collapse icon
+                    Icon(
+                      _expanded
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                      color: ac.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Priests list (when expanded) ────────────────────────────
+          if (_expanded) ...[
+            Divider(height: 1, color: ac.goldBorder),
+            if (church.priests.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'Δεν υπάρχουν ιερείς  —  لا يوجد كهنة',
+                  style: TextStyle(
+                    color: ac.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: List.generate(
+                    church.priests.length,
+                    (index) {
+                      final priest = church.priests[index];
+                      return Column(
+                        children: [
+                          _PriestItemRow(
+                            priest: priest,
+                            index: index,
+                            ac: ac,
+                            onEdit: () {
+                              // TODO: Open priest edit for this church
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Edit ${priest.nameEn} - TODO implementation'),
+                                ),
+                              );
+                            },
+                          ),
+                          if (index < church.priests.length - 1)
+                            const SizedBox(height: 8),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
+class _PriestItemRow extends StatelessWidget {
+  const _PriestItemRow({
+    required this.priest,
+    required this.index,
+    required this.ac,
+    required this.onEdit,
+  });
+
+  final PriestModel priest;
+  final int index;
+  final AdminC ac;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: ac.bgMid,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: ac.tealMid.withValues(alpha: 0.2), width: 0.5),
+      ),
+      child: Row(
+        children: [
+          // Priest number badge
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ac.tealMid.withValues(alpha: 0.12),
+              border:
+                  Border.all(color: ac.tealMid.withValues(alpha: 0.3), width: 0.5),
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: ac.tealMid,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Priest image + names + phone
+          if (priest.imageUrl.isNotEmpty)
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: ac.goldBorder, width: 0.5),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.network(
+                priest.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.person_outline, color: ac.textSecondary),
+              ),
+            )
+          else
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: ac.bgElevated,
+                border: Border.all(color: ac.goldBorder, width: 0.5),
+              ),
+              child: Icon(Icons.person_outline,
+                  color: ac.textSecondary, size: 20),
+            ),
+          const SizedBox(width: 10),
+
+          // Priest info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  priest.nameEn,
+                  style: TextStyle(
+                    color: ac.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (priest.nameAr.isNotEmpty)
+                  Text(
+                    priest.nameAr,
+                    style: TextStyle(
+                      color: ac.textSecondary,
+                      fontFamily: 'Scheherazade',
+                      fontSize: 11,
+                    ),
+                  ),
+                if (priest.phone.isNotEmpty)
+                  Text(
+                    priest.phone,
+                    style: TextStyle(
+                      color: ac.gold,
+                      fontSize: 10,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Edit button
+          GestureDetector(
+            onTap: onEdit,
+            child: Icon(Icons.edit_outlined, color: ac.gold, size: 16),
+          ),
+        ],
+      ),
     );
   }
 }
