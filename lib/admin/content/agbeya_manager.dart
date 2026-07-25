@@ -96,14 +96,20 @@ class _ListView extends StatefulWidget {
 class _ListViewState extends State<_ListView> {
   String? _deleteConfirmId;
 
+  // ── Reorder buffer ──────────────────────────────────────────────────────────
+  List<AgbeyaHour>? _reorderBuffer;
+  bool _reordering = false;
+
   @override
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
     return StreamBuilder<List<AgbeyaHour>>(
       stream: widget.repo.watchAllHours(),
       builder: (context, snap) {
-        final hours = snap.data ?? [];
-        final loading = snap.connectionState == ConnectionState.waiting;
+        final hours = _reorderBuffer ??
+            (snap.hasData ? snap.data! : const <AgbeyaHour>[]);
+        final loading = snap.connectionState == ConnectionState.waiting &&
+            hours.isEmpty;
 
         return Column(children: [
           // ── Toolbar ───────────────────────────────────────────────────
@@ -153,6 +159,14 @@ class _ListViewState extends State<_ListView> {
             ]),
           ),
 
+          // ── Pending reorder banner ────────────────────────────────────
+          if (_reorderBuffer != null)
+            _ReorderBanner(
+              saving:   _reordering,
+              onSave:   _commitReorder,
+              onCancel: () => setState(() => _reorderBuffer = null),
+            ),
+
           // ── List ──────────────────────────────────────────────────────
           Expanded(
             child: loading
@@ -163,13 +177,16 @@ class _ListViewState extends State<_ListView> {
                     ? _EmptyState(onAdd: () => widget.onEdit(null))
                     : Stack(
                         children: [
-                          ListView.separated(
+                          ReorderableListView.builder(
                             padding: const EdgeInsets.all(16),
+                            onReorderStart: (_) =>
+                                _onReorderStart(snap.data ?? hours),
+                            onReorder: _onReorder,
+                            onReorderEnd: (_) {},
                             itemCount: hours.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
                             itemBuilder: (_, i) => _HourRow(
-                              hour: hours[i],
+                              key:      ValueKey(hours[i].id),
+                              hour:     hours[i],
                               onEdit: () => widget.onEdit(hours[i]),
                               onToggle: () =>
                                   _togglePublish(context, hours[i]),
@@ -208,6 +225,32 @@ class _ListViewState extends State<_ListView> {
     if (mounted) _snack(context, 'Hour deleted');
   }
 
+  // ── Reorder ─────────────────────────────────────────────────────────────────
+
+  void _onReorderStart(List<AgbeyaHour> current) =>
+      _reorderBuffer = List.of(current);
+
+  void _onReorder(int oldIndex, int newIndex) {
+    final list = _reorderBuffer!;
+    if (newIndex > oldIndex) newIndex--;
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    setState(() {});
+  }
+
+  Future<void> _commitReorder() async {
+    if (_reorderBuffer == null) return;
+    setState(() => _reordering = true);
+    try {
+      await widget.repo.reorder(_reorderBuffer!);
+      _reorderBuffer = null;
+    } catch (e) {
+      if (mounted) _snack(context, 'Reorder failed: $e');
+    } finally {
+      if (mounted) setState(() => _reordering = false);
+    }
+  }
+
   void _snack(BuildContext context, String msg) {
     final ac = AdminC(Theme.of(context).brightness);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -226,6 +269,7 @@ class _ListViewState extends State<_ListView> {
 
 class _HourRow extends StatelessWidget {
   const _HourRow({
+    super.key,
     required this.hour,
     required this.onEdit,
     required this.onToggle,
@@ -261,7 +305,11 @@ class _HourRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Icon(Icons.drag_handle,
+              color: ac.textSecondary, size: 20),
+        ),
 
         // Hour number badge
         Container(
@@ -785,6 +833,9 @@ class _EditViewState extends State<_EditView> {
     final hour = AgbeyaHour(
       id: widget.initial?.id ?? '',
       hourNumber: _hourNumber,
+      // Display order is only changed via drag-to-reorder in the list view —
+      // preserve it here; new hours default to their hour number.
+      sortOrder: widget.initial?.sortOrder ?? _hourNumber,
       titleAr: _titleAr.text.trim(),
       titleCop: _titleCop.text.trim(),
       titleEl: _titleEl.text.trim(),
@@ -2233,6 +2284,68 @@ class _IconBtn extends StatelessWidget {
           child: Icon(icon, size: 14, color: color),
         ),
       );
+  }
+}
+
+// ── Reorder banner ─────────────────────────────────────────────────────────────
+
+class _ReorderBanner extends StatelessWidget {
+  const _ReorderBanner({
+    required this.saving,
+    required this.onSave,
+    required this.onCancel,
+  });
+  final bool         saving;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+      final ac = AdminC(Theme.of(context).brightness);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color:   ac.maroon.withOpacity(0.9),
+      child: Row(
+        children: [
+          Icon(Icons.swap_vert,
+              color: ac.goldLight, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text('Drag to reorder — save to apply.',
+                style: TextStyle(
+                    color:    ac.goldLight,
+                    fontSize: 12)),
+          ),
+          TextButton(
+            onPressed: saving ? null : onCancel,
+            child: Text('Cancel',
+                style: TextStyle(color: ac.textSecondary)),
+          ),
+          const SizedBox(width: 4),
+          ElevatedButton(
+            onPressed: saving ? null : onSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ac.gold,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize:    Size.zero,
+              tapTargetSize:  MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: saving
+                ? SizedBox(
+                    width:  14,
+                    height: 14,
+                    child:  CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color:       ac.bgDeep))
+                : Text('Save Order',
+                    style: TextStyle(
+                        color:      ac.bgDeep,
+                        fontSize:   11,
+                        fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 }
 

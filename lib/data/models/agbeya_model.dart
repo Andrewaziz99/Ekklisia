@@ -9,7 +9,12 @@
 //
 // Firestore document shape:
 //   {
-//     hour_number: int,          // 1–7 (canonical hours order)
+//     hour_number: int,          // 1–7 (canonical hour identity — DO NOT reuse
+//                                //      for display order; see sort_order)
+//     sort_order: int,           // Display/drag-reorder position. Falls back
+//                                //      to hour_number when absent so existing
+//                                //      documents keep their original order
+//                                //      until an admin explicitly reorders.
 //     title_ar: string,
 //     title_cop: string,
 //     title_el: string,
@@ -154,7 +159,8 @@ class AgbeyaAudioTrack extends Equatable {
 
 class AgbeyaHour extends Equatable {
   final String id;
-  final int hourNumber; // 1–7 (used for ordering)
+  final int hourNumber; // 1–7 (canonical hour identity — used for names/colors)
+  final int sortOrder;  // display/drag-reorder position (independent of hourNumber)
   final String titleAr;
   final String titleCop;
   final String titleEl;
@@ -178,6 +184,7 @@ class AgbeyaHour extends Equatable {
   const AgbeyaHour({
     required this.id,
     required this.hourNumber,
+    required this.sortOrder,
     required this.titleAr,
     this.titleCop = '',
     this.titleEl = '',
@@ -246,9 +253,14 @@ class AgbeyaHour extends Equatable {
 
   factory AgbeyaHour.fromFirestore(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
+    final hourNumber = (d['hour_number'] as num?)?.toInt() ?? 0;
     return AgbeyaHour(
       id: doc.id,
-      hourNumber: (d['hour_number'] as num?)?.toInt() ?? 0,
+      hourNumber: hourNumber,
+      // Falls back to hourNumber for documents written before drag-reorder
+      // support existed, so their display order doesn't change until an
+      // admin explicitly reorders them.
+      sortOrder: (d['sort_order'] as num?)?.toInt() ?? hourNumber,
       titleAr: d['title_ar'] as String? ?? '',
       titleCop: d['title_cop'] as String? ?? '',
       titleEl: d['title_el'] as String? ?? '',
@@ -276,6 +288,7 @@ class AgbeyaHour extends Equatable {
 
   Map<String, dynamic> toFirestore() => {
         'hour_number': hourNumber,
+        'sort_order': sortOrder,
         'title_ar': titleAr,
         'title_cop': titleCop,
         'title_el': titleEl,
@@ -297,6 +310,7 @@ class AgbeyaHour extends Equatable {
   AgbeyaHour copyWith({
     String? id,
     int? hourNumber,
+    int? sortOrder,
     String? titleAr,
     String? titleCop,
     String? titleEl,
@@ -317,6 +331,7 @@ class AgbeyaHour extends Equatable {
       AgbeyaHour(
         id: id ?? this.id,
         hourNumber: hourNumber ?? this.hourNumber,
+        sortOrder: sortOrder ?? this.sortOrder,
         titleAr: titleAr ?? this.titleAr,
         titleCop: titleCop ?? this.titleCop,
         titleEl: titleEl ?? this.titleEl,
@@ -339,6 +354,7 @@ class AgbeyaHour extends Equatable {
   List<Object?> get props => [
         id,
         hourNumber,
+        sortOrder,
         titleAr,
         audioUrl,
         isPublished,

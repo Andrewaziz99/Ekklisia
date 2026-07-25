@@ -162,6 +162,7 @@ class AudioPlayerBar extends StatelessWidget {
     final stub = AgbeyaHour(
       id: item.extras?['hourId'] as String? ?? '',
       hourNumber: 0,
+      sortOrder: 0,
       titleAr: item.title,
       audioUrl: item.id,
       coverUrl: item.artUri?.toString() ?? '',
