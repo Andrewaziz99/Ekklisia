@@ -30,6 +30,7 @@ import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../utils/admin_colors.dart';
+import '../utils/drive_link_utils.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const _kRadius = BorderRadius.all(Radius.circular(8));
@@ -415,8 +416,18 @@ class _EditViewState extends State<_EditView> {
   void initState() {
     super.initState();
 
+    // Google Drive "Anyone with the link" share URLs are auto-converted to
+    // their direct-download form (matches the Books upload flow).
     _pdfUrlCtrl.addListener(() {
       final v = _pdfUrlCtrl.text.trim();
+      final driveUrl = driveShareLinkToDirectUrl(v);
+      if (driveUrl != null && driveUrl != v) {
+        _pdfUrlCtrl.value = _pdfUrlCtrl.value.copyWith(
+          text: driveUrl,
+          selection: TextSelection.collapsed(offset: driveUrl.length),
+        );
+        return; // listener re-fires with the converted text
+      }
       if (v != _pdfUrl) setState(() { _pdfUrl = v; _pdfCloudId = ''; });
     });
 
@@ -881,17 +892,18 @@ class _EditViewState extends State<_EditView> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Επισυνάψτε PDF ή επικολλήστε URL.',
+                      'Επισυνάψτε PDF ή επικολλήστε URL (Cloudinary ή Google Drive).',
                       style: TextStyle(
                           color: ac.textSecondary, fontSize: 12),
                     ),
                     SizedBox(height: 10),
-                    // URL paste field
+                    // URL paste field — Drive share links auto-convert to a
+                    // direct-download URL (same behaviour as the Books upload flow).
                     TextFormField(
                       controller: _pdfUrlCtrl,
                       style: TextStyle(
                           color: ac.textPrimary, fontSize: 13),
-                      decoration: ac.inputDeco('Επικολλήστε URL PDF…'),
+                      decoration: ac.inputDeco('Επικολλήστε URL PDF ή σύνδεσμο Drive…'),
                       onChanged: (v) {
                         if (v.trim().isNotEmpty) {
                           setState(() {
@@ -902,6 +914,16 @@ class _EditViewState extends State<_EditView> {
                         }
                       },
                     ),
+                    if (looksLikeDriveLink(_pdfUrlCtrl.text) &&
+                        driveShareLinkToDirectUrl(_pdfUrlCtrl.text) == null) ...[
+                      SizedBox(height: 6),
+                      Text(
+                        "Doesn't look like a valid Drive share link — "
+                        'make sure the full URL was pasted.',
+                        style: TextStyle(
+                            color: Colors.orange.shade300, fontSize: 10),
+                      ),
+                    ],
                     SizedBox(height: 10),
                     // Divider
                     Row(children: [

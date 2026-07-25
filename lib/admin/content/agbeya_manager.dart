@@ -28,6 +28,7 @@ import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/agbeya_model.dart';
 import '../../data/repositories/agbeya_repository.dart';
 import '../utils/admin_colors.dart';
+import '../utils/drive_link_utils.dart';
 
 // ── Hour names reference ──────────────────────────────────────────────────────
 const _kHourNamesAr = {
@@ -481,9 +482,19 @@ class _EditViewState extends State<_EditView> {
   @override
   void initState() {
     super.initState();
-    // Keep _pdfUrl in sync when admin pastes a URL directly
+    // Keep _pdfUrl in sync when admin pastes a URL directly. Google Drive
+    // "Anyone with the link" share URLs are auto-converted to their direct
+    // -download form (matches the Books upload flow's Drive-link support).
     _pdfUrlCtrl.addListener(() {
       final v = _pdfUrlCtrl.text.trim();
+      final driveUrl = driveShareLinkToDirectUrl(v);
+      if (driveUrl != null && driveUrl != v) {
+        _pdfUrlCtrl.value = _pdfUrlCtrl.value.copyWith(
+          text: driveUrl,
+          selection: TextSelection.collapsed(offset: driveUrl.length),
+        );
+        return; // listener re-fires with the converted text
+      }
       if (v != _pdfUrl) setState(() => _pdfUrl = v);
     });
     _videoUrlCtrl.addListener(() {
@@ -1233,7 +1244,7 @@ class _EditViewState extends State<_EditView> {
                     Icon(Icons.link, size: 14, color: ac.goldDim),
                     SizedBox(width: 6),
                     Text(
-                      'Or paste a Cloudinary URL directly',
+                      'Or paste a Cloudinary or Google Drive URL directly',
                       style: TextStyle(
                           color: ac.textSecondary,
                           fontSize: 11,
@@ -1248,13 +1259,21 @@ class _EditViewState extends State<_EditView> {
                           fontSize: 11),
                     ),
                   ]),
+                  SizedBox(height: 4),
+                  Text(
+                    'Google Drive "Anyone with the link" share URLs are '
+                    'converted to a direct-download link automatically.',
+                    style: TextStyle(
+                        color: ac.textSecondary.withOpacity(0.7),
+                        fontSize: 10),
+                  ),
                   SizedBox(height: 8),
                   TextField(
                     controller: _pdfUrlCtrl,
                     style: TextStyle(
                         color: ac.textPrimary, fontSize: 11),
                     decoration: InputDecoration(
-                      hintText: 'https://res.cloudinary.com/…',
+                      hintText: 'https://res.cloudinary.com/… or Drive link',
                       hintStyle: TextStyle(
                           color: ac.textSecondary, fontSize: 11),
                       filled: true,
@@ -1290,6 +1309,16 @@ class _EditViewState extends State<_EditView> {
                       ),
                     ),
                   ),
+                  if (looksLikeDriveLink(_pdfUrlCtrl.text) &&
+                      driveShareLinkToDirectUrl(_pdfUrlCtrl.text) == null) ...[
+                    SizedBox(height: 6),
+                    Text(
+                      "Doesn't look like a valid Drive share link — "
+                      'make sure the full URL was pasted.',
+                      style: TextStyle(
+                          color: Colors.orange.shade300, fontSize: 10),
+                    ),
+                  ],
                 ]),
               ),
               const SizedBox(height: 14),

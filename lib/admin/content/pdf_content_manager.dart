@@ -33,6 +33,8 @@ import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../data/repositories/pdf_content_repository.dart';
 import '../utils/admin_colors.dart';
+import '../utils/drive_link_field.dart';
+import '../utils/drive_link_utils.dart';
 
 // ── Audio track entry (mutable form state per track) ──────────────────────────
 
@@ -132,6 +134,11 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   String _pdfUrl          = '';
   String _cloudinaryPdfId = '';
 
+  // ── Google Drive URL (alternative to file upload) ──────────────────────────
+  bool _useDriveUrl = false;
+  final _driveUrlCtrl = TextEditingController();
+  String? _driveUrlError;
+
   // ── Audio tracks state ──────────────────────────────────────────────────────
   List<_AudioTrackEntry> _audioTracks = [];
 
@@ -151,6 +158,7 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   void dispose() {
     _titleArCtrl.dispose();
     _titleElCtrl.dispose();
+    _driveUrlCtrl.dispose();
     for (final e in _audioTracks) e.dispose();
     super.dispose();
   }
@@ -169,6 +177,9 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     _uploadProgress   = null;
     _pdfUrl           = '';
     _cloudinaryPdfId  = '';
+    _useDriveUrl      = false;
+    _driveUrlCtrl.clear();
+    _driveUrlError    = null;
     for (final e in _audioTracks) e.dispose();
     _audioTracks             = [];
     _videoUrl                = '';
@@ -192,6 +203,11 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
     _uploadProgress   = null;
     _pdfUrl           = item.pdfUrl;
     _cloudinaryPdfId  = item.cloudinaryPdfId;
+    // If the existing PDF was stored as a Google Drive link, reopen the
+    // form with the Drive tab pre-selected and the link filled back in.
+    _useDriveUrl      = looksLikeDriveLink(item.pdfUrl);
+    _driveUrlCtrl.text = _useDriveUrl ? item.pdfUrl : '';
+    _driveUrlError    = null;
     for (final e in _audioTracks) e.dispose();
     _audioTracks = item.audioTracks.map((t) => _AudioTrackEntry(
       labelAr:           t.labelAr,
@@ -244,6 +260,18 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
   // ── Upload PDF to Cloudinary ────────────────────────────────────────────────
 
   Future<bool> _uploadPdfIfNeeded() async {
+    // Google Drive mode — skip Cloudinary entirely, store the direct link.
+    if (_useDriveUrl) {
+      final directUrl = driveShareLinkToDirectUrl(_driveUrlCtrl.text);
+      if (directUrl == null) {
+        setState(() => _driveUrlError = 'Not a valid Google Drive sharing link');
+        return false;
+      }
+      _pdfUrl          = directUrl;
+      _cloudinaryPdfId = '';
+      return true;
+    }
+
     // Nothing to upload — existing URL is still valid.
     if (_pdfFile == null && _pdfBytes == null) return true;
 
@@ -708,30 +736,70 @@ class _PdfContentManagerScreenState extends State<PdfContentManagerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Info line
-                        Text(
-                          'Upload a PDF to Cloudinary folder '
-                          '"Ekklisia/${widget.category}".',
-                          style: TextStyle(
-                            color: ac.textSecondary
-                                .withValues(alpha: 0.7),
-                            fontSize: 11,
-                          ),
+                        // Source toggle
+                        SourceToggleTabs(
+                          useDriveUrl: _useDriveUrl,
+                          onChanged: _saving
+                              ? (_) {}
+                              : (v) => setState(() {
+                                    _useDriveUrl = v;
+                                    if (v) {
+                                      // Switching to Drive — clear any picked file.
+                                      _pdfFile        = null;
+                                      _pdfBytes       = null;
+                                      _pdfName        = null;
+                                      _pdfSizeMb      = null;
+                                      _uploadProgress = null;
+                                    } else {
+                                      _driveUrlCtrl.clear();
+                                      _driveUrlError = null;
+                                    }
+                                  }),
                         ),
                         const SizedBox(height: 10),
 
-                        // Pick button / status
-                        _PdfPickerTile(
-                          pdfName:  _pdfName,
-                          sizeMb:   _pdfSizeMb,
-                          existingUrl: _pdfUrl,
-                          onPick:   _saving ? null : _pickPdf,
-                        ),
-
-                        // Upload progress
-                        if (_uploadProgress != null) ...[
+                        if (!_useDriveUrl) ...[
+                          // Info line
+                          Text(
+                            'Upload a PDF to Cloudinary folder '
+                            '"Ekklisia/${widget.category}".',
+                            style: TextStyle(
+                              color: ac.textSecondary
+                                  .withValues(alpha: 0.7),
+                              fontSize: 11,
+                            ),
+                          ),
                           const SizedBox(height: 10),
-                          _UploadProgressBar(progress: _uploadProgress!),
+
+                          // Pick button / status
+                          _PdfPickerTile(
+                            pdfName:  _pdfName,
+                            sizeMb:   _pdfSizeMb,
+                            existingUrl: _pdfUrl,
+                            onPick:   _saving ? null : _pickPdf,
+                          ),
+
+                          // Upload progress
+                          if (_uploadProgress != null) ...[
+                            const SizedBox(height: 10),
+                            _UploadProgressBar(progress: _uploadProgress!),
+                          ],
+                        ] else ...[
+                          DriveLinkInputCard(
+                            controller: _driveUrlCtrl,
+                            error: _driveUrlError,
+                            onChanged: (v) => setState(() {
+                              _driveUrlError = v.trim().isEmpty
+                                  ? null
+                                  : driveShareLinkToDirectUrl(v) == null
+                                      ? 'Not a valid Google Drive sharing link'
+                                      : null;
+                            }),
+                            onClear: () => setState(() {
+                              _driveUrlCtrl.clear();
+                              _driveUrlError = null;
+                            }),
+                          ),
                         ],
                       ],
                     ),

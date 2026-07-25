@@ -9,6 +9,7 @@
 // this runs against a given Firestore project.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../../core/constants/app_constants.dart';
 import '../models/priest_model.dart';
@@ -71,17 +72,22 @@ class PriestsRepository {
   /// schema) into this top-level collection, linked to their church. Safe to
   /// call on every app start: it claims a Firestore flag doc atomically so
   /// the copy only ever runs once, even with concurrent admins.
+  ///
+  /// Called fire-and-forget from ChurchesManagerScreen.initState(), so
+  /// nothing here is allowed to throw uncaught — every failure is logged
+  /// instead (via debugPrint) so it's visible in the debug console rather
+  /// than vanishing silently.
   Future<void> migrateFromChurchesIfNeeded() async {
-    final flagRef = _db.collection('meta').doc('migrations');
-    final claimed = await _db.runTransaction<bool>((tx) async {
-      final snap = await tx.get(flagRef);
-      if (snap.data()?['priestsFromChurches'] == true) return false;
-      tx.set(flagRef, {'priestsFromChurches': true}, SetOptions(merge: true));
-      return true;
-    });
-    if (!claimed) return;
-
     try {
+      final flagRef = _db.collection('meta').doc('migrations');
+      final claimed = await _db.runTransaction<bool>((tx) async {
+        final snap = await tx.get(flagRef);
+        if (snap.data()?['priestsFromChurches'] == true) return false;
+        tx.set(flagRef, {'priestsFromChurches': true}, SetOptions(merge: true));
+        return true;
+      });
+      if (!claimed) return;
+
       final churches =
           await _db.collection(AppConstants.churchesCollection).get();
       final batch = _db.batch();
@@ -106,12 +112,20 @@ class PriestsRepository {
           count++;
         }
       }
-      if (count > 0) await batch.commit();
-    } catch (_) {
-      // Best-effort: if this fails (e.g. offline on first launch), the flag
-      // is already claimed so it won't retry — the admin can still add
-      // priests manually going forward. Old embedded data isn't lost either
-      // way since church documents are untouched by this migration.
+      if (count > 0) {
+        await batch.commit();
+        debugPrint('[PriestsRepository] migrated $count priest(s) from ${churches.docs.length} church document(s).');
+      } else {
+        debugPrint('[PriestsRepository] migration ran — found no embedded priests to copy.');
+      }
+    } catch (e, st) {
+      // Best-effort: if the flag transaction succeeded but the copy failed
+      // partway (e.g. offline), the flag is already claimed so this won't
+      // retry — the admin can still add priests manually going forward.
+      // Old embedded data isn't lost either way since church documents are
+      // untouched by this migration. Logged rather than swallowed so a
+      // permissions problem (the most likely cause) is actually visible.
+      debugPrint('[PriestsRepository] migrateFromChurchesIfNeeded failed: $e\n$st');
     }
   }
 }

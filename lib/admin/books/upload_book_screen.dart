@@ -17,6 +17,7 @@ import '../../data/repositories/books_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../services/notification_service.dart';
 import '../utils/admin_colors.dart';
+import '../utils/drive_link_utils.dart';
 
 class UploadBookScreen extends StatefulWidget {
   const UploadBookScreen({super.key});
@@ -44,27 +45,9 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
 
   /// Converts a Google Drive sharing link to a direct-download URL.
   /// Returns null if the URL is not a recognisable Drive link.
-  static String? _toDriveDownloadUrl(String raw) {
-    final trimmed = raw.trim();
-    // Pattern: https://drive.google.com/file/d/<ID>/view...
-    final fileMatch =
-        RegExp(r'drive\.google\.com/file/d/([^/?]+)').firstMatch(trimmed);
-    if (fileMatch != null) {
-      return 'https://drive.google.com/uc?export=download&id=${fileMatch.group(1)}';
-    }
-    // Pattern: https://drive.google.com/open?id=<ID>
-    final openMatch =
-        RegExp(r'drive\.google\.com/open\?id=([^&]+)').firstMatch(trimmed);
-    if (openMatch != null) {
-      return 'https://drive.google.com/uc?export=download&id=${openMatch.group(1)}';
-    }
-    // Already a direct uc?export=download link
-    if (trimmed.contains('drive.google.com/uc') &&
-        trimmed.contains('export=download')) {
-      return trimmed;
-    }
-    return null;
-  }
+  /// Delegates to the shared parser in drive_link_utils.dart so every other
+  /// CMS section that supports Drive links stays in sync with this logic.
+  static String? _toDriveDownloadUrl(String raw) => driveShareLinkToDirectUrl(raw);
 
   bool get _hasPdf =>
       _pdfFile != null || _pdfBytes != null ||
