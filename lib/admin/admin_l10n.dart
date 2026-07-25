@@ -14,8 +14,20 @@ import '../services/settings_service.dart';
 
 extension AdminL10nExt on BuildContext {
   /// Reads current language from [SettingsCubit] (auto-watches → rebuilds).
+  /// Only call this from a build() method — Provider's `watch` asserts if
+  /// called from an event handler or other callback outside the widget
+  /// tree's build phase. Use [adminL10nOnce] there instead.
   AdminL10n get adminL10n {
     final lang = watch<SettingsCubit>().state.language;
+    return lang == AppLanguage.arabic ? AdminL10n.ar : AdminL10n.el;
+  }
+
+  /// Same lookup as [adminL10n] but via `read` instead of `watch` — safe to
+  /// call from event handlers, async callbacks, etc. (anywhere outside a
+  /// build() method). Doesn't subscribe to rebuilds, which is fine for a
+  /// one-shot read like building a dialog's contents.
+  AdminL10n get adminL10nOnce {
+    final lang = read<SettingsCubit>().state.language;
     return lang == AppLanguage.arabic ? AdminL10n.ar : AdminL10n.el;
   }
 }
@@ -133,6 +145,15 @@ class AdminL10n {
   String get priestNameEn => _t('اسم الكاهن (يوناني)', 'Όνομα Ιερέα (Ελληνικά)');
   String get priestPhone => _t('رقم الهاتف', 'Τηλέφωνο');
   String get priestImage => _t('صورة الكاهن', 'Φωτογραφία Ιερέα');
+  String get priestName => _t('اسم الكاهن', 'Όνομα Ιερέα');
+  String get priestChurchField => _t('الكنيسة', 'Εκκλησία');
+  String get churchPickerHint =>
+      _t('اختر من القائمة أو اكتب اسم الكنيسة', 'Επιλέξτε από τη λίστα ή πληκτρολογήστε όνομα');
+  String get editPriest => _t('تعديل الكاهن', 'Επεξεργασία Ιερέα');
+  String get deletePriestConfirmMsg => _t('حذف هذا الكاهن؟', 'Διαγραφή αυτού του ιερέα;');
+  String get noPriestsYet => _t('لا يوجد كهنة حتى الآن', 'Δεν έχουν προστεθεί ιερείς');
+  String get unlinkedChurch =>
+      _t('غير مرتبط بكنيسة مسجّلة', 'Δεν συνδέεται με καταχωρημένη εκκλησία');
   String get noChurches => _t('لا توجد كنائس', 'Δεν βρέθηκαν εκκλησίες');
   String get cmsChurches => _t('الكنائس', 'Εκκλησίες');
   // ── Bishop ──────────────────────────────────────────────────────────────

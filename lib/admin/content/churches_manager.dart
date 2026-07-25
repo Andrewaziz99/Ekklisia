@@ -1,10 +1,13 @@
 // lib/admin/content/churches_manager.dart
 // ─────────────────────────────────────────────────────────────────────────────
-// Admin CMS — Churches manager.
+// Admin CMS — Churches & Priests manager.
 //
-// Two modes:
-//   • list  — table of all churches with publish toggle + edit / delete
-//   • edit  — form: nameAr, nameEn, mapsUrl, dynamic priests list
+// Two independent tabs, backed by two independent Firestore collections:
+//   • Churches — nameAr, nameEn, mapsUrl, published toggle. No priest data
+//     lives here anymore, so editing a church never touches its priests.
+//   • Priests  — name, phone, image, and a church (picked from the existing
+//     churches list, or free-typed text if the church isn't registered
+//     yet). Editing a priest never touches the church document.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'dart:io';
 import 'dart:typed_data';
@@ -17,8 +20,10 @@ import '../admin_l10n.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/bishop_model.dart';
 import '../../data/models/church_model.dart';
+import '../../data/models/priest_model.dart';
 import '../../data/repositories/bishop_repository.dart';
 import '../../data/repositories/churches_repository.dart';
+import '../../data/repositories/priests_repository.dart';
 import '../utils/admin_colors.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -39,13 +44,20 @@ class ChurchesManagerScreen extends StatefulWidget {
 }
 
 class _ChurchesManagerScreenState extends State<ChurchesManagerScreen> with TickerProviderStateMixin {
-  final _repo = sl<ChurchesRepository>();
+  final _churchesRepo = sl<ChurchesRepository>();
+  final _priestsRepo = sl<PriestsRepository>();
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // One-time copy of any priests still embedded in old church documents
+    // into the top-level 'priests' collection (see PriestsRepository).
+    // Deliberately triggered here rather than at app startup: this screen
+    // only opens under an authenticated admin session, which is what
+    // Firestore's security rules require to write to these collections.
+    _priestsRepo.migrateFromChurchesIfNeeded();
   }
 
   @override
@@ -95,9 +107,9 @@ class _ChurchesManagerScreenState extends State<ChurchesManagerScreen> with Tick
             controller: _tabController,
             children: [
               // Churches tab
-              _ChurchesTab(repo: _repo),
+              _ChurchesTab(repo: _churchesRepo),
               // Priests tab
-              _PriestsTab(repo: _repo),
+              _PriestsTab(churchesRepo: _churchesRepo, priestsRepo: _priestsRepo),
             ],
           ),
         ),
@@ -131,7 +143,7 @@ class _ChurchesTabState extends State<_ChurchesTab> {
   @override
   Widget build(BuildContext context) {
     if (_mode == _ScreenMode.edit) {
-      return _EditView(repo: widget.repo, initial: _editing, onDone: _backToList, showPriestSection: false);
+      return _ChurchEditView(repo: widget.repo, initial: _editing, onDone: _backToList);
     }
     return _ListView(repo: widget.repo, onEdit: _openEdit);
   }
@@ -142,74 +154,645 @@ class _ChurchesTabState extends State<_ChurchesTab> {
 // ════════════════════════════════════════════════════════════════════════════
 
 class _PriestsTab extends StatefulWidget {
-  const _PriestsTab({required this.repo});
-  final ChurchesRepository repo;
+  const _PriestsTab({required this.churchesRepo, required this.priestsRepo});
+  final ChurchesRepository churchesRepo;
+  final PriestsRepository priestsRepo;
 
   @override
-  State<_PriestsTab> createState() => _PriestTabState();
+  State<_PriestsTab> createState() => _PriestsTabState();
 }
 
-class _PriestTabState extends State<_PriestsTab> {
+class _PriestsTabState extends State<_PriestsTab> {
+  _ScreenMode _mode = _ScreenMode.list;
+  PriestModel? _editing;
+
+  void _openEdit(PriestModel? priest) =>
+      setState(() { _editing = priest; _mode = _ScreenMode.edit; });
+
+  void _backToList() =>
+      setState(() { _editing = null; _mode = _ScreenMode.list; });
+
+  @override
+  Widget build(BuildContext context) {
+    // Churches are only needed to power the "pick an existing church" list
+    // in the priest form — a priest never writes to a church document.
+    return StreamBuilder<List<ChurchModel>>(
+      stream: widget.churchesRepo.watchAll(),
+      builder: (context, churchSnap) {
+        final churches = churchSnap.data ?? [];
+
+        if (_mode == _ScreenMode.edit) {
+          return _PriestEditView(
+            repo: widget.priestsRepo,
+            churches: churches,
+            initial: _editing,
+            onDone: _backToList,
+          );
+        }
+        return _PriestListView(repo: widget.priestsRepo, onEdit: _openEdit);
+      },
+    );
+  }
+}
+
+// ── Priests list ──────────────────────────────────────────────────────────────
+
+class _PriestListView extends StatefulWidget {
+  const _PriestListView({required this.repo, required this.onEdit});
+  final PriestsRepository repo;
+  final void Function(PriestModel?) onEdit;
+
+  @override
+  State<_PriestListView> createState() => _PriestListViewState();
+}
+
+class _PriestListViewState extends State<_PriestListView> {
   String _search = '';
-  ChurchModel? _selectedChurch;
-  ChurchModel? _editingPriest;
+  String? _deleteConfirmId;
 
   @override
   Widget build(BuildContext context) {
     final ac = AdminC(Theme.of(context).brightness);
     final l = context.adminL10n;
 
-    return StreamBuilder<List<ChurchModel>>(
+    return StreamBuilder<List<PriestModel>>(
       stream: widget.repo.watchAll(),
       builder: (context, snap) {
-        final churches = snap.data ?? [];
-        final filteredChurches = churches.where((c) {
+        final priests = (snap.data ?? []).where((p) {
           final q = _search.toLowerCase();
           return q.isEmpty ||
-              c.nameEn.toLowerCase().contains(q) ||
-              c.nameAr.contains(q);
+              p.name.toLowerCase().contains(q) ||
+              p.nameAr.contains(q) ||
+              p.churchName.toLowerCase().contains(q);
         }).toList();
+        final loading = snap.connectionState == ConnectionState.waiting;
 
-        return Column(
-          children: [
-            // ── Search toolbar ──────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              decoration: BoxDecoration(
-                color: ac.bgDeep,
-                border: Border(bottom: ac.borderSide),
-              ),
-              child: TextField(
-                onChanged: (q) => setState(() => _search = q),
-                style: TextStyle(color: ac.textPrimary, fontSize: 13),
-                decoration: ac.inputDeco('${l.search} ${l.churches}…'),
-              ),
-            ),
-
-            // ── Churches list with priest management ──────────────────
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                itemCount: filteredChurches.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (_, i) {
-                  final church = filteredChurches[i];
-                  return _ChurchPriestsCard(
-                    church: church,
-                    repo: widget.repo,
-                  );
-                },
-              ),
-            ),
-          ],
-        );
+        return Column(children: [
+          _Toolbar(
+            title: l.priests,
+            count: priests.length,
+            onSearch: (q) => setState(() => _search = q),
+            onAdd: () => widget.onEdit(null),
+          ),
+          Expanded(
+            child: loading
+                ? Center(
+                    child: CircularProgressIndicator(color: ac.gold, strokeWidth: 2),
+                  )
+                : priests.isEmpty
+                    ? _PriestsEmptyState(onAdd: () => widget.onEdit(null))
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                        itemCount: priests.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (_, i) {
+                          final p = priests[i];
+                          return _PriestCard(
+                            priest: p,
+                            confirmingDelete: _deleteConfirmId == p.id,
+                            onEdit: () => widget.onEdit(p),
+                            onDeleteTap: () => setState(() => _deleteConfirmId = p.id),
+                            onDeleteConfirm: () async {
+                              await widget.repo.delete(p.id);
+                              setState(() => _deleteConfirmId = null);
+                            },
+                            onDeleteCancel: () => setState(() => _deleteConfirmId = null),
+                          );
+                        },
+                      ),
+          ),
+        ]);
       },
     );
   }
 }
 
+class _PriestCard extends StatelessWidget {
+  const _PriestCard({
+    required this.priest,
+    required this.confirmingDelete,
+    required this.onEdit,
+    required this.onDeleteTap,
+    required this.onDeleteConfirm,
+    required this.onDeleteCancel,
+  });
+
+  final PriestModel priest;
+  final bool confirmingDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onDeleteTap;
+  final VoidCallback onDeleteConfirm;
+  final VoidCallback onDeleteCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: ac.bgElevated,
+        borderRadius: _kRadius,
+        border: Border.all(
+          color: confirmingDelete ? ac.maroon.withValues(alpha: 0.6) : ac.tealMid.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
+      ),
+      child: confirmingDelete
+          ? _DeleteConfirmRow(
+              message: l.deletePriestConfirmMsg,
+              onConfirm: onDeleteConfirm,
+              onCancel: onDeleteCancel,
+            )
+          : Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(children: [
+                // Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ac.bgMid,
+                    border: Border.all(color: ac.goldBorder, width: 0.5),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: priest.imageUrl.isNotEmpty
+                      ? Image.network(
+                          priest.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(Icons.person_outline, color: ac.textSecondary),
+                        )
+                      : Icon(Icons.person_outline, color: ac.textSecondary, size: 22),
+                ),
+                const SizedBox(width: 12),
+
+                // Name + church + phone
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        priest.name,
+                        style: TextStyle(
+                          color: ac.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (priest.nameAr.isNotEmpty)
+                        Text(
+                          priest.nameAr,
+                          style: TextStyle(
+                            color: ac.textSecondary,
+                            fontSize: 12,
+                            fontFamily: 'Scheherazade',
+                          ),
+                        ),
+                      const SizedBox(height: 2),
+                      Row(children: [
+                        Icon(Icons.church_outlined, color: ac.gold, size: 11),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            priest.churchName,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: ac.gold, fontSize: 11),
+                          ),
+                        ),
+                      ]),
+                      if (priest.phone.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          priest.phone,
+                          style: TextStyle(color: ac.textSecondary, fontSize: 11),
+                        ),
+                      ],
+                      if (!priest.isLinkedToChurch) ...[
+                        const SizedBox(height: 4),
+                        _Chip(label: l.unlinkedChurch, color: ac.textSecondary),
+                      ],
+                    ],
+                  ),
+                ),
+
+                Column(mainAxisSize: MainAxisSize.min, children: [
+                  _IconBtn(icon: Icons.edit_outlined, color: ac.gold, onTap: onEdit),
+                  const SizedBox(height: 4),
+                  _IconBtn(icon: Icons.delete_outline, color: ac.maroonMid, onTap: onDeleteTap),
+                ]),
+              ]),
+            ),
+    );
+  }
+}
+
+class _PriestsEmptyState extends StatelessWidget {
+  const _PriestsEmptyState({required this.onAdd});
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.church_outlined, color: ac.goldBorder, size: 40),
+          const SizedBox(height: 12),
+          Text(l.noPriestsYet, style: TextStyle(color: ac.textSecondary, fontSize: 14)),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: onAdd,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: ac.gold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: ac.gold.withValues(alpha: 0.4), width: 0.5),
+              ),
+              child: Text(l.addPriest, style: TextStyle(color: ac.gold, fontSize: 13)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Priest edit form ─────────────────────────────────────────────────────────
+
+class _PriestEditView extends StatefulWidget {
+  const _PriestEditView({
+    required this.repo,
+    required this.churches,
+    required this.initial,
+    required this.onDone,
+  });
+
+  final PriestsRepository repo;
+  final List<ChurchModel> churches;
+  final PriestModel? initial;
+  final VoidCallback onDone;
+
+  @override
+  State<_PriestEditView> createState() => _PriestEditViewState();
+}
+
+class _PriestEditViewState extends State<_PriestEditView> {
+  final _formKey = GlobalKey<FormState>();
+  final _cloudinary = sl<CloudinaryDataSource>();
+
+  final _name = TextEditingController();
+  final _nameAr = TextEditingController();
+  final _phone = TextEditingController();
+  final _churchName = TextEditingController();
+  String? _churchId;
+
+  String _imageUrl = '';
+  File? _imgFile;
+  Uint8List? _imgBytes;
+  bool _uploading = false;
+  double _progress = 0;
+
+  bool _saving = false;
+  String _saveError = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.initial;
+    if (p != null) {
+      _name.text = p.name;
+      _nameAr.text = p.nameAr;
+      _phone.text = p.phone;
+      _churchName.text = p.churchName;
+      _churchId = p.churchId;
+      _imageUrl = p.imageUrl;
+    }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _nameAr.dispose();
+    _phone.dispose();
+    _churchName.dispose();
+    super.dispose();
+  }
+
+  // ── Image pick + upload ───────────────────────────────────────────────────
+
+  Future<void> _pickImage() async {
+    final img = await ImagePicker().pickImage(
+        source: ImageSource.gallery, maxWidth: 800, imageQuality: 85);
+    if (img == null) return;
+    final bytes = await img.readAsBytes();
+    setState(() {
+      _imgFile = kIsWeb ? null : File(img.path);
+      _imgBytes = bytes;
+      _imageUrl = '';
+    });
+    await _uploadImage();
+  }
+
+  Future<void> _uploadImage() async {
+    if (_imgFile == null && _imgBytes == null) return;
+    setState(() { _uploading = true; _progress = 0; });
+    try {
+      final res = kIsWeb
+          ? await _cloudinary.uploadCoverImageBytes(
+              bytes: _imgBytes!,
+              fileName: 'priest_${DateTime.now().millisecondsSinceEpoch}',
+              folder: 'Ekklisia/priests',
+              onProgress: (p) => setState(() => _progress = p))
+          : await _cloudinary.uploadCoverImage(
+              imageFile: _imgFile!,
+              folder: 'Ekklisia/priests',
+              onProgress: (p) => setState(() => _progress = p));
+      setState(() => _imageUrl = res.secureUrl);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Image upload failed: $e'),
+            backgroundColor: Colors.redAccent));
+      }
+    } finally {
+      if (mounted) setState(() { _uploading = false; });
+    }
+  }
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+
+  Future<void> _save() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() { _saving = true; _saveError = ''; });
+    try {
+      final priest = PriestModel(
+        id: widget.initial?.id ?? '',
+        name: _name.text.trim(),
+        nameAr: _nameAr.text.trim(),
+        phone: _phone.text.trim(),
+        churchId: _churchId,
+        churchName: _churchName.text.trim(),
+        imageUrl: _imageUrl,
+      );
+      await widget.repo.save(priest);
+      widget.onDone();
+    } catch (e) {
+      setState(() => _saveError = e.toString());
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+    final isNew = widget.initial == null;
+
+    return Column(children: [
+      // ── Header bar ────────────────────────────────────────────────────
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        decoration: BoxDecoration(
+          color: ac.bgDeep,
+          border: Border(bottom: ac.borderSide),
+        ),
+        child: Row(children: [
+          GestureDetector(
+            onTap: widget.onDone,
+            child: Icon(Icons.arrow_back_ios_new, color: ac.gold, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isNew ? l.addPriest : l.editPriest,
+              style: TextStyle(color: ac.textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+          ),
+          GestureDetector(
+            onTap: _saving ? null : _save,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: _saving ? ac.bgMid : ac.gold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: ac.gold.withValues(alpha: 0.4), width: 0.5),
+              ),
+              child: _saving
+                  ? SizedBox(
+                      width: 14, height: 14,
+                      child: CircularProgressIndicator(color: ac.gold, strokeWidth: 2),
+                    )
+                  : Text(
+                      l.save,
+                      style: TextStyle(color: ac.gold, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+            ),
+          ),
+        ]),
+      ),
+
+      if (_saveError.isNotEmpty)
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: ac.maroon.withValues(alpha: 0.15),
+            borderRadius: _kRadius,
+            border: Border.all(color: ac.maroon.withValues(alpha: 0.4)),
+          ),
+          child: Text(_saveError, style: TextStyle(color: ac.maroonMid, fontSize: 12)),
+        ),
+
+      Expanded(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+            children: [
+              _FormCard(
+                title: 'Ιερέας',
+                titleAr: 'الكاهن',
+                child: Column(children: [
+                  _Field(ctrl: _name, label: l.priestName, required: true),
+                  const SizedBox(height: 10),
+                  _Field(ctrl: _nameAr, label: l.priestNameAr, arabic: true),
+                  const SizedBox(height: 10),
+                  _Field(
+                    ctrl: _phone,
+                    label: l.priestPhone,
+                    hint: '+30 210 0000000',
+                    keyboardType: TextInputType.phone,
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 12),
+
+              _FormCard(
+                title: 'Εκκλησία',
+                titleAr: 'الكنيسة',
+                child: _ChurchPickerField(
+                  nameCtrl: _churchName,
+                  churches: widget.churches,
+                  onChurchIdChanged: (id) => _churchId = id,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              _FormCard(
+                title: 'Φωτογραφία',
+                titleAr: 'الصورة',
+                child: _PriestImagePicker(
+                  imageUrl: _imageUrl,
+                  localBytes: _imgBytes,
+                  uploading: _uploading,
+                  progress: _progress,
+                  onPick: _pickImage,
+                  ac: ac,
+                  l: l,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ]);
+  }
+}
+
+// ── Church picker (used inside the priest form) ─────────────────────────────
+//
+// A plain text field the admin can either type into directly (free text —
+// no backing church record) or fill via the list icon, which opens a
+// searchable sheet of already-registered churches.
+
+class _ChurchPickerField extends StatefulWidget {
+  const _ChurchPickerField({
+    required this.nameCtrl,
+    required this.churches,
+    required this.onChurchIdChanged,
+  });
+
+  final TextEditingController nameCtrl;
+  final List<ChurchModel> churches;
+  final ValueChanged<String?> onChurchIdChanged;
+
+  @override
+  State<_ChurchPickerField> createState() => _ChurchPickerFieldState();
+}
+
+class _ChurchPickerFieldState extends State<_ChurchPickerField> {
+  Future<void> _openPicker() async {
+    // .adminL10nOnce (not .adminL10n) — this runs from an IconButton
+    // callback, not a build() method, and Provider's `watch` (which
+    // .adminL10n uses) asserts if called outside the widget tree's build
+    // phase.
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10nOnce;
+    String search = '';
+
+    final selected = await showModalBottomSheet<ChurchModel>(
+      context: context,
+      backgroundColor: ac.bgElevated,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final filtered = widget.churches.where((c) {
+            final q = search.toLowerCase();
+            return q.isEmpty ||
+                c.nameEn.toLowerCase().contains(q) ||
+                c.nameAr.contains(q);
+          }).toList();
+
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: TextField(
+                      autofocus: true,
+                      style: TextStyle(color: ac.textPrimary, fontSize: 13),
+                      decoration: ac.inputDeco('${l.search} ${l.churches}…'),
+                      onChanged: (v) => setSheetState(() => search = v),
+                    ),
+                  ),
+                  Flexible(
+                    child: filtered.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(l.noChurches,
+                                style: TextStyle(color: ac.textSecondary, fontSize: 13)),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filtered.length,
+                            itemBuilder: (_, i) {
+                              final c = filtered[i];
+                              return ListTile(
+                                title: Text(c.nameEn, style: TextStyle(color: ac.textPrimary)),
+                                subtitle: Text(c.nameAr,
+                                    style: TextStyle(color: ac.textSecondary, fontFamily: 'Scheherazade')),
+                                onTap: () => Navigator.of(ctx).pop(c),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (selected != null) {
+      // Order matters: setting .text first fires onChanged (which clears
+      // churchId as "manual typing"), then we set the real id afterward so
+      // it sticks.
+      widget.nameCtrl.text = selected.nameEn;
+      widget.onChurchIdChanged(selected.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: widget.nameCtrl,
+          style: TextStyle(color: ac.textPrimary, fontSize: 13),
+          decoration: ac.inputDeco(l.priestChurchField).copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.list_alt_outlined, color: ac.gold, size: 18),
+                  onPressed: _openPicker,
+                  tooltip: l.churches,
+                ),
+              ),
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Υποχρεωτικό' : null,
+          onChanged: (_) => widget.onChurchIdChanged(null),
+        ),
+        const SizedBox(height: 4),
+        Text(l.churchPickerHint, style: TextStyle(color: ac.textSecondary, fontSize: 10)),
+      ],
+    );
+  }
+}
+
 // ════════════════════════════════════════════════════════════════════════════
-// LIST VIEW
+// CHURCHES LIST VIEW
 // ════════════════════════════════════════════════════════════════════════════
 
 class _ListView extends StatefulWidget {
@@ -321,6 +904,7 @@ class _ChurchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ac = AdminC(Theme.of(context).brightness);
+    final l = context.adminL10n;
     return AnimatedContainer(
       duration: Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -335,6 +919,7 @@ class _ChurchCard extends StatelessWidget {
       ),
       child: confirmingDelete
           ? _DeleteConfirmRow(
+              message: l.deleteChurch,
               onConfirm: onDeleteConfirm,
               onCancel: onDeleteCancel,
             )
@@ -359,7 +944,7 @@ class _ChurchCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
 
-                // Names + priest count + maps chip
+                // Names + maps chip
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,21 +966,12 @@ class _ChurchCard extends StatelessWidget {
                           fontFamily: 'Scheherazade',
                         ),
                       ),
-                      SizedBox(height: 4),
-                      Row(children: [
-                        if (church.priests.isNotEmpty)
-                          _Chip(
-                            label: '${church.priests.length} κ.',
-                            color: ac.tealMid,
-                          ),
-                        if (church.priests.isNotEmpty)
-                          SizedBox(width: 4),
-                        if (church.mapsUrl.isNotEmpty)
-                          _Chip(
-                            label: '📍 maps',
-                            color: ac.gold,
-                          ),
-                      ]),
+                      if (church.mapsUrl.isNotEmpty) ...[
+                        SizedBox(height: 4),
+                        Row(children: [
+                          _Chip(label: '📍 maps', color: ac.gold),
+                        ]),
+                      ],
                     ],
                   ),
                 ),
@@ -457,38 +1033,34 @@ class _ChurchCard extends StatelessWidget {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EDIT VIEW
+// CHURCH EDIT VIEW
 // ════════════════════════════════════════════════════════════════════════════
+//
+// Church-only fields — no priest data lives on the church document anymore,
+// so this can never accidentally touch priests.
 
-class _EditView extends StatefulWidget {
-  const _EditView({
+class _ChurchEditView extends StatefulWidget {
+  const _ChurchEditView({
     required this.repo,
     required this.initial,
     required this.onDone,
-    this.showPriestSection = true,
   });
   final ChurchesRepository repo;
   final ChurchModel? initial;
   final VoidCallback onDone;
-  final bool showPriestSection;
 
   @override
-  State<_EditView> createState() => _EditViewState();
+  State<_ChurchEditView> createState() => _ChurchEditViewState();
 }
 
-class _EditViewState extends State<_EditView> {
+class _ChurchEditViewState extends State<_ChurchEditView> {
   final _formKey = GlobalKey<FormState>();
 
-  // ── Church fields ─────────────────────────────────────────────────────────
   final _nameEn  = TextEditingController();
   final _nameAr  = TextEditingController();
   final _mapsUrl = TextEditingController();
   bool _published = true;
 
-  // ── Priests (dynamic list of row controllers) ─────────────────────────────
-  final List<_PriestRow> _priests = [];
-
-  // ── Save state ────────────────────────────────────────────────────────────
   bool   _saving    = false;
   String _saveError = '';
 
@@ -501,14 +1073,6 @@ class _EditViewState extends State<_EditView> {
       _nameAr.text   = c.nameAr;
       _mapsUrl.text  = c.mapsUrl;
       _published     = c.isPublished;
-      for (final p in c.priests) {
-        _priests.add(_PriestRow(
-          nameEn:   TextEditingController(text: p.nameEn),
-          nameAr:   TextEditingController(text: p.nameAr),
-          phone:    TextEditingController(text: p.phone),
-          imageUrl: TextEditingController(text: p.imageUrl),
-        ));
-      }
     }
   }
 
@@ -517,54 +1081,19 @@ class _EditViewState extends State<_EditView> {
     _nameEn.dispose();
     _nameAr.dispose();
     _mapsUrl.dispose();
-    for (final r in _priests) {
-      r.nameEn.dispose();
-      r.nameAr.dispose();
-      r.phone.dispose();
-      r.imageUrl.dispose();
-    }
     super.dispose();
-  }
-
-  void _addPriest() {
-    setState(() {
-      _priests.add(_PriestRow(
-        nameEn:   TextEditingController(),
-        nameAr:   TextEditingController(),
-        phone:    TextEditingController(),
-        imageUrl: TextEditingController(),
-      ));
-    });
-  }
-
-  void _removePriest(int i) {
-    setState(() {
-      _priests[i].nameEn.dispose();
-      _priests[i].nameAr.dispose();
-      _priests[i].phone.dispose();
-      _priests[i].imageUrl.dispose();
-      _priests.removeAt(i);
-    });
   }
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() { _saving = true; _saveError = ''; });
     try {
-      final priests = _priests.map((r) => PriestModel(
-        nameEn:   r.nameEn.text.trim(),
-        nameAr:   r.nameAr.text.trim(),
-        phone:    r.phone.text.trim(),
-        imageUrl: r.imageUrl.text.trim(),
-      )).toList();
-
       final church = ChurchModel(
         id:          widget.initial?.id ?? '',
         nameEn:      _nameEn.text.trim(),
         nameAr:      _nameAr.text.trim(),
         mapsUrl:     _mapsUrl.text.trim(),
         isPublished: _published,
-        priests:     priests,
       );
 
       await widget.repo.save(church);
@@ -572,7 +1101,7 @@ class _EditViewState extends State<_EditView> {
     } catch (e) {
       setState(() => _saveError = e.toString());
     } finally {
-      setState(() => _saving = false);
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -711,71 +1240,6 @@ class _EditViewState extends State<_EditView> {
               ),
               const SizedBox(height: 12),
 
-              // ── Priests ────────────────────────────────────────────
-              if (widget.showPriestSection)
-              _FormCard(
-                title: 'Ιερείς',
-                titleAr: 'الكهنة',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_priests.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          'Δεν έχουν προστεθεί ιερείς  —  لا يوجد كهنة',
-                          style: TextStyle(
-                            color: ac.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-
-                    // Priest rows
-                    for (int i = 0; i < _priests.length; i++) ...[
-                      _PriestFormRow(
-                        row: _priests[i],
-                        index: i,
-                        l: l,
-                        onRemove: () => _removePriest(i),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-
-                    // Add priest button
-                    GestureDetector(
-                      onTap: _addPriest,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: ac.bgMid,
-                          borderRadius: _kRadius,
-                          border: Border.all(
-                              color: ac.goldBorder, width: 0.5),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.person_add_outlined,
-                                color: ac.tealMid, size: 16),
-                            SizedBox(width: 6),
-                            Text(
-                              l.addPriest,
-                              style: TextStyle(
-                                color: ac.tealMid,
-                                fontFamily: l.fontFam,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
               // ── Publish ────────────────────────────────────────────
               _FormCard(
                 title: 'Ορατότητα',
@@ -808,167 +1272,8 @@ class _EditViewState extends State<_EditView> {
   }
 }
 
-// ── Priest form row ───────────────────────────────────────────────────────────
-
-class _PriestRow {
-  _PriestRow({
-    required this.nameEn,
-    required this.nameAr,
-    required this.phone,
-    required this.imageUrl,
-  });
-  final TextEditingController nameEn;
-  final TextEditingController nameAr;
-  final TextEditingController phone;
-  final TextEditingController imageUrl;
-}
-
-class _PriestFormRow extends StatefulWidget {
-  const _PriestFormRow({
-    required this.row,
-    required this.index,
-    required this.l,
-    required this.onRemove,
-  });
-
-  final _PriestRow row;
-  final int index;
-  final AdminL10n l;
-  final VoidCallback onRemove;
-
-  @override
-  State<_PriestFormRow> createState() => _PriestFormRowState();
-}
-
-class _PriestFormRowState extends State<_PriestFormRow> {
-  final _cloudinary = sl<CloudinaryDataSource>();
-
-  File?      _imgFile;
-  Uint8List? _imgBytes;
-  bool       _uploading = false;
-  double     _progress  = 0;
-
-  // ── Image pick + upload ───────────────────────────────────────────────────
-
-  Future<void> _pickImage() async {
-    final img = await ImagePicker().pickImage(
-        source: ImageSource.gallery, maxWidth: 800, imageQuality: 85);
-    if (img == null) return;
-    final bytes = await img.readAsBytes();
-    setState(() {
-      _imgFile  = kIsWeb ? null : File(img.path);
-      _imgBytes = bytes;
-      widget.row.imageUrl.clear();
-    });
-    await _uploadImage();
-  }
-
-  Future<void> _uploadImage() async {
-    if (_imgFile == null && _imgBytes == null) return;
-    setState(() { _uploading = true; _progress = 0; });
-    try {
-      final res = kIsWeb
-          ? await _cloudinary.uploadCoverImageBytes(
-              bytes: _imgBytes!,
-              fileName: 'priest_${DateTime.now().millisecondsSinceEpoch}',
-              folder: 'Ekklisia/priests',
-              onProgress: (p) => setState(() => _progress = p))
-          : await _cloudinary.uploadCoverImage(
-              imageFile: _imgFile!,
-              folder: 'Ekklisia/priests',
-              onProgress: (p) => setState(() => _progress = p));
-      setState(() => widget.row.imageUrl.text = res.secureUrl);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Image upload failed: $e'),
-            backgroundColor: Colors.redAccent));
-      }
-    } finally {
-      setState(() { _uploading = false; });
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    final ac  = AdminC(Theme.of(context).brightness);
-    final l   = widget.l;
-    final row = widget.row;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ac.bgDeep,
-        borderRadius: _kRadius,
-        border: Border.all(
-            color: ac.tealMid.withValues(alpha: 0.25), width: 0.5),
-      ),
-      child: Column(children: [
-        // ── Header ──────────────────────────────────────────────────────────
-        Row(children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: ac.tealMid.withValues(alpha: 0.12),
-              border: Border.all(
-                  color: ac.tealMid.withValues(alpha: 0.3), width: 0.5),
-            ),
-            child: Center(
-              child: Text(
-                '${widget.index + 1}',
-                style: TextStyle(
-                    color: ac.tealMid,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l.priests,
-              style: TextStyle(
-                  color: ac.tealMid,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600),
-            ),
-          ),
-          GestureDetector(
-            onTap: widget.onRemove,
-            child: Icon(Icons.close, color: ac.maroonMid, size: 16),
-          ),
-        ]),
-        const SizedBox(height: 10),
-
-        // ── Text fields ──────────────────────────────────────────────────────
-        _Field(ctrl: row.nameEn, label: l.priestNameEn, required: true),
-        const SizedBox(height: 8),
-        _Field(ctrl: row.nameAr, label: l.priestNameAr, required: true, arabic: true),
-        const SizedBox(height: 8),
-        _Field(ctrl: row.phone, label: l.priestPhone,
-            hint: '+30 210 0000000', keyboardType: TextInputType.phone),
-        const SizedBox(height: 10),
-
-        // ── Image picker ─────────────────────────────────────────────────────
-        _PriestImagePicker(
-          imageUrl:   row.imageUrl.text,
-          localBytes: _imgBytes,
-          uploading:  _uploading,
-          progress:   _progress,
-          onPick:     _pickImage,
-          ac:         ac,
-          l:          l,
-        ),
-      ]),
-    );
-  }
-}
-
 // ── Priest image picker widget ────────────────────────────────────────────────
+// (also used by the bishop card, which shares the same pick/preview/upload UI)
 
 class _PriestImagePicker extends StatelessWidget {
   const _PriestImagePicker({
@@ -1278,7 +1583,7 @@ class _ToolbarState extends State<_Toolbar> {
                   style: TextStyle(
                       color: ac.textPrimary, fontSize: 13),
                   decoration: ac.inputDeco(
-                      '${l.search} ${l.churches}…'),
+                      '${l.search} ${widget.title}…'),
                   onChanged: widget.onSearch,
                 )
               : Column(
@@ -1439,10 +1744,14 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _DeleteConfirmRow extends StatelessWidget {
-  const _DeleteConfirmRow(
-      {required this.onConfirm, required this.onCancel});
+  const _DeleteConfirmRow({
+    required this.onConfirm,
+    required this.onCancel,
+    this.message,
+  });
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -1454,7 +1763,7 @@ class _DeleteConfirmRow extends StatelessWidget {
             color: ac.maroonMid, size: 18),
         SizedBox(width: 8),
         Expanded(
-          child: Text('Διαγραφή αυτής της εκκλησίας;',
+          child: Text(message ?? 'Διαγραφή;',
               style: TextStyle(
                   color: ac.textPrimary, fontSize: 13)),
         ),
@@ -1476,7 +1785,8 @@ class _DeleteConfirmRow extends StatelessWidget {
 
 // ════════════════════════════════════════════════════════════════════════════
 // BISHOP ADMIN CARD
-// ══════════════════════════════════════════════════════════════════// Shows the current bishop titles + photo, with an edit button.
+// ════════════════════════════════════════════════════════════════════════════
+// Shows the current bishop titles + photo, with an edit button.
 // Saves directly to config/bishop via BishopRepository.
 
 class _BishopAdminCard extends StatefulWidget {
@@ -1756,291 +2066,6 @@ class _BishopAdminCardState extends State<_BishopAdminCard> {
           ),
         );
       },
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// CHURCH PRIESTS CARD (for Priests Tab)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _ChurchPriestsCard extends StatefulWidget {
-  const _ChurchPriestsCard({
-    required this.church,
-    required this.repo,
-  });
-
-  final ChurchModel church;
-  final ChurchesRepository repo;
-
-  @override
-  State<_ChurchPriestsCard> createState() => _ChurchPriestsCardState();
-}
-
-class _ChurchPriestsCardState extends State<_ChurchPriestsCard> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final ac = AdminC(Theme.of(context).brightness);
-    final l = context.adminL10n;
-    final church = widget.church;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: ac.bgElevated,
-        borderRadius: _kRadius,
-        border: Border.all(color: ac.goldBorder, width: 0.5),
-      ),
-      child: Column(
-        children: [
-          // ── Church header ──────────────────────────────────────────
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    // Church icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: ac.bgMid,
-                        borderRadius: BorderRadius.circular(6),
-                        border:
-                            Border.all(color: ac.goldBorder, width: 0.5),
-                      ),
-                      child: Center(
-                        child: Text('☩',
-                            style: TextStyle(
-                                color: ac.gold, fontSize: 22)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // Church names + priest count
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            church.nameEn,
-                            style: TextStyle(
-                              color: ac.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            church.nameAr,
-                            style: TextStyle(
-                              color: ac.textSecondary,
-                              fontSize: 12,
-                              fontFamily: 'Scheherazade',
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          _Chip(
-                            label:
-                                '${church.priests.length} ${l.priests}',
-                            color: ac.tealMid,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Expand/collapse icon
-                    Icon(
-                      _expanded
-                          ? Icons.expand_less
-                          : Icons.expand_more,
-                      color: ac.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ── Priests list (when expanded) ────────────────────────────
-          if (_expanded) ...[
-            Divider(height: 1, color: ac.goldBorder),
-            if (church.priests.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  'Δεν υπάρχουν ιερείς  —  لا يوجد كهنة',
-                  style: TextStyle(
-                    color: ac.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: List.generate(
-                    church.priests.length,
-                    (index) {
-                      final priest = church.priests[index];
-                      return Column(
-                        children: [
-                          _PriestItemRow(
-                            priest: priest,
-                            index: index,
-                            ac: ac,
-                            onEdit: () {
-                              // TODO: Open priest edit for this church
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      'Edit ${priest.nameEn} - TODO implementation'),
-                                ),
-                              );
-                            },
-                          ),
-                          if (index < church.priests.length - 1)
-                            const SizedBox(height: 8),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-
-class _PriestItemRow extends StatelessWidget {
-  const _PriestItemRow({
-    required this.priest,
-    required this.index,
-    required this.ac,
-    required this.onEdit,
-  });
-
-  final PriestModel priest;
-  final int index;
-  final AdminC ac;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: ac.bgMid,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: ac.tealMid.withValues(alpha: 0.2), width: 0.5),
-      ),
-      child: Row(
-        children: [
-          // Priest number badge
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: ac.tealMid.withValues(alpha: 0.12),
-              border:
-                  Border.all(color: ac.tealMid.withValues(alpha: 0.3), width: 0.5),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: ac.tealMid,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Priest image + names + phone
-          if (priest.imageUrl.isNotEmpty)
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: ac.goldBorder, width: 0.5),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.network(
-                priest.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    Icon(Icons.person_outline, color: ac.textSecondary),
-              ),
-            )
-          else
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ac.bgElevated,
-                border: Border.all(color: ac.goldBorder, width: 0.5),
-              ),
-              child: Icon(Icons.person_outline,
-                  color: ac.textSecondary, size: 20),
-            ),
-          const SizedBox(width: 10),
-
-          // Priest info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  priest.nameEn,
-                  style: TextStyle(
-                    color: ac.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (priest.nameAr.isNotEmpty)
-                  Text(
-                    priest.nameAr,
-                    style: TextStyle(
-                      color: ac.textSecondary,
-                      fontFamily: 'Scheherazade',
-                      fontSize: 11,
-                    ),
-                  ),
-                if (priest.phone.isNotEmpty)
-                  Text(
-                    priest.phone,
-                    style: TextStyle(
-                      color: ac.gold,
-                      fontSize: 10,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Edit button
-          GestureDetector(
-            onTap: onEdit,
-            child: Icon(Icons.edit_outlined, color: ac.gold, size: 16),
-          ),
-        ],
-      ),
     );
   }
 }

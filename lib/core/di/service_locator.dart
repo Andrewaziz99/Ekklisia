@@ -26,6 +26,7 @@ import '../../data/repositories/elib_repository.dart';
 import '../../data/repositories/gallery_repository.dart';
 import '../../data/repositories/bishop_repository.dart';
 import '../../data/repositories/churches_repository.dart';
+import '../../data/repositories/priests_repository.dart';
 import '../../data/repositories/saints_repository.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
@@ -118,8 +119,11 @@ class ServiceLocator {
     sl.registerLazySingleton<SaintsRepository>(
       () => SaintsRepository(sl<FirebaseFirestore>()),
     );
+    sl.registerLazySingleton<PriestsRepository>(
+      () => PriestsRepository(sl<FirebaseFirestore>()),
+    );
     sl.registerLazySingleton<ChurchesRepository>(
-      () => ChurchesRepository(sl<FirebaseFirestore>()),
+      () => ChurchesRepository(sl<FirebaseFirestore>(), sl<PriestsRepository>()),
     );
     sl.registerLazySingleton<BishopRepository>(
       () => BishopRepository(sl<FirebaseFirestore>()),

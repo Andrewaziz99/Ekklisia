@@ -6,11 +6,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../models/church_model.dart';
+import 'priests_repository.dart';
 
 class ChurchesRepository {
-  ChurchesRepository(this._db);
+  ChurchesRepository(this._db, [this._priestsRepo]);
 
   final FirebaseFirestore _db;
+
+  /// Optional — when set, church renames/deletes keep every linked priest's
+  /// denormalized church name in sync (or unlink them on delete) instead of
+  /// leaving stale references behind.
+  final PriestsRepository? _priestsRepo;
 
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection(AppConstants.churchesCollection);
@@ -37,10 +43,14 @@ class ChurchesRepository {
       await _col.add(church.toFirestore());
     } else {
       await _col.doc(church.id).update(church.toFirestore());
+      await _priestsRepo?.renameChurch(church.id, church.nameEn);
     }
   }
 
-  Future<void> delete(String id) => _col.doc(id).delete();
+  Future<void> delete(String id) async {
+    await _col.doc(id).delete();
+    await _priestsRepo?.unlinkChurch(id);
+  }
 
   Future<void> togglePublished(String id, bool value) =>
       _col.doc(id).update({'isPublished': value});

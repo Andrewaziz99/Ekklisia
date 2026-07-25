@@ -12,7 +12,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +20,7 @@ import 'package:pdfx/pdfx.dart';
 
 import '../../core/theme/colors.dart';
 import '../../services/cache_service.dart';
+import 'pdf_internal_links.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PUBLIC CONTROLLER
@@ -156,6 +157,12 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
   PdfScrollController? _ctrl;
   String? _errorMessage;
 
+  // Internal ("jump to page") link overlays, keyed by 1-indexed source page.
+  // Parsed separately from the render path (see [_loadLinks]) and applied
+  // once ready — page images render immediately either way, this just adds
+  // tap targets a moment later.
+  Map<int, PdfPageLinks> _linksByPage = const {};
+
   @override
   void initState() {
     super.initState();
@@ -257,13 +264,20 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
     }
   }
 
-  Future<void> _openDocumentFile(File file) =>
-      _openFromLoader(() => PdfDocument.openFile(file.path));
+  Future<void> _openDocumentFile(File file) async {
+    // Read once, up front: pdfx opens the file lazily by path, but link
+    // parsing (a separate engine — see [_loadLinks]) needs the raw bytes.
+    final bytes = await file.readAsBytes();
+    await _openFromLoader(() => PdfDocument.openFile(file.path), bytes);
+  }
 
   Future<void> _openDocumentBytes(Uint8List bytes) =>
-      _openFromLoader(() => PdfDocument.openData(bytes));
+      _openFromLoader(() => PdfDocument.openData(bytes), bytes);
 
-  Future<void> _openFromLoader(Future<PdfDocument> Function() loader) async {
+  Future<void> _openFromLoader(
+    Future<PdfDocument> Function() loader,
+    Uint8List linkSourceBytes,
+  ) async {
     if (!mounted) return;
     try {
       final doc = await loader();
@@ -278,6 +292,7 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
         _phase = _Phase.ready;
       });
       widget.onControllerReady?.call(ctrl);
+      _loadLinks(linkSourceBytes);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -285,6 +300,22 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
         _phase = _Phase.error;
       });
       widget.onDocumentLoadFailed?.call(e);
+    }
+  }
+
+  // ── Internal link parsing ────────────────────────────────────────────────
+
+  /// Parses internal ("jump to page") link annotations on a background
+  /// isolate (large PDFs can be slow to parse) and applies them once done.
+  /// Failure here is silent by design — it only means link overlays don't
+  /// appear; the page images already rendered fine without them.
+  Future<void> _loadLinks(Uint8List bytes) async {
+    try {
+      final links = await compute(extractInternalPdfLinks, bytes);
+      if (!mounted || links.isEmpty) return;
+      setState(() => _linksByPage = links);
+    } catch (_) {
+      // No internal links found/parseable.
     }
   }
 
@@ -314,6 +345,7 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
           child: _PageListView(
             document: _doc!,
             ctrl: _ctrl!,
+            linksByPage: _linksByPage,
             onDocumentLoaded: widget.onDocumentLoaded,
             onDocumentLoadFailed: widget.onDocumentLoadFailed,
             onPageChanged: widget.onPageChanged,
@@ -331,6 +363,7 @@ class _PageListView extends StatefulWidget {
   const _PageListView({
     required this.document,
     required this.ctrl,
+    required this.linksByPage,
     this.onDocumentLoaded,
     this.onDocumentLoadFailed,
     this.onPageChanged,
@@ -338,6 +371,7 @@ class _PageListView extends StatefulWidget {
 
   final PdfDocument document;
   final PdfScrollController ctrl;
+  final Map<int, PdfPageLinks> linksByPage;
   final void Function(int)? onDocumentLoaded;
   final void Function(Object)? onDocumentLoadFailed;
   final void Function(int)? onPageChanged;
@@ -400,6 +434,12 @@ class _PageListViewState extends State<_PageListView> {
           zoomOwner: _zoomOwner,
           onSized: (h) => widget.ctrl._recordHeight(index + 1, h),
           onError: widget.onDocumentLoadFailed,
+          links: widget.linksByPage[index + 1],
+          onLinkTap: (targetPage) => widget.ctrl._animateTo(
+            targetPage,
+            const Duration(milliseconds: 400),
+            Curves.easeInOut,
+          ),
         ),
       ),
     );
@@ -445,6 +485,8 @@ class _PdfPageTile extends StatefulWidget {
     required this.zoomOwner,
     required this.onSized,
     this.onError,
+    this.links,
+    this.onLinkTap,
   });
 
   final PdfDocument document;
@@ -455,6 +497,10 @@ class _PdfPageTile extends StatefulWidget {
   final ValueNotifier<int?> zoomOwner;
   final void Function(double height) onSized;
   final void Function(Object)? onError;
+
+  /// This page's internal links (if any) — see [pdf_internal_links.dart].
+  final PdfPageLinks? links;
+  final void Function(int targetPage)? onLinkTap;
 
   @override
   State<_PdfPageTile> createState() => _PdfPageTileState();
@@ -619,15 +665,55 @@ class _PdfPageTileState extends State<_PdfPageTile> {
               }
             },
             onInteractionEnd: (_) => _syncZoomState(),
-            child: Image.memory(
-              _image!.bytes,
-              width: screenW,
-              height: _height,
-              fit: BoxFit.fill,
-              gaplessPlayback: true,
-            ),
+            child: _buildPageContent(screenW),
           ),
         ),
+      ),
+    );
+  }
+
+  /// The rendered page image, plus tappable overlays for any internal
+  /// links on this page (scaled from PDF point space up to [screenW] /
+  /// [_height]). Overlays live inside InteractiveViewer's child so they
+  /// pan/zoom together with the image instead of staying pinned in place.
+  Widget _buildPageContent(double screenW) {
+    final image = Image.memory(
+      _image!.bytes,
+      width: screenW,
+      height: _height,
+      fit: BoxFit.fill,
+      gaplessPlayback: true,
+    );
+
+    final pageLinks = widget.links;
+    if (pageLinks == null ||
+        pageLinks.links.isEmpty ||
+        widget.onLinkTap == null) {
+      return image;
+    }
+
+    final double h = _height!;
+    final double scaleX = screenW / pageLinks.sizePt.width;
+    final double scaleY = h / pageLinks.sizePt.height;
+
+    return SizedBox(
+      width: screenW,
+      height: h,
+      child: Stack(
+        children: [
+          image,
+          for (final link in pageLinks.links)
+            Positioned(
+              left: link.bounds.left * scaleX,
+              top: link.bounds.top * scaleY,
+              width: link.bounds.width * scaleX,
+              height: link.bounds.height * scaleY,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => widget.onLinkTap!(link.targetPage),
+              ),
+            ),
+        ],
       ),
     );
   }

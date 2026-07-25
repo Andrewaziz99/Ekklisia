@@ -13,8 +13,10 @@ import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/bishop_model.dart';
 import '../../data/models/church_model.dart';
+import '../../data/models/priest_model.dart';
 import '../../data/repositories/bishop_repository.dart';
 import '../../data/repositories/churches_repository.dart';
+import '../../data/repositories/priests_repository.dart';
 import 'churches_cubit.dart';
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -174,7 +176,7 @@ class _ChurchesViewState extends State<_ChurchesView>
                       controller: _tab,
                       children: [
                         _ChurchesTab(churches: state.churches),
-                        _PriestsTab(churches: state.churches),
+                        const _PriestsTab(),
                       ],
                     );
                   }
@@ -242,10 +244,13 @@ class _ChurchesTab extends StatelessWidget {
 }
 
 // ── Tab 2: Priests ────────────────────────────────────────────────────────────
+//
+// Priests are their own top-level collection (see PriestsRepository) rather
+// than embedded per-church, so this streams them directly instead of
+// flattening church.priests.
 
 class _PriestsTab extends StatelessWidget {
-  const _PriestsTab({required this.churches});
-  final List<ChurchModel> churches;
+  const _PriestsTab();
 
   @override
   Widget build(BuildContext context) {
@@ -257,49 +262,47 @@ class _PriestsTab extends StatelessWidget {
     final textSecondary = BrightnessColors.textSecondary(brightness);
     final l = context.l10n;
 
-    // Build a flat list: {priest, churchName}
-    final items = <({PriestModel priest, String churchName})>[];
-    for (final church in churches) {
-      final name = l.isAr ? church.nameAr : church.nameEn;
-      for (final p in church.priests) {
-        items.add((priest: p, churchName: name));
-      }
-    }
+    return StreamBuilder<List<PriestModel>>(
+      stream: sl<PriestsRepository>().watchAll(),
+      builder: (context, snap) {
+        final priests = snap.data ?? [];
 
-    if (items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('✦', style: TextStyle(color: goldBorder, fontSize: 36)),
-            const SizedBox(height: 12),
-            Text(
-              l.noPriests,
-              style: TextStyle(
-                color: textSecondary,
-                fontFamily: l.bodyFont,
-                fontSize: 14,
-              ),
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(color: gold, strokeWidth: 2));
+        }
+
+        if (priests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('✦', style: TextStyle(color: goldBorder, fontSize: 36)),
+                const SizedBox(height: 12),
+                Text(
+                  l.noPriests,
+                  style: TextStyle(
+                    color: textSecondary,
+                    fontFamily: l.bodyFont,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      itemCount: items.length,
-      itemBuilder: (_, i) {
-        final item = items[i];
-        return _PriestListCard(
-          priest: item.priest,
-          churchName: item.churchName,
-          gold: gold,
-          teal: teal,
-          textPrimary: textPrimary,
-          textSecondary: textSecondary,
-          goldBorder: goldBorder,
-          l: l,
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          itemCount: priests.length,
+          itemBuilder: (_, i) => _PriestListCard(
+            priest: priests[i],
+            gold: gold,
+            teal: teal,
+            textPrimary: textPrimary,
+            textSecondary: textSecondary,
+            goldBorder: goldBorder,
+            l: l,
+          ),
         );
       },
     );
@@ -497,7 +500,6 @@ class _ChurchCard extends StatelessWidget {
 class _PriestListCard extends StatelessWidget {
   const _PriestListCard({
     required this.priest,
-    required this.churchName,
     required this.gold,
     required this.teal,
     required this.textPrimary,
@@ -507,7 +509,6 @@ class _PriestListCard extends StatelessWidget {
   });
 
   final PriestModel priest;
-  final String churchName;
   final Color gold;
   final Color teal;
   final Color textPrimary;
@@ -554,18 +555,18 @@ class _PriestListCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l.isAr ? priest.nameAr : priest.nameEn,
+                  l.isAr && priest.nameAr.isNotEmpty ? priest.nameAr : priest.name,
                   textDirection: l.dir,
                   style: TextStyle(
                     color: textPrimary,
-                    fontFamily: l.bodyFont,
+                    fontFamily: l.isAr ? 'Scheherazade' : l.bodyFont,
                     fontSize: l.isAr ? 16 : 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (priest.nameEn.isNotEmpty && priest.nameAr.isNotEmpty)
+                if (priest.nameAr.isNotEmpty && priest.name.isNotEmpty)
                   Text(
-                    l.isAr ? priest.nameEn : priest.nameAr,
+                    l.isAr ? priest.name : priest.nameAr,
                     style: TextStyle(
                       color: textSecondary,
                       fontFamily: l.isAr ? null : 'Scheherazade',
@@ -579,7 +580,7 @@ class _PriestListCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        churchName,
+                        priest.churchName,
                         textDirection: l.dir,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

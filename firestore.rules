@@ -1,0 +1,144 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ekklisia — Firestore Security Rules
+//
+// Auth model (see lib/services/auth_service.dart, lib/core/router/app_router.dart):
+//   Every user — including guests — is signed in anonymously on launch, so
+//   request.auth is almost never null. "Admin" is:
+//     1. Firebase custom claim admin == true (preferred, server-set), OR
+//     2. users/{uid}.is_admin == true (Firestore fallback used before custom
+//        claims are wired up for a given account).
+//   A regular user can never grant themselves admin: is_admin/is_active are
+//   blocked from self-service updates below.
+//
+// Content collections generally follow one of two patterns:
+//   • Publish-gated (books, churches): public can read only published docs;
+//     admins can read everything, and are the only ones who can write.
+//   • Public-read (saints, hymns, prayers, gallery, priests, etc.): no
+//     draft/publish concept in the app today, so any signed-in (incl.
+//     anonymous) user can read; only admins can write.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin == true
+        )
+      );
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Collections with no draft/publish concept: readable by any signed-in
+    // (including anonymous) user, writable only by admins.
+    function isPublicReadCollection(name) {
+      return name in [
+        'priests',
+        'bibles', 'bible_config', 'bible_verse_overrides',
+        'hymns', 'prayers', 'liturgies', 'saints', 'calendar_events',
+        'categories', 'gallery', 'elib_sections', 'elib_items',
+        'agbeya_hours', 'pdf_contents', 'game_questions', 'daily_verses'
+      ];
+    }
+
+    // ── Users ──────────────────────────────────────────────────────────────
+    // Each user can read/manage their own profile, but can never grant
+    // themselves admin or reactivate a disabled account — only an admin
+    // (or a trusted backend using the Admin SDK, which bypasses rules) can
+    // touch is_admin / is_active.
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId) &&
+        request.resource.data.get('is_admin', false) == false;
+
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['is_admin', 'is_active'])
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ── FCM tokens ─────────────────────────────────────────────────────────
+    // Keyed by uid — a device registers/refreshes its own token only.
+
+    match /fcm_tokens/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ── Notifications log ──────────────────────────────────────────────────
+    // Admin-facing send history (actual push delivery goes through a
+    // Supabase edge function) — not user-readable content.
+
+    match /notifications/{notificationId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ── Publish-gated content ────────────────────────────────────────────
+    // Field names match each model's toFirestore() exactly (snake_case for
+    // books, camelCase for churches — see the two repositories).
+
+    match /books/{bookId} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.get('is_published', false) == true);
+      allow write: if isAdmin();
+    }
+
+    match /churches/{churchId} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.get('isPublished', false) == true);
+      allow write: if isAdmin();
+    }
+
+    // ── Public-read content (no draft/publish state) ─────────────────────
+    // Covers 'priests' plus every collection listed in
+    // isPublicReadCollection() above — one rule for all of them since they
+    // share the same access pattern.
+
+    match /{collection}/{docId} {
+      allow read: if isPublicReadCollection(collection) && isSignedIn();
+      allow write: if isPublicReadCollection(collection) && isAdmin();
+    }
+
+    // ── Singleton config docs ─────────────────────────────────────────────
+
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Migration flags ────────────────────────────────────────────────────
+    // Only ever touched by PriestsRepository.migrateFromChurchesIfNeeded(),
+    // which only runs from inside the admin CMS.
+
+    match /meta/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ── Default deny ───────────────────────────────────────────────────────
+    // Any path not matched above (including subcollections we don't know
+    // about yet) is denied by default — extend the lists above rather than
+    // relaxing this.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
