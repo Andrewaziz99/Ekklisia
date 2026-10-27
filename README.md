@@ -1,4 +1,4 @@
-# ekklisia
+# ekklicia
 
 A new Coptic mobile application.
 
