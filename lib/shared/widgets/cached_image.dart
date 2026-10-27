@@ -10,6 +10,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../admin/utils/drive_link_utils.dart';
 import '../../core/theme/colors.dart';
 
 class CachedImage extends StatelessWidget {
@@ -64,7 +65,10 @@ class CachedImage extends StatelessWidget {
     }
 
     Widget image = CachedNetworkImage(
-      imageUrl: url,
+      // Google Drive sends no CORS headers, which breaks this on Flutter
+      // Web — route Drive URLs through the drive-proxy edge function.
+      // Non-Drive URLs pass through unchanged. See drive_link_utils.dart.
+      imageUrl: resolveDriveUrl(url),
       width: width,
       height: height,
       fit: fit,

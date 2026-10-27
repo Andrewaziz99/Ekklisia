@@ -14,7 +14,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../../core/theme/colors.dart';
 import 'admin_colors.dart';
 import 'drive_link_utils.dart';
 
@@ -205,7 +204,7 @@ class DriveLinkInputCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: EkklisiaColors.tealDark.withOpacity(0.15),
+              color: ac.tealDark.withOpacity(0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(children: [

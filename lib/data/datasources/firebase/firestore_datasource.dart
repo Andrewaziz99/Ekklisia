@@ -17,7 +17,8 @@ class FirestoreDataSource {
 
   // ── Books ──────────────────────────────────────────────────────────────
 
-  /// Real-time stream of published books, newest first.
+  /// Real-time stream of published books, newest first (then re-sorted by
+  /// admin drag order — see [_bySortOrder]).
   Stream<List<BookModel>> watchPublishedBooks({String? category}) {
     Query<Map<String, dynamic>> query = _books
         .where('is_published', isEqualTo: true)
@@ -28,7 +29,7 @@ class FirestoreDataSource {
     }
 
     return query.snapshots().map(
-      (snap) => snap.docs.map(BookModel.fromFirestore).toList(),
+      (snap) => _bySortOrder(snap.docs.map(BookModel.fromFirestore).toList()),
     );
   }
 
@@ -43,7 +44,7 @@ class FirestoreDataSource {
     }
 
     final snap = await query.get();
-    return snap.docs.map(BookModel.fromFirestore).toList();
+    return _bySortOrder(snap.docs.map(BookModel.fromFirestore).toList());
   }
 
   Future<BookModel?> fetchBookById(String id) async {
@@ -85,7 +86,28 @@ class FirestoreDataSource {
     return _books
         .orderBy('created_at', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(BookModel.fromFirestore).toList());
+        .map((snap) => _bySortOrder(snap.docs.map(BookModel.fromFirestore).toList()));
+  }
+
+  /// Sorts by [BookModel.sortOrder] using a *stable* sort, so books written
+  /// before that field existed (all defaulting to 0) keep the newest-first
+  /// order the Firestore query already gave them, instead of being silently
+  /// dropped the way an `orderBy('sort_order')` query would drop any
+  /// document missing that field.
+  List<BookModel> _bySortOrder(List<BookModel> books) {
+    final sorted = List<BookModel>.of(books);
+    sorted.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return sorted;
+  }
+
+  /// Admin: persist a new display order after drag-to-reorder.
+  /// [ordered] is the full book list in the desired order.
+  Future<void> reorderBooks(List<BookModel> ordered) async {
+    final batch = _firestore.batch();
+    for (var i = 0; i < ordered.length; i++) {
+      batch.update(_books.doc(ordered[i].id), {'sort_order': i});
+    }
+    await batch.commit();
   }
 
   // ── FCM Token Registry ─────────────────────────────────────────────────

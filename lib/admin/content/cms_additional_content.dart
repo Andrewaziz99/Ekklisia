@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import '../../core/utils/text_normalizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
-import '../../core/theme/colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/content_models.dart';
 import '../../features/auth/auth_cubit.dart';

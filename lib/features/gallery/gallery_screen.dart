@@ -19,7 +19,21 @@ const _kNavy  = Color(0xFF1B2A4A);
 const _kGold  = Color(0xFFC9A84C);
 
 class GalleryScreen extends StatefulWidget {
-  const GalleryScreen({super.key});
+  const GalleryScreen({
+    super.key,
+    this.galleryType = GalleryType.general,
+    this.titleAr,
+    this.titleEl,
+  });
+
+  /// Which gallery instance to show — see [GalleryType]. Defaults to the
+  /// general church photo gallery.
+  final String galleryType;
+
+  /// Optional header title override — falls back to the generic "Gallery"
+  /// label when unset (used by the general gallery entry point).
+  final String? titleAr;
+  final String? titleEl;
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
@@ -33,7 +47,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   void initState() {
     super.initState();
-    _repo.watchPublished().listen(
+    _repo.watchPublished(galleryType: widget.galleryType).listen(
       (items) => setState(() { _items = items; _loading = false; }),
       onError: (_) => setState(() => _loading = false),
     );
@@ -44,13 +58,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
     final brightness = Theme.of(context).brightness;
     final l = context.l10n;
     final isGreek = !l.isAr;
+    final titleAr = widget.titleAr ?? AppL10n.ar.gallery;
+    final titleEl = widget.titleEl ?? AppL10n.el.gallery;
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgDeep(brightness),
       body: SafeArea(
         child: Column(
           children: [
-            _Header(isGreek: isGreek),
+            _Header(
+              isGreek: isGreek,
+              titleAr: titleAr,
+              titleEl: titleEl,
+            ),
             Expanded(
               child: _loading
                   ? Center(child: CircularProgressIndicator(
@@ -84,11 +104,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({required this.isGreek});
+  const _Header({
+    required this.isGreek,
+    required this.titleAr,
+    required this.titleEl,
+  });
   final bool isGreek;
+  final String titleAr;
+  final String titleEl;
 
   @override
   Widget build(BuildContext context) {
+    final title = isGreek ? titleEl : titleAr;
     return Container(
       color: _kNavy,
       padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
@@ -102,9 +129,10 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              context.l10n.gallery,
+              title,
+              textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
               style: TextStyle(
-                fontFamily: context.l10n.bodyFont,
+                fontFamily: isGreek ? null : 'Scheherazade',
                 color: _kGold,
                 fontSize: isGreek ? 18 : 22,
                 fontWeight: FontWeight.w700,

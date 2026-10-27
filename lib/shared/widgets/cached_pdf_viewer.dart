@@ -2,25 +2,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Drop-in PDF viewer that:
 //   1. Downloads & caches the PDF (shows progress bar on first open).
-//   2. Renders every page into a ListView at full screen width — no PhotoView
-//      letterboxing, no gaps between pages.
-//   3. Exposes [PdfScrollController] (via onControllerReady) for page navigation.
-//   4. Lets the user pinch (or double-tap) to zoom into a page, panning
-//      around it while zoomed; page-list scrolling is frozen for the
-//      duration so the two gestures don't fight each other.
+//   2. Renders the document via pdfrx's native PdfViewer widget — PDFium-
+//      backed, continuous vertical scroll, built-in pinch/double-tap zoom
+//      over the whole document (not per-page), keyboard navigation, and
+//      native internal-link ("jump to page") handling.
+//   3. Exposes [PdfScrollController] (via onControllerReady) for page
+//      navigation — same public API as before the pdfx→pdfrx migration, so
+//      every call site (reader screens, pdf_nav_tools.dart) is untouched.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb, compute;
+import 'package:flutter/foundation.dart' show kIsWeb, compute, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart' as http;
-import 'package:pdfx/pdfx.dart';
+import 'package:pdfrx/pdfrx.dart';
 
+import '../../admin/utils/drive_link_utils.dart';
 import '../../core/theme/colors.dart';
 import '../../services/cache_service.dart';
-import 'pdf_internal_links.dart';
+import 'pdf_text_search.dart';
+
+export 'pdf_text_search.dart' show PdfSearchMatch;
 
 // ═════════════════════════════════════════════════════════════════════════════
 // PUBLIC CONTROLLER
@@ -33,80 +37,122 @@ import 'pdf_internal_links.dart';
 class PdfScrollController {
   PdfScrollController();
 
-  final ScrollController _scroll = ScrollController();
+  /// Backing pdfrx controller, handed to the pdfrx [PdfViewer] widget via
+  /// its `controller:` param. Page layout/scroll position tracking all
+  /// lives inside pdfrx now — this class is a thin, stable-API wrapper
+  /// around it so callers never had to change when the rendering engine
+  /// (pdfx → pdfrx) was swapped underneath.
+  final PdfViewerController _pdf = PdfViewerController();
 
-  // Per-page heights (logical px). Filled lazily as pages render.
-  final List<double> _heights = [];
-  double _fallback = 0; // used before a real height is known
-  int _totalPages = 0;
-  int _currentPage = 1;
+  // Raw document bytes — kept around (already downloaded for rendering) so
+  // search can run without a second network fetch. Set once by
+  // CachedPdfViewer right after the document opens.
+  Uint8List? _sourceBytes;
 
-  // ── internal API used by CachedPdfViewer ────────────────────────────────
+  /// Total page count (0 before the document finishes loading).
+  int get totalPages => _pdf.isReady ? _pdf.pageCount : 0;
 
-  void _init(int total) => _totalPages = total;
-
-  void _recordHeight(int pageIndex, double h) {
-    // Grow list to fit
-    while (_heights.length < pageIndex) _heights.add(0);
-    _heights[pageIndex - 1] = h;
-    if (_fallback == 0 && h > 0) _fallback = h;
-  }
-
-  void _updateCurrentPage(int page) => _currentPage = page;
-
-  // ── offset helpers ────────────────────────────────────────────────────────
-
-  double _offsetFor(int page) {
-    double sum = 0;
-    for (int i = 0; i < page - 1; i++) {
-      sum += (i < _heights.length && _heights[i] > 0) ? _heights[i] : _fallback;
-    }
-    return sum;
-  }
-
-  int _pageForOffset(double offset) {
-    double sum = 0;
-    for (int i = 0; i < _totalPages; i++) {
-      final h = (i < _heights.length && _heights[i] > 0)
-          ? _heights[i]
-          : _fallback;
-      if (h == 0) break;
-      if (sum + h > offset) return i + 1;
-      sum += h;
-    }
-    return _totalPages.clamp(1, _totalPages.isFinite ? _totalPages : 1);
-  }
+  /// Last known visible page (1-indexed).
+  int get currentPage => _pdf.isReady ? (_pdf.pageNumber ?? 1) : 1;
 
   // ── public API ────────────────────────────────────────────────────────────
 
-  void jumpToPage(int page) {
-    if (!_scroll.hasClients || _fallback == 0) return;
-    final offset = _offsetFor(
-      page,
-    ).clamp(0.0, _scroll.position.maxScrollExtent);
-    _scroll.jumpTo(offset);
-  }
+  void jumpToPage(int page) => _goTo(page, Duration.zero);
 
+  /// [curve] is accepted for API compatibility with existing call sites but
+  /// ignored — pdfrx's own page-to-page animation doesn't take a custom
+  /// curve (matches the [CachedPdfViewer.scrollDirection]/[pageSnapping]
+  /// "kept but ignored" pattern already used in this file).
   void nextPage({
     Duration duration = const Duration(milliseconds: 300),
     Curve curve = Curves.easeInOut,
-  }) => _animateTo(_currentPage + 1, duration, curve);
+  }) => _goTo(currentPage + 1, duration);
 
   void previousPage({
     Duration duration = const Duration(milliseconds: 300),
     Curve curve = Curves.easeInOut,
-  }) => _animateTo(_currentPage - 1, duration, curve);
+  }) => _goTo(currentPage - 1, duration);
 
-  void _animateTo(int page, Duration duration, Curve curve) {
-    if (!_scroll.hasClients || _fallback == 0) return;
-    final target = page.clamp(1, _totalPages);
-    final offset = _offsetFor(
-      target,
-    ).clamp(0.0, _scroll.position.maxScrollExtent);
-    _scroll.animateTo(offset, duration: duration, curve: curve);
+  /// Public, animated jump — used by the "go to page" UI. Silently clamps
+  /// to the valid page range.
+  void animateToPage(
+    int page, {
+    Duration duration = const Duration(milliseconds: 400),
+    Curve curve = Curves.easeInOut,
+  }) => _goTo(page, duration);
+
+  void _goTo(int page, Duration duration) {
+    if (!_pdf.isReady || _pdf.pageCount == 0) return;
+    final target = page.clamp(1, _pdf.pageCount);
+    _pdf.goToPage(pageNumber: target, duration: duration);
   }
 
-  void dispose() => _scroll.dispose();
+  // ── Text search ──────────────────────────────────────────────────────────
+  // Pages are still matched via a background-isolate text extraction pass
+  // (see pdf_text_search.dart) rather than pdfrx's own PdfTextSearcher, so
+  // the search UI (pdf_nav_tools.dart) — built around "which pages matched"
+  // — didn't need to change either. Only the actual page-jump underneath
+  // now goes through pdfrx's controller instead of manual scroll math.
+
+  List<PdfSearchMatch> searchResults = const [];
+  int searchResultIndex = -1;
+
+  PdfSearchMatch? get currentSearchMatch =>
+      (searchResultIndex >= 0 && searchResultIndex < searchResults.length)
+          ? searchResults[searchResultIndex]
+          : null;
+
+  /// Searches the document for [query] on a background isolate and jumps to
+  /// the first match. Returns the matches found (also stored in
+  /// [searchResults] for a caller to render a results list).
+  Future<List<PdfSearchMatch>> search(String query) async {
+    final bytes = _sourceBytes;
+    if (bytes == null || query.trim().isEmpty) {
+      searchResults = const [];
+      searchResultIndex = -1;
+      return searchResults;
+    }
+    final results = await compute(
+      searchPdfText,
+      PdfSearchArgs(bytes: bytes, query: query),
+    );
+    searchResults = results;
+    searchResultIndex = results.isEmpty ? -1 : 0;
+    if (results.isNotEmpty) animateToPage(results.first.pageNumber);
+    return results;
+  }
+
+  void goToSearchResult(int index) {
+    if (index < 0 || index >= searchResults.length) return;
+    searchResultIndex = index;
+    animateToPage(searchResults[index].pageNumber);
+  }
+
+  void nextSearchResult() {
+    if (searchResults.isEmpty) return;
+    goToSearchResult((searchResultIndex + 1) % searchResults.length);
+  }
+
+  void previousSearchResult() {
+    if (searchResults.isEmpty) return;
+    goToSearchResult(
+      (searchResultIndex - 1 + searchResults.length) % searchResults.length,
+    );
+  }
+
+  void clearSearch() {
+    searchResults = const [];
+    searchResultIndex = -1;
+  }
+
+  // NOTE: PdfViewerController has no dispose() method of its own — even
+  // pdfrx's own PdfViewer widget doesn't call one on the controllers it
+  // auto-creates internally (verified against the package source: its
+  // State.dispose() only detaches via `_controller?._attach(null)`).
+  // Nothing here currently holds a resource that needs manual releasing,
+  // so this is a no-op kept for API compatibility with existing callers
+  // (_CachedPdfViewerState._cleanup() still calls ctrl?.dispose()).
+  void dispose() {}
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -122,7 +168,7 @@ class CachedPdfViewer extends StatefulWidget {
     this.onDocumentLoadFailed,
     this.onPageChanged,
     // scrollDirection / pageSnapping kept for API compatibility but ignored:
-    // the ListView always scrolls vertically without snapping.
+    // pdfrx always lays the document out as a continuous vertical scroll.
     this.scrollDirection = Axis.vertical,
     this.pageSnapping = false,
   });
@@ -153,15 +199,21 @@ enum _Phase { downloading, ready, error }
 class _CachedPdfViewerState extends State<CachedPdfViewer> {
   _Phase _phase = _Phase.downloading;
   double _progress = 0;
-  PdfDocument? _doc;
   PdfScrollController? _ctrl;
   String? _errorMessage;
 
-  // Internal ("jump to page") link overlays, keyed by 1-indexed source page.
-  // Parsed separately from the render path (see [_loadLinks]) and applied
-  // once ready — page images render immediately either way, this just adds
-  // tap targets a moment later.
-  Map<int, PdfPageLinks> _linksByPage = const {};
+  // What pdfrx actually opens: a local file path (native/IO — reused from
+  // our own disk cache) or raw bytes (web, where there's no filesystem to
+  // point pdfrx at). Exactly one of these is set once _phase is ready.
+  String? _filePath;
+  Uint8List? _fileBytes;
+
+  // Google Drive sends no CORS headers, which breaks the direct fetch below
+  // on Flutter Web — route Drive URLs through the drive-proxy edge function.
+  // Non-Drive URLs pass through unchanged. Used for every actual network/
+  // cache-key access below; [widget.url] itself is left untouched so
+  // [didUpdateWidget]'s equality check still reflects the real input prop.
+  String get _effectiveUrl => resolveDriveUrl(widget.url);
 
   @override
   void initState() {
@@ -178,6 +230,8 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
         _phase = _Phase.downloading;
         _progress = 0;
         _errorMessage = null;
+        _filePath = null;
+        _fileBytes = null;
       });
       _loadPdf();
     }
@@ -186,8 +240,6 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
   void _cleanup() {
     _ctrl?.dispose();
     _ctrl = null;
-    _doc?.close();
-    _doc = null;
   }
 
   @override
@@ -202,121 +254,112 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
     // flutter_cache_manager's disk cache (used below) needs a real
     // filesystem, backed by path_provider — which has no web implementation
     // at all, so any call into it throws MissingPluginException in a
-    // browser. pdfx's web renderer also can't open a file by path (only
-    // openAsset/openData), so file-based caching is a dead end on web
-    // either way. Skip it there and just fetch bytes straight into memory.
+    // browser. Skip it there and just fetch bytes straight into memory;
+    // pdfrx opens those directly via PdfViewer.data.
     if (kIsWeb) return _loadPdfWeb();
     return _loadPdfIO();
   }
 
   Future<void> _loadPdfWeb() async {
     try {
-      final response = await http.get(Uri.parse(widget.url));
+      final response = await http.get(Uri.parse(_effectiveUrl));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw HttpException(
           'HTTP ${response.statusCode}',
-          uri: Uri.tryParse(widget.url),
+          uri: Uri.tryParse(_effectiveUrl),
         );
       }
-      await _openDocumentBytes(response.bodyBytes);
+      _finishOpen(bytes: response.bodyBytes);
     } catch (e) {
+      // The old message here was a blanket "no internet connection", shown
+      // for ANY failure — including a reachable-but-erroring server (e.g.
+      // the drive-proxy edge function rejecting/failing a request), which
+      // is misleading when the device genuinely has a connection. Logged so
+      // the real cause is visible in the console/logcat, and the on-screen
+      // message now only claims "offline" for an actual connectivity error.
+      debugPrint('[CachedPdfViewer] Failed to load $_effectiveUrl: $e');
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'لا يوجد اتصال بالإنترنت ولم يتم تنزيل هذا الملف بعد.';
+        _errorMessage = _messageFor(e);
         _phase = _Phase.error;
       });
     }
   }
 
+  /// Only genuine connectivity failures (DNS/socket errors) get the
+  /// "you're offline" copy — everything else (bad HTTP status from the
+  /// server/proxy, timeouts, malformed responses, etc.) gets a distinct
+  /// "couldn't download" message so the two very different failure modes
+  /// aren't conflated in the UI.
+  String _messageFor(Object e) {
+    if (e is SocketException) {
+      return 'لا يوجد اتصال بالإنترنت ولم يتم تنزيل هذا الملف بعد.';
+    }
+    return 'تعذّر تحميل الملف. حاول مرة أخرى لاحقاً.';
+  }
+
   Future<void> _loadPdfIO() async {
     final manager = CacheService.instance.pdf;
     try {
-      final info = await manager.getFileFromCache(widget.url);
+      final info = await manager.getFileFromCache(_effectiveUrl);
       if (info != null && await info.file.exists()) {
-        await _openDocumentFile(info.file);
+        await _openFile(info.file);
         return;
       }
       await for (final result in manager.getFileStream(
-        widget.url,
+        _effectiveUrl,
         withProgress: true,
       )) {
         if (!mounted) return;
         if (result is DownloadProgress) {
           setState(() => _progress = result.progress ?? 0);
         } else if (result is FileInfo) {
-          await _openDocumentFile(result.file);
+          await _openFile(result.file);
           return;
         }
       }
     } catch (e) {
+      debugPrint('[CachedPdfViewer] Failed to download $_effectiveUrl: $e');
       if (!mounted) return;
       try {
-        final stale = await manager.getFileFromCache(widget.url);
+        final stale = await manager.getFileFromCache(_effectiveUrl);
         if (stale != null && await stale.file.exists()) {
-          await _openDocumentFile(stale.file);
+          await _openFile(stale.file);
           return;
         }
       } catch (_) {}
       setState(() {
-        _errorMessage = 'لا يوجد اتصال بالإنترنت ولم يتم تنزيل هذا الملف بعد.';
+        _errorMessage = _messageFor(e);
         _phase = _Phase.error;
       });
     }
   }
 
-  Future<void> _openDocumentFile(File file) async {
-    // Read once, up front: pdfx opens the file lazily by path, but link
-    // parsing (a separate engine — see [_loadLinks]) needs the raw bytes.
-    final bytes = await file.readAsBytes();
-    await _openFromLoader(() => PdfDocument.openFile(file.path), bytes);
-  }
-
-  Future<void> _openDocumentBytes(Uint8List bytes) =>
-      _openFromLoader(() => PdfDocument.openData(bytes), bytes);
-
-  Future<void> _openFromLoader(
-    Future<PdfDocument> Function() loader,
-    Uint8List linkSourceBytes,
-  ) async {
+  Future<void> _openFile(File file) async {
     if (!mounted) return;
+    Uint8List? bytes;
     try {
-      final doc = await loader();
-      if (!mounted) {
-        doc.close();
-        return;
-      }
-      final ctrl = PdfScrollController().._init(doc.pagesCount);
-      setState(() {
-        _doc = doc;
-        _ctrl = ctrl;
-        _phase = _Phase.ready;
-      });
-      widget.onControllerReady?.call(ctrl);
-      _loadLinks(linkSourceBytes);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'تعذّر فتح الملف.';
-        _phase = _Phase.error;
-      });
-      widget.onDocumentLoadFailed?.call(e);
+      // Only needed for text search (see pdf_text_search.dart) — pdfrx
+      // renders straight off the file path below regardless of whether
+      // this read succeeds.
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      // Search will just be unavailable for this document; rendering is
+      // unaffected.
     }
+    _finishOpen(filePath: file.path, bytes: bytes);
   }
 
-  // ── Internal link parsing ────────────────────────────────────────────────
-
-  /// Parses internal ("jump to page") link annotations on a background
-  /// isolate (large PDFs can be slow to parse) and applies them once done.
-  /// Failure here is silent by design — it only means link overlays don't
-  /// appear; the page images already rendered fine without them.
-  Future<void> _loadLinks(Uint8List bytes) async {
-    try {
-      final links = await compute(extractInternalPdfLinks, bytes);
-      if (!mounted || links.isEmpty) return;
-      setState(() => _linksByPage = links);
-    } catch (_) {
-      // No internal links found/parseable.
-    }
+  void _finishOpen({String? filePath, Uint8List? bytes}) {
+    if (!mounted) return;
+    final ctrl = PdfScrollController().._sourceBytes = bytes;
+    setState(() {
+      _ctrl = ctrl;
+      _filePath = filePath;
+      _fileBytes = bytes;
+      _phase = _Phase.ready;
+    });
+    widget.onControllerReady?.call(ctrl);
   }
 
   // ── Build ───────────────────────────────────────────────────────────────────
@@ -342,10 +385,10 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
 
       case _Phase.ready:
         return RepaintBoundary(
-          child: _PageListView(
-            document: _doc!,
+          child: _PdfrxHost(
+            filePath: _filePath,
+            bytes: _fileBytes,
             ctrl: _ctrl!,
-            linksByPage: _linksByPage,
             onDocumentLoaded: widget.onDocumentLoaded,
             onDocumentLoadFailed: widget.onDocumentLoadFailed,
             onPageChanged: widget.onPageChanged,
@@ -356,365 +399,141 @@ class _CachedPdfViewerState extends State<CachedPdfViewer> {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// CONTINUOUS LIST VIEW
+// PDFRX HOST — wires the pdfrx PdfViewer widget to our controller/callbacks
 // ═════════════════════════════════════════════════════════════════════════════
 
-class _PageListView extends StatefulWidget {
-  const _PageListView({
-    required this.document,
+class _PdfrxHost extends StatefulWidget {
+  const _PdfrxHost({
+    this.filePath,
+    this.bytes,
     required this.ctrl,
-    required this.linksByPage,
     this.onDocumentLoaded,
     this.onDocumentLoadFailed,
     this.onPageChanged,
   });
 
-  final PdfDocument document;
+  /// Local cache file path (native/IO). Null on web.
+  final String? filePath;
+
+  /// Raw document bytes. Always set on web; also kept on IO for search, but
+  /// [filePath] takes priority there since pdfrx can stream straight off
+  /// disk instead of holding the whole file in memory again.
+  final Uint8List? bytes;
+
   final PdfScrollController ctrl;
-  final Map<int, PdfPageLinks> linksByPage;
   final void Function(int)? onDocumentLoaded;
   final void Function(Object)? onDocumentLoadFailed;
   final void Function(int)? onPageChanged;
 
   @override
-  State<_PageListView> createState() => _PageListViewState();
+  State<_PdfrxHost> createState() => _PdfrxHostState();
 }
 
-class _PageListViewState extends State<_PageListView> {
-  // Shared across every tile in this list — see [_AsyncLock] for why.
-  final _AsyncLock _renderLock = _AsyncLock();
+class _PdfrxHostState extends State<_PdfrxHost> {
+  // Stable method references (not fresh closures rebuilt every frame) so
+  // PdfViewerParams' equality check never sees a "changed" callback and
+  // triggers pdfrx to needlessly reload the document.
 
-  // Holds the pageIndex of the tile currently pinch-zoomed in, or null when
-  // no tile is zoomed. While a tile is zoomed, the outer ListView's own
-  // scrolling is frozen so a single-finger pan on the zoomed page moves the
-  // page's content instead of scrolling to the next page.
-  final ValueNotifier<int?> _zoomOwner = ValueNotifier<int?>(null);
+  void _onDocumentChanged(PdfDocument? document) {
+    if (document != null) widget.onDocumentLoaded?.call(document.pages.length);
+  }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.onDocumentLoaded?.call(widget.document.pagesCount),
+  void _onPageChanged(int? page) {
+    if (page != null) widget.onPageChanged?.call(page);
+  }
+
+  void _onDocumentLoadFinished(PdfDocumentRef documentRef, bool succeeded) {
+    if (succeeded) return;
+    final error =
+        documentRef.resolveListenable().error ?? 'Failed to open document';
+    widget.onDocumentLoadFailed?.call(error);
+  }
+
+  Widget _loadingBanner(BuildContext context, int bytesDownloaded, int? totalBytes) {
+    return const Center(
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(EkklisiaColors.gold),
+        ),
+      ),
     );
-    widget.ctrl._scroll.addListener(_onScroll);
   }
 
-  @override
-  void dispose() {
-    widget.ctrl._scroll.removeListener(_onScroll);
-    _zoomOwner.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (widget.ctrl._fallback == 0) return;
-    final page = widget.ctrl
-        ._pageForOffset(widget.ctrl._scroll.offset)
-        .clamp(1, widget.document.pagesCount);
-    if (page != widget.ctrl._currentPage) {
-      widget.ctrl._updateCurrentPage(page);
-      widget.onPageChanged?.call(page);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int?>(
-      valueListenable: _zoomOwner,
-      builder: (context, zoomedPage, _) => ListView.builder(
-        controller: widget.ctrl._scroll,
-        itemCount: widget.document.pagesCount,
-        physics: zoomedPage == null
-            ? const ClampingScrollPhysics()
-            : const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) => _PdfPageTile(
-          document: widget.document,
-          pageIndex: index + 1,
-          renderLock: _renderLock,
-          zoomOwner: _zoomOwner,
-          onSized: (h) => widget.ctrl._recordHeight(index + 1, h),
-          onError: widget.onDocumentLoadFailed,
-          links: widget.linksByPage[index + 1],
-          onLinkTap: (targetPage) => widget.ctrl._animateTo(
-            targetPage,
-            const Duration(milliseconds: 400),
-            Curves.easeInOut,
+  Widget _errorBanner(
+    BuildContext context,
+    Object error,
+    StackTrace? stackTrace,
+    PdfDocumentRef documentRef,
+  ) {
+    return Container(
+      color: EkklisiaColors.bgPrimary,
+      child: const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            'تعذّر فتح الملف.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: EkklisiaColors.textPrimary, fontSize: 16),
           ),
         ),
       ),
     );
   }
-}
 
-// ═════════════════════════════════════════════════════════════════════════════
-// RENDER LOCK
-// ═════════════════════════════════════════════════════════════════════════════
-//
-// Android's native PdfRenderer only allows ONE open Page per document at a
-// time — calling getPage() while a previously-opened page hasn't been
-// close()d yet throws a native PlatformException
-// ("PdfRendererException: Unknown error"). ListView.builder can build
-// several _PdfPageTile widgets in quick succession (readahead beyond the
-// viewport), each independently calling document.getPage()/render() as soon
-// as it mounts, so without serialization those calls race and crash. This
-// lock funnels every page's getPage → render → close sequence through a
-// single queue so only one is ever in flight at once.
-class _AsyncLock {
-  Future<void> _tail = Future<void>.value();
-
-  Future<T> run<T>(Future<T> Function() task) {
-    final result = _tail.then((_) => task());
-    // Keep the chain alive even if a task throws — otherwise one failed
-    // page would permanently stall every page queued after it. The real
-    // error/value is still delivered to this call's own caller via
-    // [result].
-    _tail = result.then((_) {}, onError: (_) {});
-    return result;
-  }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// SINGLE PAGE TILE
-// ═════════════════════════════════════════════════════════════════════════════
-
-class _PdfPageTile extends StatefulWidget {
-  const _PdfPageTile({
-    required this.document,
-    required this.pageIndex,
-    required this.renderLock,
-    required this.zoomOwner,
-    required this.onSized,
-    this.onError,
-    this.links,
-    this.onLinkTap,
-  });
-
-  final PdfDocument document;
-  final int pageIndex;
-  final _AsyncLock renderLock;
-
-  /// Shared with every other tile in the list — see [_PageListViewState].
-  final ValueNotifier<int?> zoomOwner;
-  final void Function(double height) onSized;
-  final void Function(Object)? onError;
-
-  /// This page's internal links (if any) — see [pdf_internal_links.dart].
-  final PdfPageLinks? links;
-  final void Function(int targetPage)? onLinkTap;
-
-  @override
-  State<_PdfPageTile> createState() => _PdfPageTileState();
-}
-
-class _PdfPageTileState extends State<_PdfPageTile> {
-  PdfPageImage? _image;
-  double? _height;
-  bool _started = false;
-
-  // ── Zoom ──────────────────────────────────────────────────────────────────
-  final TransformationController _transformCtrl = TransformationController();
-  bool _isZoomed = false;
-  Offset _doubleTapPos = Offset.zero;
-  static const double _doubleTapScale = 2.5;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_started) {
-      _started = true;
-      _render();
-    }
-  }
-
-  @override
-  void dispose() {
-    _transformCtrl.dispose();
-    // Don't leave the list frozen if this tile is disposed mid-zoom (e.g.
-    // hot reload) — release the lock it's holding on the outer ListView.
-    if (widget.zoomOwner.value == widget.pageIndex) {
-      widget.zoomOwner.value = null;
-    }
-    super.dispose();
-  }
-
-  // Reconciles _isZoomed / the shared zoomOwner with the transform's actual
-  // current scale. Called after any interaction (pinch or double-tap) ends.
-  void _syncZoomState() {
-    final scale = _transformCtrl.value.getMaxScaleOnAxis();
-    final zoomed = scale > 1.01;
-    if (zoomed != _isZoomed && mounted) {
-      setState(() => _isZoomed = zoomed);
-    }
-    if (zoomed) {
-      widget.zoomOwner.value = widget.pageIndex;
-    } else if (widget.zoomOwner.value == widget.pageIndex) {
-      widget.zoomOwner.value = null;
-    }
-  }
-
-  void _handleDoubleTap() {
-    final current = _transformCtrl.value.getMaxScaleOnAxis();
-    if (current > 1.01) {
-      _transformCtrl.value = Matrix4.identity();
-    } else {
-      final dx = -_doubleTapPos.dx * (_doubleTapScale - 1);
-      final dy = -_doubleTapPos.dy * (_doubleTapScale - 1);
-      _transformCtrl.value = Matrix4.identity()
-        ..translate(dx, dy)
-        ..scale(_doubleTapScale);
-    }
-    _syncZoomState();
-  }
-
-  Future<void> _render() async {
-    final dpr = MediaQuery.of(context).devicePixelRatio;
-    final screenW = MediaQuery.of(context).size.width;
-    // Clamp to a sane max so a huge dpr * screenW can't request a bitmap
-    // large enough to OOM the native renderer.
-    final double pixelW = (screenW * dpr).clamp(1.0, 2600.0).roundToDouble();
-
-    try {
-      final result = await widget.renderLock.run(() async {
-        final page = await widget.document.getPage(widget.pageIndex);
-        try {
-          // Some malformed/odd PDFs report a zero or missing page size —
-          // guard against NaN/Infinite ratios which would otherwise be
-          // handed to the native renderer as invalid bitmap dimensions
-          // (a common cause of "PdfRendererException: Unknown error").
-          final hasValidSize = page.width > 0 && page.height > 0;
-          final double ratio = hasValidSize
-              ? page.width.toDouble() / page.height.toDouble()
-              : 1 / 1.414; // fall back to an A4-ish ratio
-          final double pixelH =
-              (pixelW / ratio).clamp(1.0, 4000.0).roundToDouble();
-
-          final image = await page.render(
-            width: pixelW,
-            height: pixelH,
-            format: PdfPageImageFormat.jpeg,
-            backgroundColor: '#ffffff',
-            quality: 92,
-          );
-          return (image: image, ratio: ratio);
-        } finally {
-          // Always release the native page handle, even if render() threw.
-          // Android's PdfRenderer only permits one open page per document
-          // at a time, so a leaked handle here would break every page
-          // rendered after it.
-          await page.close();
-        }
-      });
-
-      if (!mounted) return;
-
-      final logicalH = screenW / result.ratio;
-      widget.onSized(logicalH);
-      setState(() {
-        _image = result.image;
-        _height = logicalH;
-      });
-    } catch (e) {
-      if (mounted) widget.onError?.call(e);
-    }
+  /// Internal ("jump to page") links only — external URLs are intentionally
+  /// ignored here, matching the previous implementation, since opening an
+  /// arbitrary URL from inside a PDF without prompting the user first is a
+  /// phishing vector (see pdfrx's own security note on link handling).
+  void _onLinkTap(PdfLink link) {
+    if (link.dest != null) widget.ctrl._pdf.goToDest(link.dest);
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenW = MediaQuery.of(context).size.width;
+    final params = PdfViewerParams(
+      backgroundColor: EkklisiaColors.bgPrimary,
+      margin: 0,
+      pageDropShadow: null,
+      // pdfrx enables text selection by default (it has a real text layer,
+      // unlike pdfx's flat bitmaps). That repurposes a single-finger drag
+      // as a text-selection gesture instead of a scroll/pan — which reads
+      // as "can't scroll or zoom the page" for a touch-first reading app
+      // where we never wanted text selection in the first place.
+      textSelectionParams: const PdfTextSelectionParams(enabled: false),
+      onDocumentChanged: _onDocumentChanged,
+      onPageChanged: _onPageChanged,
+      onDocumentLoadFinished: _onDocumentLoadFinished,
+      loadingBannerBuilder: _loadingBanner,
+      errorBannerBuilder: _errorBanner,
+      // linkColor/enableAutoLinkDetection: pdfrx's defaults paint a visible
+      // tinted box over every detected link, including plain text that
+      // merely *looks* like a URL (ISBNs, emails in credits pages, etc).
+      // The old pdfx-based overlay was an invisible tap target with no
+      // visual box at all — match that look, since we only act on `.dest`
+      // (internal jump links) and deliberately ignore `.url` taps anyway.
+      linkHandlerParams: PdfLinkHandlerParams(
+        onLinkTap: _onLinkTap,
+        linkColor: Colors.transparent,
+        enableAutoLinkDetection: false,
+      ),
+    );
 
-    if (_image == null) {
-      // A4 placeholder until the page renders
-      return SizedBox(
-        width: screenW,
-        height: screenW * 1.414,
-        child: const Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.5,
-              valueColor: AlwaysStoppedAnimation<Color>(EkklisiaColors.goldDim),
-            ),
-          ),
-        ),
+    final filePath = widget.filePath;
+    if (filePath != null) {
+      return PdfViewer.file(
+        filePath,
+        controller: widget.ctrl._pdf,
+        params: params,
       );
     }
-
-    return SizedBox(
-      width: screenW,
-      height: _height,
-      child: ClipRect(
-        child: GestureDetector(
-          onDoubleTapDown: (d) => _doubleTapPos = d.localPosition,
-          onDoubleTap: _handleDoubleTap,
-          child: InteractiveViewer(
-            transformationController: _transformCtrl,
-            minScale: 1.0,
-            maxScale: 4.0,
-            scaleEnabled: true,
-            // Only let a single finger drag/pan the content once actually
-            // zoomed in — otherwise a plain one-finger scroll gesture would
-            // be swallowed here instead of scrolling the page list.
-            panEnabled: _isZoomed,
-            onInteractionStart: (details) {
-              // A second finger touching down means a pinch is starting —
-              // claim the zoom lock immediately so the ListView freezes for
-              // the whole gesture, not just once it resolves.
-              if (details.pointerCount > 1) {
-                widget.zoomOwner.value = widget.pageIndex;
-              }
-            },
-            onInteractionEnd: (_) => _syncZoomState(),
-            child: _buildPageContent(screenW),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// The rendered page image, plus tappable overlays for any internal
-  /// links on this page (scaled from PDF point space up to [screenW] /
-  /// [_height]). Overlays live inside InteractiveViewer's child so they
-  /// pan/zoom together with the image instead of staying pinned in place.
-  Widget _buildPageContent(double screenW) {
-    final image = Image.memory(
-      _image!.bytes,
-      width: screenW,
-      height: _height,
-      fit: BoxFit.fill,
-      gaplessPlayback: true,
-    );
-
-    final pageLinks = widget.links;
-    if (pageLinks == null ||
-        pageLinks.links.isEmpty ||
-        widget.onLinkTap == null) {
-      return image;
-    }
-
-    final double h = _height!;
-    final double scaleX = screenW / pageLinks.sizePt.width;
-    final double scaleY = h / pageLinks.sizePt.height;
-
-    return SizedBox(
-      width: screenW,
-      height: h,
-      child: Stack(
-        children: [
-          image,
-          for (final link in pageLinks.links)
-            Positioned(
-              left: link.bounds.left * scaleX,
-              top: link.bounds.top * scaleY,
-              width: link.bounds.width * scaleX,
-              height: link.bounds.height * scaleY,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => widget.onLinkTap!(link.targetPage),
-              ),
-            ),
-        ],
-      ),
+    return PdfViewer.data(
+      widget.bytes!,
+      sourceName: 'document.pdf',
+      controller: widget.ctrl._pdf,
+      params: params,
     );
   }
 }

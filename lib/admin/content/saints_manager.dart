@@ -11,7 +11,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +19,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/colors.dart';
 import '../admin_l10n.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/saint_model.dart';
@@ -216,10 +213,10 @@ class _SaintCard extends StatelessWidget {
                             saint.imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
-                                _crossIcon(),
+                                _crossIcon(ac.goldBorder),
                           ),
                         )
-                      : _crossIcon(),
+                      : _crossIcon(ac.goldBorder),
                 ),
                 const SizedBox(width: 12),
 
@@ -329,10 +326,10 @@ class _SaintCard extends StatelessWidget {
     );
   }
 
-  Widget _crossIcon() => Center(
+  Widget _crossIcon(Color color) => Center(
     child: Text('✦',
         style: TextStyle(
-            color: EkklisiaColors.darkGoldBorder, fontSize: 18)),
+            color: color, fontSize: 18)),
   );
 }
 

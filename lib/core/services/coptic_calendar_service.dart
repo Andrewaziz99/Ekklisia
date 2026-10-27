@@ -27,12 +27,12 @@ class CopticDate {
 class CopticFeast {
   const CopticFeast({
     required this.nameAr,
-    required this.nameEn,
+    required this.nameEl,
     this.isMajor = false,
   });
 
   final String nameAr;
-  final String nameEn;
+  final String nameEl; // Greek name — verified liturgical translation
   final bool isMajor; // true = highlighted in gold
 }
 
@@ -40,14 +40,12 @@ class CopticFeast {
 class CopticSeason {
   const CopticSeason({
     required this.nameAr,
-    required this.nameEn,
     required this.nameEl,
     required this.colorHex,
     this.isFast = false,
   });
 
   final String nameAr;
-  final String nameEn;
   final String nameEl; // Greek name
   final int colorHex; // ARGB hex, e.g. 0xFF2A4A7A
   final bool isFast;
@@ -63,18 +61,12 @@ abstract class CopticCalendarService {
     'برمهات', 'برموده', 'بشنس', 'بؤونة', 'أبيب', 'مسرى', 'نسيء',
   ];
 
-  static const List<String> _monthsEn = [
-    'Toot', 'Baba', 'Hatour', 'Kiahk', 'Touba', 'Amshir',
-    'Baramhat', 'Baramoudah', 'Bashans', 'Baouna', 'Abib', 'Misra', 'Nasie',
-  ];
-
   static const List<String> _monthsEl = [
-    'Θωθ', 'Βαβέ', 'Χατώρ', 'Χοιάκ', 'Τωβή', 'Αμσίρ',
-    'Βαρεμχάτ', 'Βαρμούδα', 'Βαχώνς', 'Παώνι', 'Επήφ', 'Μεσωρή', 'Νεσί',
+    'Τουτ', 'Μπάμπα', 'Χατούρ', 'Κιάχκ', 'Τούμπα', 'Αμσίρ',
+    'Μπαραμχάτ', 'Μπαραμούντα', 'Μπασάνς', 'Μπαούνα', 'Αμπίμπ', 'Μέσρα', 'Νάσγι',
   ];
 
   static String monthNameAr(int month) => _monthsAr[month - 1];
-  static String monthNameEn(int month) => _monthsEn[month - 1];
   static String monthNameEl(int month) => _monthsEl[month - 1];
 
   /// Ordinal day label e.g. "7".
@@ -191,7 +183,6 @@ abstract class CopticCalendarService {
     if (diff >= 0 && diff < 50) {
       return const CopticSeason(
         nameAr: 'الخمسون المقدسة',
-        nameEn: 'Holy Fifty Days',
         nameEl: 'Άγια Πεντηκοστή',
         colorHex: 0xFF1A5A7A,
       );
@@ -200,7 +191,6 @@ abstract class CopticCalendarService {
     if (diff >= -7 && diff < 0) {
       return const CopticSeason(
         nameAr: 'الأسبوع المقدس',
-        nameEn: 'Holy Week',
         nameEl: 'Αγία Εβδομάδα',
         colorHex: 0xFF6B1A1A,
         isFast: true,
@@ -210,7 +200,6 @@ abstract class CopticCalendarService {
     if (diff >= -55 && diff < -7) {
       return const CopticSeason(
         nameAr: 'الصوم الكبير',
-        nameEn: 'Great Lent',
         nameEl: 'Μεγάλη Τεσσαρακοστή',
         colorHex: 0xFF5A1A6B,
         isFast: true,
@@ -224,7 +213,6 @@ abstract class CopticCalendarService {
     if (!d.isBefore(ninevehStart) && !d.isAfter(ninevehEnd)) {
       return const CopticSeason(
         nameAr: 'صوم نينوى',
-        nameEn: 'Fast of Nineveh',
         nameEl: 'Νηστεία Νινευή',
         colorHex: 0xFF3A5A2A,
         isFast: true,
@@ -237,7 +225,6 @@ abstract class CopticCalendarService {
     if (d.isAfter(pentecost) && !d.isAfter(abib5)) {
       return const CopticSeason(
         nameAr: 'صوم الرسل',
-        nameEn: "Apostles' Fast",
         nameEl: 'Νηστεία Αποστόλων',
         colorHex: 0xFF2A5A3A,
         isFast: true,
@@ -248,7 +235,6 @@ abstract class CopticCalendarService {
     if (date.month == 8 && date.day >= 1 && date.day <= 15) {
       return const CopticSeason(
         nameAr: 'صوم العذراء',
-        nameEn: 'Fast of the Virgin',
         nameEl: 'Νηστεία Θεοτόκου',
         colorHex: 0xFF6A2A7A,
         isFast: true,
@@ -262,8 +248,7 @@ abstract class CopticCalendarService {
     if (isAdvent) {
       return const CopticSeason(
         nameAr: 'صوم الميلاد (كيهك)',
-        nameEn: 'Advent — Kiahk Fast',
-        nameEl: 'Νηστεία Χριστουγέννων (Χοιάκ)',
+        nameEl: 'Νηστεία Χριστουγέννων (Κιάχκ)',
         colorHex: 0xFF1A2A6A,
         isFast: true,
       );
@@ -272,7 +257,6 @@ abstract class CopticCalendarService {
     // Ordinary time
     return const CopticSeason(
       nameAr: 'الوقت العادي',
-      nameEn: 'Ordinary Time',
       nameEl: 'Κοινός Χρόνος',
       colorHex: 0xFF2A3A4A,
     );
@@ -289,20 +273,20 @@ abstract class CopticCalendarService {
     if (day == 21) {
       feasts.add(const CopticFeast(
         nameAr: 'عيد السيدة العذراء مريم (الشهري)',
-        nameEn: 'Monthly Feast of the Virgin Mary',
+        nameEl: 'Μηνιαία Εορτή της Θεοτόκου',
         isMajor: true,
       ));
     }
     if (day == 12) {
       feasts.add(const CopticFeast(
         nameAr: 'عيد الملاك ميخائيل (الشهري)',
-        nameEn: 'Monthly Feast of Archangel Michael',
+        nameEl: 'Μηνιαία Εορτή του Αρχαγγέλου Μιχαήλ',
       ));
     }
     if (day == 22) {
       feasts.add(const CopticFeast(
         nameAr: 'عيد الملاك جبرائيل (الشهري)',
-        nameEn: 'Monthly Feast of Archangel Gabriel',
+        nameEl: 'Μηνιαία Εορτή του Αρχαγγέλου Γαβριήλ',
       ));
     }
 
@@ -320,171 +304,171 @@ abstract class CopticCalendarService {
     // ── Toot (1) ──────────────────────────────────────────────────────────
     (1, 1): [const CopticFeast(
       nameAr: 'عيد النيروز — رأس السنة القبطية',
-      nameEn: 'Nayrouz — Coptic New Year',
+      nameEl: 'Ναϊρούζ — Κοπτική Πρωτοχρονιά',
       isMajor: true,
     )],
     (1, 17): [const CopticFeast(
       nameAr: 'عيد الصليب المقدس',
-      nameEn: 'Feast of the Holy Cross',
+      nameEl: 'Εορτή του Τιμίου Σταυρού',
       isMajor: true,
     )],
     (1, 26): [const CopticFeast(
       nameAr: 'تذكار الرسول يوحنا الحبيب الإنجيلي',
-      nameEn: 'Commemoration of St. John the Beloved',
+      nameEl: 'Μνήμη του Αγίου Ιωάννη του Αγαπημένου',
     )],
 
     // ── Baba (2) ──────────────────────────────────────────────────────────
     (2, 1): [const CopticFeast(
       nameAr: 'تذكار ميلاد السيدة العذراء مريم',
-      nameEn: 'Nativity of the Virgin Mary',
+      nameEl: 'Γέννηση της Υπεραγίας Θεοτόκου',
       isMajor: true,
     )],
     (2, 3): [const CopticFeast(
       nameAr: 'تذكار القديس ديونيسيوس الإسكندري',
-      nameEn: 'St. Dionysius of Alexandria',
+      nameEl: 'Μνήμη του Αγίου Διονυσίου Αλεξανδρείας',
     )],
     (2, 22): [const CopticFeast(
       nameAr: 'تذكار الشهيدة مارينا',
-      nameEn: 'St. Marina the Martyr',
+      nameEl: 'Μνήμη της Αγίας Μεγαλομάρτυρος Μαρίνας',
     )],
 
     // ── Hatour (3) ────────────────────────────────────────────────────────
     (3, 8): [const CopticFeast(
       nameAr: 'عيد رئاسة الملاك جبرائيل',
-      nameEn: 'Feast of Archangel Gabriel',
+      nameEl: 'Σύναξις του Αρχαγγέλου Γαβριήλ',
       isMajor: true,
     )],
     (3, 14): [const CopticFeast(
       nameAr: 'تذكار الرسول فيلبس',
-      nameEn: 'St. Philip the Apostle',
+      nameEl: 'Μνήμη του Αποστόλου Φιλίππου',
     )],
     (3, 15): [const CopticFeast(
       nameAr: 'تقدمة السيد المسيح للهيكل',
-      nameEn: 'Presentation of the Lord at the Temple',
+      nameEl: 'Η Υπαπαντή του Κυρίου',
       isMajor: true,
     )],
     (3, 29): [const CopticFeast(
       nameAr: 'تذكار القديسة كاترين',
-      nameEn: 'St. Catherine of Alexandria',
+      nameEl: 'Μνήμη της Αγίας Αικατερίνης της Αλεξανδρινής',
     )],
 
     // ── Kiahk (4) ─────────────────────────────────────────────────────────
     (4, 29): [const CopticFeast(
       nameAr: 'عيد الميلاد المجيد',
-      nameEn: 'Coptic Christmas',
+      nameEl: 'Κοπτικά Χριστούγεννα',
       isMajor: true,
     )],
 
     // ── Touba (5) ─────────────────────────────────────────────────────────
     (5, 11): [const CopticFeast(
       nameAr: 'عيد الغطاس المجيد (الإبيفانيا)',
-      nameEn: 'Feast of the Epiphany — Theophany',
+      nameEl: 'Εορτή των Θεοφανείων',
       isMajor: true,
     )],
     (5, 24): [const CopticFeast(
       nameAr: 'تذكار الرسول تيموثاوس',
-      nameEn: 'St. Timothy the Apostle',
+      nameEl: 'Μνήμη του Αποστόλου Τιμοθέου',
     )],
     (5, 27): [const CopticFeast(
       nameAr: 'عيد الأسرة المقدسة في مصر',
-      nameEn: 'Commemoration of the Holy Family in Egypt',
+      nameEl: 'Μνήμη της Αγίας Οικογένειας στην Αίγυπτο',
       isMajor: true,
     )],
 
     // ── Amshir (6) ────────────────────────────────────────────────────────
     (6, 16): [const CopticFeast(
       nameAr: 'عيد ميلاد القديسة ديميانة',
-      nameEn: 'St. Damiana',
+      nameEl: 'Αγία Δημιανή',
       isMajor: false,
     )],
     (6, 29): [const CopticFeast(
       nameAr: 'رقاد البابا كيرلس السادس',
-      nameEn: 'Repose of Pope Kyrillos VI',
+      nameEl: 'Κοίμηση του Πάπα Κυρίλλου ΣΤ΄',
     )],
 
     // ── Baramhat (7) ──────────────────────────────────────────────────────
     (7, 8): [const CopticFeast(
       nameAr: 'عيد الشهيد أبيفانيوس',
-      nameEn: 'St. Epiphanius the Martyr',
+      nameEl: 'Μνήμη του Αγίου Επιφανίου του Μάρτυρος',
     )],
     (7, 29): [const CopticFeast(
       nameAr: 'عيد رئاسة الملاك ميخائيل',
-      nameEn: 'Feast of Archangel Michael',
+      nameEl: 'Σύναξις του Αρχαγγέλου Μιχαήλ',
       isMajor: true,
     )],
 
     // ── Baramoudah (8) ────────────────────────────────────────────────────
     (8, 23): [const CopticFeast(
       nameAr: 'عيد الشهيد مارجرجس',
-      nameEn: 'Feast of St. George the Martyr',
+      nameEl: 'Εορτή του Αγίου Μεγαλομάρτυρος Γεωργίου',
       isMajor: true,
     )],
     (8, 24): [const CopticFeast(
       nameAr: 'عيد البشير القديس مرقس الرسول',
-      nameEn: 'Feast of St. Mark the Evangelist',
+      nameEl: 'Εορτή του Αγίου Ευαγγελιστή Μάρκου',
       isMajor: true,
     )],
     (8, 28): [const CopticFeast(
       nameAr: 'تذكار الرسول يعقوب بن زبدي',
-      nameEn: 'St. James, son of Zebedee',
+      nameEl: 'Μνήμη του Αποστόλου Ιακώβου του Ζεβεδαίου',
     )],
 
     // ── Bashans (9) ───────────────────────────────────────────────────────
     (9, 1): [const CopticFeast(
       nameAr: 'تذكار القديسة إيرين الشهيدة',
-      nameEn: 'St. Irene the Martyr',
+      nameEl: 'Μνήμη της Αγίας Μεγαλομάρτυρος Ειρήνης',
     )],
     (9, 8): [const CopticFeast(
       nameAr: 'ظهور الملاك ميخائيل في إكمياء',
-      nameEn: 'Apparition of Archangel Michael at Chonae',
+      nameEl: 'Το Θαύμα του Αρχαγγέλου Μιχαήλ στις Χώνες',
       isMajor: true,
     )],
     (9, 24): [const CopticFeast(
       nameAr: 'دخول السيد المسيح أرض مصر مع العائلة المقدسة',
-      nameEn: 'Entry of the Holy Family into Egypt',
+      nameEl: 'Είσοδος της Αγίας Οικογένειας στην Αίγυπτο',
       isMajor: true,
     )],
 
     // ── Baouna (10) ───────────────────────────────────────────────────────
     (10, 5): [const CopticFeast(
       nameAr: 'عيد الرسولين بطرس وبولس',
-      nameEn: 'Feast of Sts. Peter and Paul',
+      nameEl: 'Εορτή των Αγίων Αποστόλων Πέτρου και Παύλου',
       isMajor: true,
     )],
     (10, 13): [const CopticFeast(
       nameAr: 'تذكار الشهيد يوحنا المعمدان',
-      nameEn: 'St. John the Baptist — Martyrdom',
+      nameEl: 'Η Αποτομή της Τιμίας Κεφαλής του Προδρόμου',
     )],
 
     // ── Abib (11) ─────────────────────────────────────────────────────────
     (11, 15): [const CopticFeast(
       nameAr: 'تذكار مريم المجدلية',
-      nameEn: 'Commemoration of St. Mary Magdalene',
+      nameEl: 'Μνήμη της Αγίας Μαρίας της Μαγδαληνής',
     )],
     (11, 20): [const CopticFeast(
       nameAr: 'تذكار النبي إيليا',
-      nameEn: 'Commemoration of Prophet Elijah',
+      nameEl: 'Μνήμη του Προφήτου Ηλιού',
       isMajor: true,
     )],
     (11, 27): [const CopticFeast(
       nameAr: 'تذكار الشهيد أبوسيفين',
-      nameEn: 'St. Mercurius (Abu Seifein)',
+      nameEl: 'Άγιος Μερκούριος (Αμπού Σεϊφέιν)',
     )],
 
     // ── Misra (12) ────────────────────────────────────────────────────────
     (12, 13): [const CopticFeast(
       nameAr: 'عيد التجلي المجيد',
-      nameEn: 'Feast of the Transfiguration',
+      nameEl: 'Εορτή της Μεταμορφώσεως του Σωτήρος',
       isMajor: true,
     )],
     (12, 16): [const CopticFeast(
       nameAr: 'عيد رقاد السيدة العذراء مريم',
-      nameEn: 'Dormition of the Virgin Mary',
+      nameEl: 'Κοίμηση της Θεοτόκου',
       isMajor: true,
     )],
     (12, 30): [const CopticFeast(
       nameAr: 'تذكار القديس يوحنا الصائم',
-      nameEn: 'St. John the Faster',
+      nameEl: 'Μνήμη του Αγίου Ιωάννου του Νηστευτού',
     )],
   };
 }

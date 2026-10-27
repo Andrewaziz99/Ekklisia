@@ -20,7 +20,6 @@ import '../../core/utils/text_normalizer.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../utils/admin_colors.dart';
@@ -309,7 +308,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 8),
-                color: EkklisiaColors.bgPrimary,
+                color: ac.bgPrimary,
                 child: Row(children: [
                   Icon(Icons.people,
                       size: 14, color: ac.goldDim),

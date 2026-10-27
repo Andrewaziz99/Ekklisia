@@ -11,6 +11,13 @@ class AudioPlayerState extends Equatable {
   final Duration duration;
   final double speed;
 
+  /// The ordered list [currentItem] belongs to, if any (e.g. all the parts
+  /// of a Holy Mass). Empty for a standalone track. Lives here — on the
+  /// app-wide singleton cubit's state — rather than in a screen widget, so
+  /// auto-advance-to-next-track keeps working no matter what screen is on
+  /// top, or if the device screen locks while a Liturgy is playing.
+  final List<MediaItem> playlist;
+
   const AudioPlayerState({
     this.currentItem,
     this.isPlaying = false,
@@ -19,6 +26,7 @@ class AudioPlayerState extends Equatable {
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.speed = 1.0,
+    this.playlist = const [],
   });
 
   /// True when a track is loaded (even if paused).
@@ -48,6 +56,7 @@ class AudioPlayerState extends Equatable {
     Duration? position,
     Duration? duration,
     double? speed,
+    List<MediaItem>? playlist,
   }) =>
       AudioPlayerState(
         currentItem: currentItem ?? this.currentItem,
@@ -57,6 +66,7 @@ class AudioPlayerState extends Equatable {
         position: position ?? this.position,
         duration: duration ?? this.duration,
         speed: speed ?? this.speed,
+        playlist: playlist ?? this.playlist,
       );
 
   @override
@@ -68,5 +78,6 @@ class AudioPlayerState extends Equatable {
         position,
         duration,
         speed,
+        playlist,
       ];
 }

@@ -6,7 +6,6 @@
 // Each card: image + title + publish toggle + delete.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -17,7 +16,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/gallery_item_model.dart';
 import '../../data/repositories/gallery_repository.dart';
 import '../../features/auth/auth_cubit.dart';
@@ -28,7 +26,26 @@ import '../admin_l10n.dart';
 import '../utils/admin_colors.dart';
 
 class GalleryManagerScreen extends StatefulWidget {
-  const GalleryManagerScreen({super.key});
+  const GalleryManagerScreen({
+    super.key,
+    this.galleryType = GalleryType.general,
+    this.titleAr,
+    this.titleEl,
+    this.bulkRoute,
+  });
+
+  /// Which gallery instance to manage — see [GalleryType]. Defaults to the
+  /// general church photo gallery.
+  final String galleryType;
+
+  /// Optional toolbar title override — falls back to the generic "Gallery"
+  /// label when unset.
+  final String? titleAr;
+  final String? titleEl;
+
+  /// Route to push for bulk upload — defaults to the general gallery's bulk
+  /// upload route when unset.
+  final String? bulkRoute;
 
   @override
   State<GalleryManagerScreen> createState() => _GalleryManagerScreenState();
@@ -49,7 +66,7 @@ class _GalleryManagerScreenState extends State<GalleryManagerScreen> {
   @override
   void initState() {
     super.initState();
-    _repo.watchAll().listen(
+    _repo.watchAll(galleryType: widget.galleryType).listen(
       (items) => setState(() { _items = items; _loading = false; }),
       onError: (e) => setState(() { _error = e.toString(); _loading = false; }),
     );
@@ -78,6 +95,7 @@ class _GalleryManagerScreenState extends State<GalleryManagerScreen> {
           titleAr: titles.$1,
           titleEl: titles.$2,
           createdBy: uid,
+          galleryType: widget.galleryType,
         );
       } else if (!kIsWeb && file.path != null) {
         await _repo.uploadAndSave(
@@ -85,6 +103,7 @@ class _GalleryManagerScreenState extends State<GalleryManagerScreen> {
           titleAr: titles.$1,
           titleEl: titles.$2,
           createdBy: uid,
+          galleryType: widget.galleryType,
         );
       }
     } catch (e) {
@@ -166,17 +185,22 @@ class _GalleryManagerScreenState extends State<GalleryManagerScreen> {
     final isGreek = context.select<SettingsCubit, bool>(
       (c) => c.state.language == AppLanguage.greek,
     );
+    final title = isGreek
+        ? (widget.titleEl ?? l.gallery)
+        : (widget.titleAr ?? l.gallery);
 
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       body: Column(
         children: [
           // ── Toolbar ──────────────────────────────────────────────────────
           _Toolbar(
-            title: l.gallery,
+            title: title,
             isGreek: isGreek,
             onAdd: _addSingle,
-            onBulk: () => context.push(Routes.adminCmsGalleryBulk),
+            onBulk: () => context.push(
+              widget.bulkRoute ?? Routes.adminCmsGalleryBulk,
+            ),
           ),
           // ── Content ───────────────────────────────────────────────────────
           Expanded(
@@ -236,7 +260,7 @@ class _Toolbar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgPrimary,
+        color: ac.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
       child: Row(
@@ -337,7 +361,7 @@ class _ImageCard extends StatelessWidget {
               children: [
                 Text(
                   title.isNotEmpty ? title : '—',
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: isGreek ? null : 'Scheherazade',

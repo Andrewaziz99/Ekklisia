@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/colors.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/text_normalizer.dart';
 import '../../data/models/book_category_model.dart';
@@ -27,15 +26,25 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
   String? _filterCat;
   List<BookCategory> _categories = [];
 
-  static const _catColors = {
-    'bible':         EkklisiaColors.darkMaroon,
-    'prayers':       EkklisiaColors.darkMaroonMid,
-    'liturgy':       EkklisiaColors.darkBronze,
-    'hymns':         EkklisiaColors.tealDark,
-    'saints':        EkklisiaColors.darkPlum,
-    'fathers':       EkklisiaColors.forest,
-    'commentaries':  EkklisiaColors.ocean,
-    'studies':       EkklisiaColors.ocean,
+  // ── Reorder buffer ────────────────────────────────────────────────────
+  // Drag-to-reorder only makes sense against the full, unfiltered list —
+  // writing sequential sort_order values for just a filtered subset would
+  // collide with the sort_order values of the hidden items. So reordering
+  // is only enabled when there's no active search/category filter.
+  List<BookModel>? _reorderBuffer;
+  bool _reordering = false;
+
+  bool get _canReorder => _search.text.trim().isEmpty && _filterCat == null;
+
+  Map<String, Color> _catColors(AdminC ac) => {
+    'bible':         ac.maroon,
+    'prayers':       ac.maroonMid,
+    'liturgy':       ac.bronze,
+    'hymns':         ac.tealDark,
+    'saints':        ac.plum,
+    'fathers':       ac.forest,
+    'commentaries':  ac.ocean,
+    'studies':       ac.ocean,
   };
 
   @override
@@ -54,17 +63,47 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
   @override
   void dispose() { _search.dispose(); super.dispose(); }
 
+  // ── Reorder ───────────────────────────────────────────────────────────
+
+  void _onReorderStart(List<BookModel> current) =>
+      _reorderBuffer = List.of(current);
+
+  void _onReorder(int oldIndex, int newIndex) {
+    final list = _reorderBuffer!;
+    if (newIndex > oldIndex) newIndex--;
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    setState(() {});
+  }
+
+  Future<void> _commitReorder() async {
+    if (_reorderBuffer == null) return;
+    setState(() => _reordering = true);
+    try {
+      await sl<BooksRepository>().reorder(_reorderBuffer!);
+      _reorderBuffer = null;
+    } catch (e) {
+      if (mounted) _snack(context, 'Reorder failed: $e');
+    } finally {
+      if (mounted) setState(() => _reordering = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
     return BlocBuilder<BooksCubit, BooksState>(
       builder: (context, state) {
-        final visible = state.books.where((b) {
+        final filtered = state.books.where((b) {
           final matchSearch = TextNormalizer.anyContains(
               [b.titleAr, b.titleEl, b.category], _search.text);
           final matchCat = _filterCat == null || b.category == _filterCat;
           return matchSearch && matchCat;
         }).toList();
+        // While a drag is in progress, render the local buffer instead of
+        // the fresh Firestore order so the list doesn't jump under the
+        // admin's thumb before they hit Save.
+        final visible = (_canReorder ? _reorderBuffer : null) ?? filtered;
 
         return Column(children: [
           // ── Toolbar ───────────────────────────────────────────────
@@ -78,12 +117,15 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
             child: Column(children: [
               Row(children: [
                 Expanded(child: _SearchField(ctrl: _search,
-                    onChanged: (_) => setState(() {}))),
+                    onChanged: (_) => setState(() => _reorderBuffer = null))),
                 const SizedBox(width: 10),
                 _FilterButton(
                   selected: _filterCat,
                   categories: _categories,
-                  onChanged: (v) => setState(() => _filterCat = v),
+                  onChanged: (v) => setState(() {
+                    _filterCat = v;
+                    _reorderBuffer = null;
+                  }),
                 ),
                 SizedBox(width: 10),
                 OutlinedButton.icon(
@@ -129,19 +171,53 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
           // ── File count strip ──────────────────────────────────────
           _FileCountStrip(books: state.books),
 
+          // ── Pending reorder banner ─────────────────────────────────
+          if (_reorderBuffer != null)
+            _ReorderBanner(
+              saving:   _reordering,
+              onSave:   _commitReorder,
+              onCancel: () => setState(() => _reorderBuffer = null),
+            ),
+
+          // ── Filtered-view reorder hint ─────────────────────────────
+          if (_reorderBuffer == null && !_canReorder && visible.isNotEmpty)
+            _ReorderHint(),
+
           // ── List ──────────────────────────────────────────────────
           Expanded(child: state.isLoading
               ? Center(child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation(ac.gold)))
               : visible.isEmpty
               ? _EmptyState(onUpload: () => context.go(Routes.adminUpload))
+              : _canReorder
+              ? ReorderableListView.builder(
+            padding: const EdgeInsets.all(16),
+            onReorderStart: (_) => _onReorderStart(visible),
+            onReorder: _onReorder,
+            itemCount: visible.length,
+            itemBuilder: (_, i) => _BookRow(
+              key: ValueKey(visible[i].id),
+              book: visible[i],
+              catColor: _catColors(ac)[visible[i].category] ??
+                  ac.bgElevated,
+              onToggle: () => _togglePublish(
+                  context, visible[i]),
+              onDelete: () => _confirmDelete(context, visible[i].id),
+              onView: () => context.go(
+                  '/home/book/${visible[i].id}',
+                  extra: visible[i]),
+              onEdit: () => context.go(
+                  Routes.adminEditBook,
+                  extra: visible[i]),
+            ),
+          )
               : ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: visible.length,
             separatorBuilder: (_, __) => SizedBox(height: 10),
             itemBuilder: (_, i) => _BookRow(
               book: visible[i],
-              catColor: _catColors[visible[i].category] ??
+              catColor: _catColors(ac)[visible[i].category] ??
                   ac.bgElevated,
               onToggle: () => _togglePublish(
                   context, visible[i]),
@@ -197,10 +273,91 @@ class _BooksManagerScreenState extends State<BooksManagerScreen> {
   }
 }
 
+// ── Reorder banner / hint ────────────────────────────────────────────────────
+
+class _ReorderBanner extends StatelessWidget {
+  const _ReorderBanner({
+    required this.saving,
+    required this.onSave,
+    required this.onCancel,
+  });
+  final bool         saving;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color:   ac.maroon.withOpacity(0.9),
+      child: Row(children: [
+        Icon(Icons.swap_vert, color: ac.goldLight, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text('Drag to reorder — save to apply.',
+              style: TextStyle(color: ac.goldLight, fontSize: 12)),
+        ),
+        TextButton(
+          onPressed: saving ? null : onCancel,
+          child: Text('Cancel', style: TextStyle(color: ac.textSecondary)),
+        ),
+        const SizedBox(width: 4),
+        ElevatedButton(
+          onPressed: saving ? null : onSave,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ac.gold,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minimumSize:   Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: saving
+              ? SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: ac.bgDeep))
+              : Text('Save Order',
+                  style: TextStyle(
+                      color: ac.bgDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Shown instead of the banner when a search/category filter is active —
+/// reordering is disabled there since a filtered subset can't be written
+/// back as a consistent global sort_order.
+class _ReorderHint extends StatelessWidget {
+  const _ReorderHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color:   ac.bgMid,
+      child: Row(children: [
+        Icon(Icons.info_outline, color: ac.textSecondary, size: 13),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            'Clear search/filter to drag-reorder items.',
+            style: TextStyle(color: ac.textSecondary, fontSize: 11),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 // ── Book Row ──────────────────────────────────────────────────────────────────
 
 class _BookRow extends StatelessWidget {
   const _BookRow({
+    super.key,
     required this.book,
     required this.catColor,
     required this.onToggle,
@@ -268,7 +425,7 @@ class _BookRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(book.titleAr,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textDirection: TextDirection.rtl,
                 style: TextStyle(
@@ -388,7 +545,7 @@ class _FileCountStrip extends StatelessWidget {
         const SizedBox(width: 10),
         _CountChip(icon: Icons.videocam_outlined,
             label: 'Videos', value: videos,
-            color: EkklisiaColors.ocean),
+            color: ac.ocean),
         SizedBox(width: 10),
         _CountChip(icon: Icons.headphones_outlined,
             label: 'Audios', value: audios,

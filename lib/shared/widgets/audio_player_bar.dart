@@ -16,6 +16,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/l10n/app_l10n.dart';
 import '../../data/models/agbeya_model.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
 import '../../features/agbeya/cubit/audio_player_state.dart';
@@ -41,6 +42,23 @@ class AudioPlayerBar extends StatelessWidget {
 
         final cubit = context.read<AudioPlayerCubit>();
         final item = state.currentItem!;
+        final l = context.l10n;
+        final isGreek = !l.isAr;
+        final extras = item.extras;
+        // Bilingual title/album live in extras (see track_picker_sheet.dart /
+        // generic_pdf_viewer_screen.dart / full_audio_player_sheet.dart) so
+        // this bar reacts to an app-language change immediately instead of
+        // being stuck with whatever language was active when play() was
+        // called. Falls back to the plain MediaItem fields for any track
+        // played through a path that doesn't set them yet.
+        final displayTitle = (isGreek
+                ? (extras?['titleEl'] as String?)
+                : (extras?['titleAr'] as String?)) ??
+            item.title;
+        final rawAlbum = (isGreek
+                ? (extras?['albumEl'] as String?)
+                : (extras?['albumAr'] as String?)) ??
+            item.album;
 
         return GestureDetector(
           onTap: () => _openFullPlayer(context, cubit, item),
@@ -92,22 +110,22 @@ class AudioPlayerBar extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              item.title,
-                              textDirection: TextDirection.rtl,
+                              displayTitle,
+                              textDirection: l.dir,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Scheherazade',
+                              style: TextStyle(
+                                fontFamily: l.bodyFont,
                                 color: Colors.white,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            if (item.album != null && item.album!.isNotEmpty)
+                            if (rawAlbum != null && rawAlbum.isNotEmpty)
                               Text(
-                                item.album!,
-                                textDirection: TextDirection.rtl,
+                                rawAlbum,
+                                textDirection: l.dir,
                                 style: TextStyle(
-                                  fontFamily: 'Scheherazade',
+                                  fontFamily: l.bodyFont,
                                   color: Colors.white.withValues(alpha: 0.55),
                                   fontSize: 11,
                                 ),
@@ -158,12 +176,21 @@ class AudioPlayerBar extends StatelessWidget {
     MediaItem item,
   ) {
     // We need an AgbeyaHour stub to pass to FullAudioPlayerSheet.
-    // Extract what we know from the MediaItem.
+    // Extract what we know from the MediaItem. Audio played from outside
+    // the Agbeya hours (e.g. Holy Mass / other PDF content) is tagged with
+    // 'contentId' instead of 'hourId' — fall back to that so the stub's id
+    // still matches what's actually playing (see the isCurrent check in
+    // FullAudioPlayerSheet).
+    final hourId = item.extras?['hourId'] as String?;
+    final contentId = item.extras?['contentId'] as String?;
+    final isAgbeyaHour = hourId != null && hourId.isNotEmpty;
+
     final stub = AgbeyaHour(
-      id: item.extras?['hourId'] as String? ?? '',
+      id: hourId ?? contentId ?? '',
       hourNumber: 0,
       sortOrder: 0,
-      titleAr: item.title,
+      titleAr: item.extras?['titleAr'] as String? ?? item.title,
+      titleEl: item.extras?['titleEl'] as String? ?? '',
       audioUrl: item.id,
       coverUrl: item.artUri?.toString() ?? '',
       durationSeconds: item.duration?.inSeconds ?? 0,
@@ -177,7 +204,19 @@ class AudioPlayerBar extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: cubit,
-        child: FullAudioPlayerSheet(hour: stub),
+        child: FullAudioPlayerSheet(
+          hour: stub,
+          // Real Agbeya hours keep the default l.agbeya brand eyebrow;
+          // anything else shows its own album (e.g. the Mass/content title)
+          // instead, in both languages, so the label matches what's
+          // actually playing and stays correct if the user switches
+          // app language while the sheet is open.
+          sectionLabelAr: isAgbeyaHour
+              ? null
+              : (item.extras?['albumAr'] as String? ?? item.album),
+          sectionLabelEl:
+              isAgbeyaHour ? null : (item.extras?['albumEl'] as String?),
+        ),
       ),
     );
   }

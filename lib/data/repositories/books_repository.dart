@@ -397,6 +397,12 @@ class BooksRepository {
     return firestoreDataSource.deleteBook(id);
   }
 
+  /// Admin: persist a new display order after drag-to-reorder in
+  /// [BooksManagerScreen]. [ordered] is the full book list in the desired
+  /// order — every item gets a fresh sequential `sort_order`.
+  Future<void> reorder(List<BookModel> ordered) =>
+      firestoreDataSource.reorderBooks(ordered);
+
   // ── FCM Tokens ─────────────────────────────────────────────────────────
 
   Future<void> saveOrUpdateFcmToken({

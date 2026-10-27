@@ -47,7 +47,12 @@ String? _youtubeId(String url) {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-void showVideoSheet(BuildContext context, String url, {String? titleAr}) {
+void showVideoSheet(
+  BuildContext context,
+  String url, {
+  String? titleAr,
+  bool isGreek = false,
+}) {
   _log('showVideoSheet called — url="$url"');
   if (url.isEmpty) {
     _log('showVideoSheet: url is empty, aborting');
@@ -58,7 +63,8 @@ void showVideoSheet(BuildContext context, String url, {String? titleAr}) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: true,
-    builder: (_) => _VideoSheet(url: url, titleAr: titleAr),
+    builder: (_) =>
+        _VideoSheet(url: url, titleAr: titleAr, isGreek: isGreek),
   );
 }
 
@@ -86,9 +92,10 @@ class EkklisiaVideoPlayer extends StatelessWidget {
 // ═════════════════════════════════════════════════════════════════════════════
 
 class _VideoSheet extends StatelessWidget {
-  const _VideoSheet({required this.url, this.titleAr});
+  const _VideoSheet({required this.url, this.titleAr, this.isGreek = false});
   final String  url;
   final String? titleAr;
+  final bool    isGreek;
 
   @override
   Widget build(BuildContext context) {
@@ -119,11 +126,12 @@ class _VideoSheet extends StatelessWidget {
                       child: (titleAr?.isNotEmpty == true)
                           ? Text(
                               titleAr!,
-                              textDirection: TextDirection.rtl,
+                              textDirection:
+                                  isGreek ? TextDirection.ltr : TextDirection.rtl,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Scheherazade',
+                              style: TextStyle(
+                                fontFamily: isGreek ? 'GFSDidot' : 'Scheherazade',
                                 color: EkklisiaColors.goldLight,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,

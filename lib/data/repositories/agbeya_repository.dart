@@ -28,6 +28,15 @@ class AgbeyaRepository {
   CollectionReference<Map<String, dynamic>> get _col =>
       _firestore.collection('agbeya_hours');
 
+  /// Fixed document ID for the singleton "whole Agbeya book" entry — stored
+  /// in the same collection as the 7 canonical hours (so it can reuse the
+  /// exact same model/upload/reader flow) but always excluded from the
+  /// numbered hour lists below by filtering out this one ID.
+  static const String wholeBookDocId = 'whole_book';
+
+  DocumentReference<Map<String, dynamic>> get _wholeBookRef =>
+      _col.doc(wholeBookDocId);
+
   /// Ascending by sortOrder, tie-broken by hourNumber for determinism.
   List<AgbeyaHour> _bySortOrder(List<AgbeyaHour> hours) {
     final sorted = [...hours];
@@ -38,22 +47,25 @@ class AgbeyaRepository {
     return sorted;
   }
 
+  List<AgbeyaHour> _excludingWholeBook(Iterable<AgbeyaHour> hours) =>
+      hours.where((h) => h.id != wholeBookDocId).toList();
+
   // ── Read ────────────────────────────────────────────────────────────────────
 
   /// Real-time stream of ALL hours (published + drafts) — admin only.
   Stream<List<AgbeyaHour>> watchAllHours() => _col
       .orderBy('hour_number')
       .snapshots()
-      .map((snap) =>
-          _bySortOrder(snap.docs.map(AgbeyaHour.fromFirestore).toList()));
+      .map((snap) => _bySortOrder(
+          _excludingWholeBook(snap.docs.map(AgbeyaHour.fromFirestore))));
 
   /// Real-time stream of published hours ordered by [sortOrder].
   Stream<List<AgbeyaHour>> watchPublishedHours() => _col
       .where('is_published', isEqualTo: true)
       .orderBy('hour_number')
       .snapshots()
-      .map((snap) =>
-          _bySortOrder(snap.docs.map(AgbeyaHour.fromFirestore).toList()));
+      .map((snap) => _bySortOrder(
+          _excludingWholeBook(snap.docs.map(AgbeyaHour.fromFirestore))));
 
   /// One-time fetch (useful for offline-first or initial load).
   Future<List<AgbeyaHour>> fetchHours() async {
@@ -61,7 +73,8 @@ class AgbeyaRepository {
         .where('is_published', isEqualTo: true)
         .orderBy('hour_number')
         .get();
-    return _bySortOrder(snap.docs.map(AgbeyaHour.fromFirestore).toList());
+    return _bySortOrder(
+        _excludingWholeBook(snap.docs.map(AgbeyaHour.fromFirestore)));
   }
 
   Future<AgbeyaHour?> fetchHourById(String id) async {
@@ -69,6 +82,28 @@ class AgbeyaRepository {
     if (!doc.exists) return null;
     return AgbeyaHour.fromFirestore(doc);
   }
+
+  // ── Whole book (singleton) ──────────────────────────────────────────────────
+
+  /// Real-time stream of the single "whole Agbeya book" entry (title, PDF
+  /// and/or audio), or null if the admin hasn't set it up yet.
+  Stream<AgbeyaHour?> watchWholeBook() => _wholeBookRef.snapshots().map(
+        (doc) => doc.exists ? AgbeyaHour.fromFirestore(doc) : null,
+      );
+
+  Future<AgbeyaHour?> fetchWholeBook() async {
+    final doc = await _wholeBookRef.get();
+    return doc.exists ? AgbeyaHour.fromFirestore(doc) : null;
+  }
+
+  /// Creates/updates the singleton whole-book document. Always writes to the
+  /// fixed [wholeBookDocId] regardless of `hour.id`, so it can never collide
+  /// with — or leak into — the 7 canonical hour documents.
+  Future<void> saveWholeBook(AgbeyaHour hour) => _wholeBookRef.set({
+        ...hour.toFirestore(),
+        'hour_number': 0,
+        'sort_order': -1,
+      });
 
   // ── Write (Admin) ───────────────────────────────────────────────────────────
 

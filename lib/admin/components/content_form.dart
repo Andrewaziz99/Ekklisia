@@ -3,7 +3,6 @@
 // Reusable multi-language content form for CMS
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
-import '../../core/theme/colors.dart';
 import '../../core/theme/theme.dart';
 import '../utils/admin_colors.dart';
 
@@ -89,7 +88,7 @@ class _ContentFormState extends State<ContentForm> {
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
     return Container(
-      color: EkklisiaColors.bgPrimary,
+      color: ac.bgPrimary,
       child: Column(
         children: [
           // ── Header ───────────────────────────────────────────────────────

@@ -26,6 +26,11 @@ interface NotificationPayload {
   tokens?: string[];
   topic?: string;
   data?:  Record<string, string>;
+  /// Android notification channel to display under (must already exist on
+  /// the client — see notification_service.dart's init()). Defaults to the
+  /// "New Books" channel for backward compatibility with older clients that
+  /// don't send this field.
+  channelId?: string;
 }
 
 interface FcmMessage {
@@ -121,6 +126,7 @@ async function sendToToken(
   data:        Record<string, string> | undefined,
   projectId:   string,
   accessToken: string,
+  channelId:   string,
 ): Promise<{ token: string; success: boolean; error?: string }> {
   const payload: FcmMessage = {
     message: {
@@ -129,7 +135,7 @@ async function sendToToken(
       data,
       android: {
         notification: {
-          channel_id:    'new_book_channel',
+          channel_id:    channelId,
 
           default_sound: true,
         },
@@ -173,6 +179,7 @@ async function sendToTopic(
   data:        Record<string, string> | undefined,
   projectId:   string,
   accessToken: string,
+  channelId:   string,
 ): Promise<{ success: boolean; error?: string }> {
   const payload = {
     message: {
@@ -181,7 +188,7 @@ async function sendToTopic(
       data,
       android: {
         notification: {
-          channel_id:    'new_book_channel',
+          channel_id:    channelId,
 
           default_sound: true,
         },
@@ -266,6 +273,12 @@ serve(async (req: Request): Promise<Response> => {
     // ── Get OAuth2 access token ────────────────────────────────────────
     const accessToken = await getAccessToken(serviceAccount);
 
+    // Prefer an explicit channelId; fall back to the "New Books" channel so
+    // older client builds that don't send this field keep working as before.
+    const channelId = (payload.channelId && payload.channelId.trim())
+      ? payload.channelId.trim()
+      : 'new_book_channel';
+
     if (hasTopic) {
       const result = await sendToTopic(
         payload.topic!.trim(),
@@ -274,6 +287,7 @@ serve(async (req: Request): Promise<Response> => {
         payload.data,
         projectId,
         accessToken,
+        channelId,
       );
 
       if (!result.success) {
@@ -310,6 +324,7 @@ serve(async (req: Request): Promise<Response> => {
             payload.data,
             projectId,
             accessToken,
+            channelId,
           ),
         ),
       );

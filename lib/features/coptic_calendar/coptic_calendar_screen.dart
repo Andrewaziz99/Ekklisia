@@ -170,7 +170,7 @@ class _CopticCalendarScreenState extends State<CopticCalendarScreen> {
   }
 
   void _showDaySheet(BuildContext context, int day, bool isGreek) {
-    final l = context.l10n;
+    final l = context.l10nOnce; // event handler — must use read, not watch
     final feasts = CopticCalendarService.getFeastsForDay(_viewMonth, day);
     final brightness = Theme.of(context).brightness;
     final bgMid = BrightnessColors.bgMid(brightness);
@@ -750,7 +750,7 @@ class _FeastRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isGreek ? feast.nameEn : feast.nameAr,
+                  isGreek ? feast.nameEl : feast.nameAr,
                   textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
                   style: TextStyle(
                     fontFamily: isGreek ? null : 'Scheherazade',
@@ -760,13 +760,6 @@ class _FeastRow extends StatelessWidget {
                         feast.isMajor ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
-                if (!isGreek) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    feast.nameEn,
-                    style: TextStyle(color: textSecondary, fontSize: 11),
-                  ),
-                ],
               ],
             ),
           ),

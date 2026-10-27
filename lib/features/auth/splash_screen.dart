@@ -300,7 +300,7 @@ class _BottomBand extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'الكنيسة القبطية الأرثوذكسية للسيدة العذراء مريم\nوالقديس مار مرقس الرسول في اليونان',
+            'الكنيسة القبطية الأرثوذكسية في اليونان',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Scheherazade',
@@ -312,7 +312,7 @@ class _BottomBand extends StatelessWidget {
           Directionality(
             textDirection: TextDirection.ltr,
             child: Text(
-              'Η Κοπτορθόδοξη Εκκλησία της Παρθένου Μαρίας\nκαι του Αποστόλου Μάρκου εν Ελλάδι',
+              ' Η Κοπτική Ορθόδοξη Εκκλησία στην Ελλάδα',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'GFSDidot',

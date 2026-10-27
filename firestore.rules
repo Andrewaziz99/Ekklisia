@@ -51,7 +51,8 @@ service cloud.firestore {
         'bibles', 'bible_config', 'bible_verse_overrides',
         'hymns', 'prayers', 'liturgies', 'saints', 'calendar_events',
         'categories', 'gallery', 'elib_sections', 'elib_items',
-        'agbeya_hours', 'pdf_contents', 'game_questions', 'daily_verses'
+        'agbeya_hours', 'pdf_contents', 'game_questions', 'daily_verses',
+        'section_descriptions', 'category_labels', 'artwork_sections'
       ];
     }
 
@@ -122,6 +123,19 @@ service cloud.firestore {
     match /config/{docId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
+    }
+
+    // ── Bookmarks ──────────────────────────────────────────────────────────
+    // No auth check — any request can read/create/update/delete any
+    // bookmark, regardless of sign-in state. This intentionally drops the
+    // isSignedIn() + user_id-ownership enforcement that used to gate this
+    // collection: the client still filters each user's own bookmarks by
+    // user_id (see BookmarkRepository.watchAll()), but that's a UI
+    // convenience only now, not a security boundary — nothing here stops a
+    // client from reading or writing another user's bookmark documents.
+
+    match /bookmarks/{bookmarkId} {
+      allow read, write: if true;
     }
 
     // ── Migration flags ────────────────────────────────────────────────────

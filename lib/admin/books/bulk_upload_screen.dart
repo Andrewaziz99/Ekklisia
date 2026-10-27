@@ -4,7 +4,6 @@
 // assign each a title + category, then upload all sequentially.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -15,7 +14,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/models/book_model.dart';
 import '../../data/repositories/book_category_repository.dart';
@@ -565,11 +563,11 @@ class _FileRowCard extends StatelessWidget {
     }
   }
 
-  static Color _colorFor(BookMediaType t) {
+  static Color _colorFor(BookMediaType t, AdminC ac) {
     switch (t) {
-      case BookMediaType.video: return EkklisiaColors.ocean;
-      case BookMediaType.audio: return EkklisiaColors.darkTealMid;
-      default:                  return EkklisiaColors.darkMaroon;
+      case BookMediaType.video: return ac.ocean;
+      case BookMediaType.audio: return ac.tealMid;
+      default:                  return ac.maroon;
     }
   }
 
@@ -614,20 +612,20 @@ class _FileRowCard extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: _colorFor(row.item.mediaType).withOpacity(0.15),
+                color: _colorFor(row.item.mediaType, ac).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                    color: _colorFor(row.item.mediaType).withOpacity(0.4)),
+                    color: _colorFor(row.item.mediaType, ac).withOpacity(0.4)),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(_iconFor(row.item.mediaType),
-                    size: 12, color: _colorFor(row.item.mediaType)),
+                    size: 12, color: _colorFor(row.item.mediaType, ac)),
                 const SizedBox(width: 4),
                 Text(_labelFor(row.item.mediaType),
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: _colorFor(row.item.mediaType))),
+                        color: _colorFor(row.item.mediaType, ac))),
               ]),
             ),
             const SizedBox(width: 8),

@@ -23,7 +23,15 @@ const _kGold    = Color(0xFFC9A84C);
 const _kCrimson = Color(0xFF6B1A1A);
 
 class ElectronicLibraryScreen extends StatefulWidget {
-  const ElectronicLibraryScreen({super.key});
+  const ElectronicLibraryScreen({
+    super.key,
+    this.libraryType = ElibLibraryType.general,
+  });
+
+  /// Which library instance to show — see [ElibLibraryType]. Defaults to the
+  /// original, single "Electronic Library" so existing call sites keep
+  /// working unchanged.
+  final String libraryType;
 
   @override
   State<ElectronicLibraryScreen> createState() =>
@@ -38,7 +46,7 @@ class _ElectronicLibraryScreenState extends State<ElectronicLibraryScreen> {
   @override
   void initState() {
     super.initState();
-    _repo.watchSections().listen(
+    _repo.watchSections(libraryType: widget.libraryType).listen(
       (sections) => setState(() { _sections = sections; _loading = false; }),
       onError: (_) => setState(() => _loading = false),
     );
@@ -88,6 +96,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = context.l10n.elib;
     return Container(
       color: _kNavy,
       padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
@@ -101,7 +110,7 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              context.l10n.elib,
+              title,
               textDirection: context.l10n.dir,
               style: TextStyle(
                 fontFamily: context.l10n.bodyFont,

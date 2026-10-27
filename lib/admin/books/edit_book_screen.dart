@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/models/book_model.dart';
 import '../../data/repositories/book_category_repository.dart';
@@ -39,19 +38,19 @@ class _EditBookScreenState extends State<EditBookScreen> {
   List<BookCategory> _categories = [];
   bool _catsLoading = true;
 
-  static const _catColors = {
-    'bible':         EkklisiaColors.darkMaroon,
-    'prayers':       EkklisiaColors.darkMaroonMid,
-    'liturgy':       EkklisiaColors.darkBronze,
-    'hymns':         EkklisiaColors.tealDark,
-    'saints':        EkklisiaColors.darkPlum,
-    'fathers':       EkklisiaColors.forest,
-    'commentaries':  EkklisiaColors.ocean,
-    'studies':       EkklisiaColors.ocean,
+  Map<String, Color> _catColors(AdminC ac) => {
+    'bible':         ac.maroon,
+    'prayers':       ac.maroonMid,
+    'liturgy':       ac.bronze,
+    'hymns':         ac.tealDark,
+    'saints':        ac.plum,
+    'fathers':       ac.forest,
+    'commentaries':  ac.ocean,
+    'studies':       ac.ocean,
   };
 
-  Color get _catColor =>
-      _catColors[_category] ?? EkklisiaColors.darkBgElevated;
+  Color _catColor(AdminC ac) =>
+      _catColors(ac)[_category] ?? ac.bgElevated;
 
   @override
   void initState() {
@@ -200,7 +199,7 @@ class _EditBookScreenState extends State<EditBookScreen> {
                 existingUrl:   widget.book.coverUrl,
                 newCoverBytes: _newCoverBytes,
                 mediaType:     widget.book.mediaType,
-                catColor:      _catColor,
+                catColor:      _catColor(ac),
                 onTap:         _pickCover,
               ),
               const SizedBox(height: 14),

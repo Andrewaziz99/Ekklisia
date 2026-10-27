@@ -23,18 +23,31 @@ class ChurchesRepository {
 
   // ── Streams ────────────────────────────────────────────────────────────────
 
-  /// All published churches — ordered by nameEn.
+  /// All published churches — ordered by admin drag order (falls back to
+  /// nameEn for churches saved before [ChurchModel.sortOrder] existed).
   Stream<List<ChurchModel>> watchPublished() => _col
       .where('isPublished', isEqualTo: true)
       .orderBy('nameEn')
       .snapshots()
-      .map((s) => s.docs.map(ChurchModel.fromFirestore).toList());
+      .map((s) => _bySortOrder(s.docs.map(ChurchModel.fromFirestore).toList()));
 
-  /// All churches (including drafts) — for admin CMS.
+  /// All churches (including drafts) — for admin CMS, ordered by admin drag
+  /// order.
   Stream<List<ChurchModel>> watchAll() => _col
       .orderBy('nameEn')
       .snapshots()
-      .map((s) => s.docs.map(ChurchModel.fromFirestore).toList());
+      .map((s) => _bySortOrder(s.docs.map(ChurchModel.fromFirestore).toList()));
+
+  /// Sorts by [ChurchModel.sortOrder] using a *stable* sort, so churches
+  /// written before that field existed (all defaulting to 0) keep the
+  /// alphabetical order the Firestore query already gave them, instead of
+  /// being silently dropped the way an `orderBy('sortOrder')` query would
+  /// drop any document missing that field.
+  List<ChurchModel> _bySortOrder(List<ChurchModel> churches) {
+    final sorted = List<ChurchModel>.of(churches);
+    sorted.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return sorted;
+  }
 
   // ── CRUD ───────────────────────────────────────────────────────────────────
 
@@ -54,4 +67,15 @@ class ChurchesRepository {
 
   Future<void> togglePublished(String id, bool value) =>
       _col.doc(id).update({'isPublished': value});
+
+  /// Admin: persist a new display order after drag-to-reorder in the CMS
+  /// churches manager. [ordered] is the full church list in the desired
+  /// order — every item gets a fresh sequential `sortOrder`.
+  Future<void> reorder(List<ChurchModel> ordered) async {
+    final batch = _db.batch();
+    for (var i = 0; i < ordered.length; i++) {
+      batch.update(_col.doc(ordered[i].id), {'sortOrder': i});
+    }
+    await batch.commit();
+  }
 }

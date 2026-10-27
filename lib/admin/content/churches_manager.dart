@@ -15,7 +15,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../admin_l10n.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/bishop_model.dart';
@@ -352,14 +351,17 @@ class _PriestCard extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 2),
-                      Row(children: [
-                        Icon(Icons.church_outlined, color: ac.gold, size: 11),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1.5),
+                          child: Icon(Icons.church_outlined, color: ac.gold, size: 11),
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             priest.churchName,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: ac.gold, fontSize: 11),
+                            softWrap: true,
+                            style: TextStyle(color: ac.gold, fontSize: 11, height: 1.2),
                           ),
                         ),
                       ]),
@@ -808,6 +810,43 @@ class _ListViewState extends State<_ListView> {
   String _search = '';
   String? _deleteConfirmId;
 
+  // ── Reorder buffer ────────────────────────────────────────────────────
+  // Drag-to-reorder only makes sense against the full, unfiltered list —
+  // writing sequential sortOrder values for just a filtered subset would
+  // collide with the sortOrder values of the hidden items. So reordering
+  // is only enabled when there's no active search filter.
+  List<ChurchModel>? _reorderBuffer;
+  bool _reordering = false;
+
+  bool get _canReorder => _search.trim().isEmpty;
+
+  void _onReorderStart(List<ChurchModel> current) =>
+      _reorderBuffer = List.of(current);
+
+  void _onReorder(int oldIndex, int newIndex) {
+    final list = _reorderBuffer!;
+    if (newIndex > oldIndex) newIndex--;
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    setState(() {});
+  }
+
+  Future<void> _commitReorder() async {
+    if (_reorderBuffer == null) return;
+    setState(() => _reordering = true);
+    try {
+      await widget.repo.reorder(_reorderBuffer!);
+      _reorderBuffer = null;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Reorder failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _reordering = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ac = AdminC(Theme.of(context).brightness);
@@ -825,17 +864,37 @@ class _ListViewState extends State<_ListView> {
         final loading =
             snap.connectionState == ConnectionState.waiting;
 
+        // While a drag is in progress, render the local buffer instead of
+        // the fresh Firestore order so the list doesn't jump under the
+        // admin's thumb before they hit Save.
+        final visible = (_canReorder ? _reorderBuffer : null) ?? churches;
+
         return Column(children: [
           // ── Toolbar ───────────────────────────────────────────────────
           _Toolbar(
             title: l.churches,
             count: churches.length,
-            onSearch: (q) => setState(() => _search = q),
+            onSearch: (q) => setState(() {
+              _search = q;
+              _reorderBuffer = null;
+            }),
             onAdd: () => widget.onEdit(null),
           ),
 
           // ── Bishop section ────────────────────────────────────────────
           _BishopAdminCard(repo: sl<BishopRepository>()),
+
+          // ── Pending reorder banner ───────────────────────────────────
+          if (_reorderBuffer != null)
+            _ReorderBanner(
+              saving:   _reordering,
+              onSave:   _commitReorder,
+              onCancel: () => setState(() => _reorderBuffer = null),
+            ),
+
+          // ── Filtered-view reorder hint ───────────────────────────────
+          if (_reorderBuffer == null && !_canReorder && visible.isNotEmpty)
+            _ReorderHint(),
 
           // ── List ──────────────────────────────────────────────────────
           Expanded(
@@ -846,36 +905,141 @@ class _ListViewState extends State<_ListView> {
                       strokeWidth: 2,
                     ),
                   )
-                : churches.isEmpty
+                : visible.isEmpty
                     ? _EmptyState(onAdd: () => widget.onEdit(null))
-                    : ListView.separated(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                        itemCount: churches.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 8),
-                        itemBuilder: (_, i) {
-                          final c = churches[i];
-                          return _ChurchCard(
-                            church: c,
-                            confirmingDelete: _deleteConfirmId == c.id,
-                            onEdit: () => widget.onEdit(c),
-                            onToggle: () => widget.repo
-                                .togglePublished(c.id, !c.isPublished),
-                            onDeleteTap: () =>
-                                setState(() => _deleteConfirmId = c.id),
-                            onDeleteConfirm: () async {
-                              await widget.repo.delete(c.id);
-                              setState(() => _deleteConfirmId = null);
+                    : _canReorder
+                        ? ReorderableListView.builder(
+                            padding:
+                                const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                            onReorderStart: (_) => _onReorderStart(visible),
+                            onReorder: _onReorder,
+                            itemCount: visible.length,
+                            itemBuilder: (_, i) {
+                              final c = visible[i];
+                              return Padding(
+                                key: ValueKey(c.id),
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _ChurchCard(
+                                  church: c,
+                                  confirmingDelete:
+                                      _deleteConfirmId == c.id,
+                                  onEdit: () => widget.onEdit(c),
+                                  onToggle: () => widget.repo
+                                      .togglePublished(
+                                          c.id, !c.isPublished),
+                                  onDeleteTap: () => setState(
+                                      () => _deleteConfirmId = c.id),
+                                  onDeleteConfirm: () async {
+                                    await widget.repo.delete(c.id);
+                                    setState(
+                                        () => _deleteConfirmId = null);
+                                  },
+                                  onDeleteCancel: () => setState(
+                                      () => _deleteConfirmId = null),
+                                ),
+                              );
                             },
-                            onDeleteCancel: () =>
-                                setState(() => _deleteConfirmId = null),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            padding:
+                                const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                            itemCount: visible.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (_, i) {
+                              final c = visible[i];
+                              return _ChurchCard(
+                                church: c,
+                                confirmingDelete: _deleteConfirmId == c.id,
+                                onEdit: () => widget.onEdit(c),
+                                onToggle: () => widget.repo
+                                    .togglePublished(c.id, !c.isPublished),
+                                onDeleteTap: () =>
+                                    setState(() => _deleteConfirmId = c.id),
+                                onDeleteConfirm: () async {
+                                  await widget.repo.delete(c.id);
+                                  setState(() => _deleteConfirmId = null);
+                                },
+                                onDeleteCancel: () =>
+                                    setState(() => _deleteConfirmId = null),
+                              );
+                            },
+                          ),
           ),
         ]);
       },
+    );
+  }
+}
+
+// ── Reorder banner / hint ──────────────────────────────────────────────────
+
+class _ReorderBanner extends StatelessWidget {
+  const _ReorderBanner({
+    required this.saving,
+    required this.onSave,
+    required this.onCancel,
+  });
+  final bool saving;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color:   ac.maroon.withValues(alpha: 0.9),
+      child: Row(children: [
+        Icon(Icons.swap_vert, color: ac.goldLight, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text('Drag to reorder — save to apply.',
+              style: TextStyle(color: ac.goldLight, fontSize: 12)),
+        ),
+        TextButton(
+          onPressed: saving ? null : onCancel,
+          child: Text('Cancel', style: TextStyle(color: ac.textSecondary)),
+        ),
+        const SizedBox(width: 4),
+        ElevatedButton(
+          onPressed: saving ? null : onSave,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ac.gold,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minimumSize:   Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: saving
+              ? SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: ac.bgDeep))
+              : Text('Save Order',
+                  style: TextStyle(
+                      color: ac.bgDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Shown instead of the banner when a search filter is active — explains
+/// why the drag handles disappeared.
+class _ReorderHint extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(children: [
+        Icon(Icons.info_outline, color: ac.textSecondary, size: 13),
+        const SizedBox(width: 6),
+        Text('Clear search to drag-reorder churches.',
+            style: TextStyle(color: ac.textSecondary, fontSize: 11)),
+      ]),
     );
   }
 }

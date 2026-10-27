@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/brightness_colors.dart';
-import '../../core/theme/colors.dart';
 import '../../core/router/app_router.dart';
 import '../../core/di/service_locator.dart';
 import '../../features/auth/auth_cubit.dart';
@@ -107,6 +106,7 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -116,13 +116,13 @@ class _StatsGrid extends StatelessWidget {
       childAspectRatio: 1.55,
       children: [
         _StatCard(label: l.totalBooks,  value: books.toString(),
-            icon: Icons.library_books,          color: EkklisiaColors.darkGold,      l: l),
+            icon: Icons.library_books,          color: BrightnessColors.gold(b),      l: l),
         _StatCard(label: l.published,   value: published.toString(),
-            icon: Icons.check_circle_outline,   color: EkklisiaColors.darkTealMid,   l: l),
+            icon: Icons.check_circle_outline,   color: BrightnessColors.tealMid(b),   l: l),
         _StatCard(label: l.drafts,      value: drafts.toString(),
-            icon: Icons.edit_note_outlined,     color: EkklisiaColors.darkTextSecondary, l: l),
+            icon: Icons.edit_note_outlined,     color: BrightnessColors.textSecondary(b), l: l),
         _StatCard(label: l.categories,  value: categories.toString(),
-            icon: Icons.category_outlined,      color: EkklisiaColors.darkGoldLight, l: l),
+            icon: Icons.category_outlined,      color: BrightnessColors.goldLight(b), l: l),
       ],
     );
   }
@@ -136,6 +136,7 @@ class _AllMediaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final l         = context.adminL10n;
     final pdfs      = books.where((b) => b.mediaType == BookMediaType.pdf).length;
     final videos    = books.where((b) => b.mediaType == BookMediaType.video).length;
@@ -146,16 +147,16 @@ class _AllMediaSection extends StatelessWidget {
       // Row 1: books breakdown
       Row(children: [
         Expanded(child: _MiniStat(label: l.pdfs,   value: pdfs,
-            icon: Icons.picture_as_pdf_outlined, color: EkklisiaColors.darkMaroon, l: l)),
+            icon: Icons.picture_as_pdf_outlined, color: BrightnessColors.maroon(brightness), l: l)),
         const SizedBox(width: 8),
         Expanded(child: _MiniStat(label: l.videos, value: videos,
-            icon: Icons.videocam_outlined, color: EkklisiaColors.darkOcean, l: l)),
+            icon: Icons.videocam_outlined, color: BrightnessColors.ocean(brightness), l: l)),
         const SizedBox(width: 8),
         Expanded(child: _MiniStat(label: l.audio,  value: audios,
-            icon: Icons.headphones_outlined, color: EkklisiaColors.darkTealMid, l: l)),
+            icon: Icons.headphones_outlined, color: BrightnessColors.tealMid(brightness), l: l)),
         const SizedBox(width: 8),
         Expanded(child: _MiniStat(label: l.live,   value: published,
-            icon: Icons.check_circle_outline, color: EkklisiaColors.darkTealDark, l: l)),
+            icon: Icons.check_circle_outline, color: BrightnessColors.tealDark(brightness), l: l)),
       ]),
       const SizedBox(height: 8),
 
@@ -176,22 +177,22 @@ class _AllMediaSection extends StatelessWidget {
                 Expanded(child: _MiniStat(
                     label: l.gallery, value: galCount,
                     icon: Icons.photo_library_outlined,
-                    color: EkklisiaColors.darkBronze, l: l)),
+                    color: BrightnessColors.bronze(brightness), l: l)),
                 const SizedBox(width: 8),
                 Expanded(child: _MiniStat(
                     label: l.elibManager, value: elibVideos + elibAudios,
                     icon: Icons.video_library_outlined,
-                    color: EkklisiaColors.darkPlum, l: l)),
+                    color: BrightnessColors.plum(brightness), l: l)),
                 const SizedBox(width: 8),
                 Expanded(child: _MiniStat(
                     label: l.elibVideos, value: elibVideos,
                     icon: Icons.videocam_outlined,
-                    color: EkklisiaColors.darkForest, l: l)),
+                    color: BrightnessColors.forest(brightness), l: l)),
                 const SizedBox(width: 8),
                 Expanded(child: _MiniStat(
                     label: 'Total', value: totalAll,
                     icon: Icons.perm_media_outlined,
-                    color: EkklisiaColors.darkGoldLight, l: l)),
+                    color: BrightnessColors.goldLight(brightness), l: l)),
               ]);
             },
           );
@@ -203,19 +204,19 @@ class _AllMediaSection extends StatelessWidget {
       Row(children: [
         Expanded(child: _LibraryActionBtn(
           label: l.manageLibrary, icon: Icons.library_books_outlined,
-          color: EkklisiaColors.darkGold, l: l,
+          color: BrightnessColors.gold(brightness), l: l,
           onTap: () => context.go(Routes.adminBooks),
         )),
         const SizedBox(width: 8),
         Expanded(child: _LibraryActionBtn(
           label: l.uploadBook, icon: Icons.upload_file_outlined,
-          color: EkklisiaColors.darkBronze, l: l,
+          color: BrightnessColors.bronze(brightness), l: l,
           onTap: () => context.go(Routes.adminUpload),
         )),
         const SizedBox(width: 8),
         Expanded(child: _LibraryActionBtn(
           label: l.bulkUpload, icon: Icons.cloud_upload_outlined,
-          color: EkklisiaColors.darkTealMid, l: l,
+          color: BrightnessColors.tealMid(brightness), l: l,
           onTap: () => context.go(Routes.adminBulkUpload),
         )),
       ]),
@@ -395,12 +396,12 @@ class _WelcomeBanner extends StatelessWidget {
               width: 56, height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const RadialGradient(
-                    colors: [EkklisiaColors.darkBronze, EkklisiaColors.darkMaroon]),
+                gradient: RadialGradient(
+                    colors: [BrightnessColors.bronze(b), BrightnessColors.maroon(b)]),
                 border: Border.all(color: BrightnessColors.goldBorder(b), width: 1.5),
               ),
-              child: const Center(child: Text('✦', style: TextStyle(
-                  color: EkklisiaColors.darkGoldLight, fontSize: 24))),
+              child: Center(child: Text('✦', style: TextStyle(
+                  color: BrightnessColors.goldLight(b), fontSize: 24))),
             ),
           ]),
         );
@@ -512,19 +513,19 @@ class _QuickActions extends StatelessWidget {
       Row(children: [
         Expanded(child: _ActionButton(
           label: l.uploadBook, icon: Icons.upload_file,
-          color: EkklisiaColors.darkGold, l: l,
+          color: BrightnessColors.gold(b), l: l,
           onTap: () => context.go(Routes.adminUpload),
         )),
         const SizedBox(width: 12),
         Expanded(child: _ActionButton(
           label: l.sendNotification, icon: Icons.notifications_active_outlined,
-          color: EkklisiaColors.darkMaroonMid, l: l,
+          color: BrightnessColors.maroonMid(b), l: l,
           onTap: () => context.go(Routes.adminNotify),
         )),
         const SizedBox(width: 12),
         Expanded(child: _ActionButton(
           label: l.users, icon: Icons.people_outline,
-          color: EkklisiaColors.darkTealMid, l: l,
+          color: BrightnessColors.tealMid(b), l: l,
           onTap: () => context.go(Routes.adminUsers),
         )),
       ]),
@@ -577,17 +578,18 @@ class _QuickActions extends StatelessWidget {
 class _CmsShortcuts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final b = Theme.of(context).brightness;
     final l = context.adminL10n;
 
     final items = [
-      (label: l.cmsBible,      icon: Icons.book_outlined,       color: EkklisiaColors.darkGold,       path: Routes.adminCmsBibles),
-      (label: l.cmsHymns,      icon: Icons.music_note_outlined, color: EkklisiaColors.darkTealDark,   path: Routes.adminCmsHymns),
-      (label: l.cmsPrayers,    icon: Icons.favorite_outline,    color: EkklisiaColors.darkMaroonMid,  path: Routes.adminCmsPrayers),
-      (label: l.cmsLiturgies,  icon: Icons.church_outlined,     color: EkklisiaColors.darkBronze,     path: Routes.adminCmsLiturgies),
-      (label: l.cmsSaints,     icon: Icons.person_outline,      color: EkklisiaColors.darkPlum,       path: Routes.adminCmsSaints),
-      (label: l.cmsDailyVerse, icon: Icons.menu_book_outlined,  color: EkklisiaColors.darkTealMid,    path: Routes.adminCmsDailyVerse),
-      (label: l.cmsAgbeya,     icon: Icons.access_time_outlined,color: EkklisiaColors.darkMaroon,     path: Routes.adminCmsAgbeya),
-      (label: l.cmsChurches,   icon: Icons.church_outlined,     color: EkklisiaColors.darkTealDark,   path: Routes.adminCmsChurches),
+      (label: l.cmsBible,      icon: Icons.book_outlined,       color: BrightnessColors.gold(b),       path: Routes.adminCmsBibles),
+      (label: l.cmsHymns,      icon: Icons.music_note_outlined, color: BrightnessColors.tealDark(b),   path: Routes.adminCmsHymns),
+      (label: l.cmsPrayers,    icon: Icons.favorite_outline,    color: BrightnessColors.maroonMid(b),  path: Routes.adminCmsPrayers),
+      (label: l.cmsLiturgies,  icon: Icons.church_outlined,     color: BrightnessColors.bronze(b),     path: Routes.adminCmsLiturgies),
+      (label: l.cmsSaints,     icon: Icons.person_outline,      color: BrightnessColors.plum(b),       path: Routes.adminCmsSaints),
+      (label: l.cmsDailyVerse, icon: Icons.menu_book_outlined,  color: BrightnessColors.tealMid(b),    path: Routes.adminCmsDailyVerse),
+      (label: l.cmsAgbeya,     icon: Icons.access_time_outlined,color: BrightnessColors.maroon(b),     path: Routes.adminCmsAgbeya),
+      (label: l.cmsChurches,   icon: Icons.church_outlined,     color: BrightnessColors.tealDark(b),   path: Routes.adminCmsChurches),
     ];
 
     return LayoutBuilder(
@@ -709,11 +711,11 @@ class _RecentBooks extends StatelessWidget {
   const _RecentBooks({required this.books});
   final List<BookModel> books;
 
-  static const _catColors = {
-    'bible': EkklisiaColors.darkMaroon,    'prayers':  EkklisiaColors.darkMaroonMid,
-    'liturgy': EkklisiaColors.darkBronze,  'hymns':    EkklisiaColors.darkTealDark,
-    'saints': EkklisiaColors.darkPlum,     'fathers':  EkklisiaColors.darkForest,
-    'commentaries': EkklisiaColors.darkOcean, 'studies': EkklisiaColors.darkOcean,
+  static Map<String, Color> _catColors(Brightness b) => {
+    'bible': BrightnessColors.maroon(b),    'prayers':  BrightnessColors.maroonMid(b),
+    'liturgy': BrightnessColors.bronze(b),  'hymns':    BrightnessColors.tealDark(b),
+    'saints': BrightnessColors.plum(b),     'fathers':  BrightnessColors.forest(b),
+    'commentaries': BrightnessColors.ocean(b), 'studies': BrightnessColors.ocean(b),
   };
 
   static IconData _mediaIcon(BookMediaType t) {
@@ -767,20 +769,20 @@ class _RecentBooks extends StatelessWidget {
               Container(
                 width: 36, height: 50,
                 decoration: BoxDecoration(
-                  color: (_catColors[books[i].category] ??
+                  color: (_catColors(b)[books[i].category] ??
                       BrightnessColors.bgElevated(b)).withOpacity(0.7),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: BrightnessColors.goldBorder(b), width: 0.5),
                 ),
                 child: Center(child: Icon(_mediaIcon(books[i].mediaType),
-                    size: 16, color: EkklisiaColors.darkTextCream)),
+                    size: 16, color: BrightnessColors.textCream(b))),
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(books[i].titleAr,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      maxLines: 2, overflow: TextOverflow.ellipsis,
                       textDirection: TextDirection.rtl,
                       style: TextStyle(
                         fontFamily: 'Scheherazade',
@@ -792,7 +794,7 @@ class _RecentBooks extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: (_catColors[books[i].category] ??
+                        color: (_catColors(b)[books[i].category] ??
                             BrightnessColors.bgElevated(b)).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(3),
                       ),

@@ -457,7 +457,7 @@ class _ListView extends StatelessWidget {
                           textDirection: isGreek
                               ? TextDirection.ltr
                               : TextDirection.rtl,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontFamily: isGreek ? null : 'Scheherazade',

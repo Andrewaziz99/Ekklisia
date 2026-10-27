@@ -16,20 +16,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/game_model.dart';
 import '../../data/repositories/game_repository.dart';
 import '../../shared/widgets/cached_image.dart';
 import '../utils/admin_colors.dart';
+// TEMPORARY — see mcq_seed_data.dart header. Remove this import + the
+// "Seed Questions" button below once the one-time bulk seed has been run.
+import 'mcq_seed_data.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
+// Fixed brand navy for the header banner — intentionally the same in both
+// themes (matches the app-wide header treatment elsewhere).
 const _kNavy    = Color(0xFF1B2A4A);
-const _kGold    = EkklisiaColors.darkGold;
-const _kBg      = EkklisiaColors.bgPrimary;
-const _kBgDeep  = EkklisiaColors.darkBgDeep;
-const _kText    = EkklisiaColors.darkTextPrimary;
-const _kTextSub = EkklisiaColors.darkTextSecondary;
+// (was: hardcoded-dark _kGold / _kBg / _kBgDeep / _kText / _kTextSub aliases
+// — replaced with ac.gold / ac.bgPrimary / ac.bgDeep / ac.textPrimary /
+// ac.textSecondary at each call site so this screen follows the app theme)
 
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN
@@ -44,30 +46,40 @@ class GameManagerScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: _kBg,
+        backgroundColor: ac.bgPrimary,
         appBar: AppBar(
-          backgroundColor: _kBgDeep,
+          backgroundColor: ac.bgDeep,
           elevation: 0,
-          title: const Column(
+          title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Game Questions',
                   style: TextStyle(
-                      color: _kGold,
+                      color: ac.gold,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5)),
               Text('الألعاب • Παιχνίδια',
                   style: TextStyle(
                       fontFamily: 'Scheherazade',
-                      color: _kTextSub,
+                      color: ac.textSecondary,
                       fontSize: 11)),
             ],
           ),
-          bottom: const TabBar(
-            labelColor: _kGold,
-            unselectedLabelColor: _kTextSub,
-            indicatorColor: _kGold,
+          // TEMPORARY — one-time bulk seeder for the researched Coptic MCQ
+          // trivia set. Remove this action + the import above +
+          // mcq_seed_data.dart once the seed has been run successfully.
+          actions: [
+            IconButton(
+              tooltip: 'Seed MCQ Questions (one-time)',
+              icon: Icon(Icons.cloud_upload_outlined, color: ac.gold),
+              onPressed: () => _confirmAndSeedMcq(context),
+            ),
+          ],
+          bottom: TabBar(
+            labelColor: ac.gold,
+            unselectedLabelColor: ac.textSecondary,
+            indicatorColor: ac.gold,
             indicatorWeight: 2,
             tabs: [
               Tab(
@@ -105,6 +117,113 @@ class GameManagerScreen extends StatelessWidget {
   }
 }
 
+// ── TEMPORARY: one-time MCQ bulk seeder ─────────────────────────────────────
+// See mcq_seed_data.dart header — delete this section (and the import + the
+// AppBar action above) once the seed has been run successfully.
+
+Future<void> _confirmAndSeedMcq(BuildContext context) async {
+  final ac = AdminC(Theme.of(context).brightness);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogCtx) => AlertDialog(
+      backgroundColor: ac.bgDeep,
+      title: Text('Seed ${mcqSeedQuestions.length} MCQ Questions?',
+          style: TextStyle(color: ac.textPrimary, fontSize: 14)),
+      content: Text(
+        'This adds ${mcqSeedQuestions.length} researched Coptic Orthodox '
+        'trivia questions (Bible, Liturgy & Agbeya, Saints, Church History) '
+        'to the MCQ tab, in Arabic and Greek. Safe to run once — running it '
+        'again will add duplicates.',
+        style: TextStyle(color: ac.textSecondary, fontSize: 12),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogCtx, false),
+          child: Text('Cancel', style: TextStyle(color: ac.textSecondary)),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogCtx, true),
+          child: const Text('Seed Now'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  final repo = sl<GameRepository>();
+  int done = 0;
+  int failed = 0;
+  final total = mcqSeedQuestions.length;
+
+  final progressNotifier = ValueNotifier<int>(0);
+
+  if (!context.mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogCtx) => AlertDialog(
+      backgroundColor: ac.bgDeep,
+      content: ValueListenableBuilder<int>(
+        valueListenable: progressNotifier,
+        builder: (_, count, __) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(ac.gold),
+                strokeWidth: 2,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Text('Seeding $count / $total…',
+                style: TextStyle(color: ac.textPrimary, fontSize: 13)),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  for (final q in mcqSeedQuestions) {
+    try {
+      await repo.add(GameQuestion(
+        id: '',
+        type: GameType.mcq,
+        questionAr: q.qAr,
+        questionEl: q.qEl,
+        imageUrl: '',
+        cloudinaryImageId: '',
+        choices: List.generate(
+          4,
+          (i) => GameChoice(textAr: q.choicesAr[i], textEl: q.choicesEl[i]),
+        ),
+        correctIndex: q.correct,
+        category: q.category,
+        isVisible: true,
+        sortOrder: 0,
+        createdAt: DateTime.now(),
+      ));
+      done++;
+    } catch (_) {
+      failed++;
+    }
+    progressNotifier.value = done + failed;
+  }
+
+  if (context.mounted) Navigator.pop(context); // close progress dialog
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          failed == 0
+              ? 'Seeded $done MCQ questions successfully.'
+              : 'Seeded $done questions, $failed failed.',
+        ),
+      ),
+    );
+  }
+}
+
 // ── FAB ───────────────────────────────────────────────────────────────────────
 
 class _AddFab extends StatelessWidget {
@@ -121,7 +240,7 @@ class _AddFab extends StatelessWidget {
         return FloatingActionButton.extended(
           heroTag: 'game_add_fab',
           backgroundColor: _kNavy,
-          foregroundColor: _kGold,
+          foregroundColor: ac.gold,
           icon: const Icon(Icons.add),
           label: Text(
             type == GameType.guessWho ? 'Add Guess Who' : 'Add MCQ',
@@ -157,9 +276,9 @@ class _QuestionList extends StatelessWidget {
       stream: repo.watchAll(type: type),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(_kGold),
+              valueColor: AlwaysStoppedAnimation<Color>(ac.gold),
               strokeWidth: 2,
             ),
           );
@@ -195,7 +314,7 @@ class _EmptyState extends StatelessWidget {
             type == GameType.guessWho
                 ? Icons.face_retouching_natural_outlined
                 : Icons.quiz_outlined,
-            color: _kGold.withValues(alpha: 0.3),
+            color: ac.gold.withValues(alpha: 0.3),
             size: 52,
           ),
           const SizedBox(height: 14),
@@ -204,12 +323,12 @@ class _EmptyState extends StatelessWidget {
                 ? 'No "Guess Who" questions yet'
                 : 'No MCQ questions yet',
             style: TextStyle(
-                color: _kTextSub, fontSize: 13),
+                color: ac.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Tap + to add one',
-            style: TextStyle(color: _kTextSub, fontSize: 11),
+            style: TextStyle(color: ac.textSecondary, fontSize: 11),
           ),
         ],
       ),
@@ -232,7 +351,7 @@ class _QuestionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: _kBgDeep,
+        color: ac.bgDeep,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
@@ -263,7 +382,7 @@ class _QuestionTile extends StatelessWidget {
                   : '(no question text)'),
           style: TextStyle(
             fontFamily: 'Scheherazade',
-            color: _kText,
+            color: ac.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -297,7 +416,7 @@ class _QuestionTile extends StatelessWidget {
               Text(
                 question.category,
                 style: TextStyle(
-                    color: _kTextSub, fontSize: 10),
+                    color: ac.textSecondary, fontSize: 10),
               ),
           ],
         ),
@@ -313,7 +432,7 @@ class _QuestionTile extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: question.isVisible
-                      ? _kGold.withValues(alpha: 0.12)
+                      ? ac.gold.withValues(alpha: 0.12)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: ac.goldBorder, width: 0.5),
@@ -323,7 +442,7 @@ class _QuestionTile extends StatelessWidget {
                       ? Icons.visibility
                       : Icons.visibility_off_outlined,
                   size: 14,
-                  color: question.isVisible ? _kGold : _kTextSub,
+                  color: question.isVisible ? ac.gold : ac.textSecondary,
                 ),
               ),
             ),
@@ -346,8 +465,8 @@ class _QuestionTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
-                child: const Icon(Icons.edit_outlined,
-                    size: 14, color: _kTextSub),
+                child: Icon(Icons.edit_outlined,
+                    size: 14, color: ac.textSecondary),
               ),
             ),
             const SizedBox(width: 6),
@@ -383,21 +502,22 @@ class _QuestionTile extends StatelessWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, GameRepository repo) async {
+    final ac = AdminC(Theme.of(context).brightness);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: _kBgDeep,
-        title: const Text('Delete Question?',
-            style: TextStyle(color: _kText, fontSize: 14)),
-        content: const Text(
+        backgroundColor: ac.bgDeep,
+        title: Text('Delete Question?',
+            style: TextStyle(color: ac.textPrimary, fontSize: 14)),
+        content: Text(
           'This cannot be undone.',
-          style: TextStyle(color: _kTextSub, fontSize: 12),
+          style: TextStyle(color: ac.textSecondary, fontSize: 12),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: _kTextSub)),
+            child: Text('Cancel',
+                style: TextStyle(color: ac.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
@@ -428,7 +548,7 @@ class _FallbackIcon extends StatelessWidget {
         type == GameType.guessWho
             ? Icons.face_retouching_natural_outlined
             : Icons.quiz_outlined,
-        color: _kGold.withValues(alpha: 0.5),
+        color: ac.gold.withValues(alpha: 0.5),
         size: 24,
       ),
     );
@@ -659,9 +779,9 @@ class _GameFormScreenState extends State<_GameFormScreen> {
         : 'MCQ — اختبار';
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: ac.bgPrimary,
       appBar: AppBar(
-        backgroundColor: _kBgDeep,
+        backgroundColor: ac.bgDeep,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -669,24 +789,24 @@ class _GameFormScreenState extends State<_GameFormScreen> {
             Text(
               _isEdit ? 'Edit Question' : 'New Question',
               style: TextStyle(
-                  color: _kGold, fontSize: 15, fontWeight: FontWeight.w700),
+                  color: ac.gold, fontSize: 15, fontWeight: FontWeight.w700),
             ),
             Text(typeLabel,
                 style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: _kTextSub, fontSize: 11)),
+                    color: ac.textSecondary, fontSize: 11)),
           ],
         ),
         actions: [
           if (_isSaving)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.only(right: 16),
                 child: SizedBox(
                   width: 18, height: 18,
                   child: CircularProgressIndicator(
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(_kGold),
+                        AlwaysStoppedAnimation<Color>(ac.gold),
                     strokeWidth: 2,
                   ),
                 ),
@@ -695,9 +815,9 @@ class _GameFormScreenState extends State<_GameFormScreen> {
           else
             TextButton(
               onPressed: _save,
-              child: const Text('Save',
+              child: Text('Save',
                   style: TextStyle(
-                      color: _kGold, fontWeight: FontWeight.w700)),
+                      color: ac.gold, fontWeight: FontWeight.w700)),
             ),
         ],
       ),
@@ -769,9 +889,9 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                       LinearProgressIndicator(
                         value: _imageUploadProgress,
                         backgroundColor:
-                            _kGold.withValues(alpha: 0.15),
+                            ac.gold.withValues(alpha: 0.15),
                         valueColor:
-                            const AlwaysStoppedAnimation<Color>(_kGold),
+                            AlwaysStoppedAnimation<Color>(ac.gold),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -779,9 +899,9 @@ class _GameFormScreenState extends State<_GameFormScreen> {
 
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _kGold,
+                    foregroundColor: ac.gold,
                     side: BorderSide(
-                        color: _kGold.withValues(alpha: 0.5)),
+                        color: ac.gold.withValues(alpha: 0.5)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
@@ -843,7 +963,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                   decoration: BoxDecoration(
                     color: isCorrect
                         ? const Color(0xFF2E7D52).withValues(alpha: 0.1)
-                        : _kBgDeep.withValues(alpha: 0.5),
+                        : ac.bgDeep.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isCorrect
@@ -864,7 +984,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                               shape: BoxShape.circle,
                               color: isCorrect
                                   ? Color(0xFF2E7D52)
-                                  : _kBgDeep,
+                                  : ac.bgDeep,
                               border: Border.all(
                                   color: isCorrect
                                       ? Color(0xFF2E7D52)
@@ -875,16 +995,16 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                                   style: TextStyle(
                                     color: isCorrect
                                         ? Colors.white
-                                        : _kTextSub,
+                                        : ac.textSecondary,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   )),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text('Choice',
+                          Text('Choice',
                               style: TextStyle(
-                                  color: _kTextSub,
+                                  color: ac.textSecondary,
                                   fontSize: 11)),
                           const Spacer(),
                           GestureDetector(
@@ -899,7 +1019,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                                   size: 16,
                                   color: isCorrect
                                       ? const Color(0xFF2E7D52)
-                                      : _kTextSub,
+                                      : ac.textSecondary,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -907,7 +1027,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                                   style: TextStyle(
                                     color: isCorrect
                                         ? const Color(0xFF2E7D52)
-                                        : _kTextSub,
+                                        : ac.textSecondary,
                                     fontSize: 11,
                                     fontWeight: isCorrect
                                         ? FontWeight.w700
@@ -959,15 +1079,15 @@ class _GameFormScreenState extends State<_GameFormScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Text('Visible to users',
+                    Text('Visible to users',
                         style: TextStyle(
-                            color: _kText, fontSize: 13)),
+                            color: ac.textPrimary, fontSize: 13)),
                     const Spacer(),
                     Switch(
                       value: _isVisible,
                       onChanged: (v) =>
                           setState(() => _isVisible = v),
-                      activeColor: _kGold,
+                      activeColor: ac.gold,
                     ),
                   ],
                 ),
@@ -983,7 +1103,7 @@ class _GameFormScreenState extends State<_GameFormScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kNavy,
-                foregroundColor: _kGold,
+                foregroundColor: ac.gold,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -991,11 +1111,11 @@ class _GameFormScreenState extends State<_GameFormScreen> {
               ),
               onPressed: _isSaving ? null : _save,
               child: _isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20, height: 20,
                       child: CircularProgressIndicator(
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(_kGold),
+                            AlwaysStoppedAnimation<Color>(ac.gold),
                         strokeWidth: 2,
                       ),
                     )
@@ -1025,7 +1145,7 @@ class _FormCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
       decoration: BoxDecoration(
-        color: _kBgDeep,
+        color: ac.bgDeep,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
@@ -1035,7 +1155,7 @@ class _FormCard extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: TextStyle(
-              color: _kGold,
+              color: ac.gold,
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,
@@ -1078,7 +1198,7 @@ class _Field extends StatelessWidget {
       children: [
         Text(label,
             style: TextStyle(
-                color: _kTextSub, fontSize: 10, letterSpacing: 0.5)),
+                color: ac.textSecondary, fontSize: 10, letterSpacing: 0.5)),
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
@@ -1086,18 +1206,18 @@ class _Field extends StatelessWidget {
           maxLines: maxLines,
           style: TextStyle(
             fontFamily: fontFamily,
-            color: _kText,
+            color: ac.textPrimary,
             fontSize: dense ? 13 : 14,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               fontFamily: fontFamily,
-              color: _kTextSub.withValues(alpha: 0.5),
+              color: ac.textSecondary.withValues(alpha: 0.5),
               fontSize: dense ? 12 : 13,
             ),
             filled: true,
-            fillColor: _kBg,
+            fillColor: ac.bgPrimary,
             isDense: dense,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 10,
@@ -1116,7 +1236,7 @@ class _Field extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(7),
               borderSide: BorderSide(
-                  color: _kGold, width: 1),
+                  color: ac.gold, width: 1),
             ),
           ),
         ),

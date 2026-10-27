@@ -27,6 +27,7 @@ import '../../admin/books/bulk_upload_screen.dart';
 import '../../admin/books/edit_book_screen.dart';
 import '../../admin/books/upload_book_screen.dart';
 import '../../admin/content/agbeya_manager.dart';
+import '../../admin/content/agbeya_intro_manager.dart';
 import '../../admin/content/bible_manager.dart';
 import '../../admin/content/book_category_manager.dart';
 import '../../admin/content/cms_additional_content.dart';
@@ -36,9 +37,12 @@ import '../../admin/content/daily_verse_manager.dart';
 import '../../admin/content/game_manager_screen.dart';
 import '../../admin/gallery/gallery_manager_screen.dart';
 import '../../admin/gallery/gallery_bulk_upload_screen.dart';
+import '../../data/models/gallery_item_model.dart';
 import '../../admin/electronic_library/elib_manager_screen.dart';
 import '../../admin/electronic_library/elib_bulk_upload_screen.dart';
 import '../../admin/content/churches_manager.dart';
+import '../../admin/content/social_links_manager.dart';
+import '../../admin/content/home_layout_manager.dart';
 import '../../admin/content/pdf_content_manager.dart';
 import '../../data/models/pdf_content_model.dart';
 import '../../admin/dashboard/dashboard_screen.dart';
@@ -88,18 +92,27 @@ abstract class Routes {
   static const String adminCmsSaints      = '/admin/cms/saints';
   static const String adminCmsDailyVerse  = '/admin/cms/daily-verse';
   static const String adminCmsAgbeya      = '/admin/cms/agbeya';
+  static const String adminCmsAgbeyaIntro = '/admin/cms/agbeya-intro';
   static const String adminCmsCategories  = '/admin/cms/categories';
   // PDF content managers
   static const String adminCmsPsalmody    = '/admin/cms/psalmody';
   static const String adminCmsReadings    = '/admin/cms/readings';
   static const String adminCmsOccasions   = '/admin/cms/occasions';
+  static const String adminCmsTheses         = '/admin/cms/theses';
+  static const String adminCmsChristianBooks = '/admin/cms/christian-books';
+  static const String adminCmsServiceBooks   = '/admin/cms/service-books';
   static const String adminCmsGames       = '/admin/cms/games';
   static const String adminCmsSaintsBulk = '/admin/cms/saints-bulk';
   static const String adminCmsGallery     = '/admin/cms/gallery';
   static const String adminCmsGalleryBulk = '/admin/cms/gallery-bulk';
+  static const String adminCmsSaintsGallery     = '/admin/cms/saints-gallery';
+  static const String adminCmsSaintsGalleryBulk = '/admin/cms/saints-gallery-bulk';
   static const String adminCmsElib        = '/admin/cms/elib';
   static const String adminCmsElibBulk    = '/admin/cms/elib-bulk';
+  static const String adminCmsArtworks    = '/admin/cms/artworks';
   static const String adminCmsChurches    = '/admin/cms/churches';
+  static const String adminCmsSocialLinks = '/admin/cms/social-links';
+  static const String adminCmsHomeLayout  = '/admin/cms/home-layout';
 
   // User content routes (pushed via Navigator, not go_router shell)
   static const String homeBible       = '/home/bible';
@@ -333,6 +346,11 @@ class AppRouter {
             builder: (_, __) => const AgbeyaManagerScreen(),
           ),
           GoRoute(
+            path:    Routes.adminCmsAgbeyaIntro,
+            name:    'adminCmsAgbeyaIntro',
+            builder: (_, __) => const AgbeyaIntroManagerScreen(),
+          ),
+          GoRoute(
             path:    Routes.adminCmsCategories,
             name:    'adminCmsCategories',
             builder: (_, __) => const BookCategoryManagerScreen(),
@@ -365,6 +383,33 @@ class AppRouter {
             ),
           ),
           GoRoute(
+            path:    Routes.adminCmsTheses,
+            name:    'adminCmsTheses',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.theses,
+              labelAr:  PdfCategory.labelAr[PdfCategory.theses]!,
+              labelEn:  'Theses',
+            ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsChristianBooks,
+            name:    'adminCmsChristianBooks',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.christianBooks,
+              labelAr:  PdfCategory.labelAr[PdfCategory.christianBooks]!,
+              labelEn:  'Christian Books',
+            ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsServiceBooks,
+            name:    'adminCmsServiceBooks',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.serviceBooks,
+              labelAr:  PdfCategory.labelAr[PdfCategory.serviceBooks]!,
+              labelEn:  'Service Books',
+            ),
+          ),
+          GoRoute(
             path:    Routes.adminCmsGames,
             name:    'adminCmsGames',
             builder: (_, __) => const GameManagerScreen(),
@@ -380,6 +425,25 @@ class AppRouter {
             builder: (_, __) => const GalleryBulkUploadScreen(),
           ),
           GoRoute(
+            path:    Routes.adminCmsSaintsGallery,
+            name:    'adminCmsSaintsGallery',
+            builder: (_, __) => const GalleryManagerScreen(
+              galleryType: GalleryType.saintsLives,
+              titleAr: 'صور من حياة القديسين',
+              titleEl: 'Φωτογραφίες Βίοι Αγίων',
+              bulkRoute: Routes.adminCmsSaintsGalleryBulk,
+            ),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsSaintsGalleryBulk,
+            name:    'adminCmsSaintsGalleryBulk',
+            builder: (_, __) => const GalleryBulkUploadScreen(
+              galleryType: GalleryType.saintsLives,
+              titleAr: 'صور من حياة القديسين',
+              titleEl: 'Φωτογραφίες Βίοι Αγίων',
+            ),
+          ),
+          GoRoute(
             path:    Routes.adminCmsElib,
             name:    'adminCmsElib',
             builder: (_, __) => const ElibManagerScreen(),
@@ -392,9 +456,28 @@ class AppRouter {
             ),
           ),
           GoRoute(
+            path:    Routes.adminCmsArtworks,
+            name:    'adminCmsArtworks',
+            builder: (_, __) => PdfContentManagerScreen(
+              category: PdfCategory.artworks,
+              labelAr:  PdfCategory.labelAr[PdfCategory.artworks]!,
+              labelEn:  'Art Works',
+            ),
+          ),
+          GoRoute(
             path:    Routes.adminCmsChurches,
             name:    'adminCmsChurches',
             builder: (_, __) => const ChurchesManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsSocialLinks,
+            name:    'adminCmsSocialLinks',
+            builder: (_, __) => const SocialLinksManagerScreen(),
+          ),
+          GoRoute(
+            path:    Routes.adminCmsHomeLayout,
+            name:    'adminCmsHomeLayout',
+            builder: (_, __) => const HomeLayoutManagerScreen(),
           ),
         ],
       ),

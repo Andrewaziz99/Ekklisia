@@ -31,14 +31,28 @@ class ElibRepository {
 
   // ── Sections ──────────────────────────────────────────────────────────────
 
-  Stream<List<ElibSectionModel>> watchSections() => _sections
+  // Note: filtering by libraryType is done in memory (not via a Firestore
+  // `.where()`) so the existing `orderBy('order')` query keeps working
+  // without needing a new composite index, consistent with the item queries
+  // below. Docs written before `libraryType` existed default to `general`.
+  Stream<List<ElibSectionModel>> watchSections({
+    String libraryType = ElibLibraryType.general,
+  }) => _sections
       .orderBy('order')
       .snapshots()
-      .map((s) => s.docs.map(ElibSectionModel.fromDoc).toList());
+      .map((s) => s.docs
+          .map(ElibSectionModel.fromDoc)
+          .where((sec) => sec.libraryType == libraryType)
+          .toList());
 
-  Future<List<ElibSectionModel>> fetchSections() async {
+  Future<List<ElibSectionModel>> fetchSections({
+    String libraryType = ElibLibraryType.general,
+  }) async {
     final snap = await _sections.orderBy('order').get();
-    return snap.docs.map(ElibSectionModel.fromDoc).toList();
+    return snap.docs
+        .map(ElibSectionModel.fromDoc)
+        .where((sec) => sec.libraryType == libraryType)
+        .toList();
   }
 
   Future<ElibSectionModel> saveSection(ElibSectionModel section) async {

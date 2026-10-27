@@ -16,14 +16,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/repositories/book_category_repository.dart';
 import '../utils/admin_colors.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-const _kNavy = EkklisiaColors.darkBgDeep;
-const _kGold = EkklisiaColors.darkGold;
+// (was: hardcoded-dark _kNavy / _kGold aliases — replaced with ac.bgDeep /
+// ac.gold at each call site so this screen follows the app theme)
 
 // ════════════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -254,7 +253,7 @@ class _BookCategoryManagerScreenState extends State<BookCategoryManagerScreen> {
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       body: _mode == _Mode.list ? _buildList() : _buildForm(),
     );
   }
@@ -553,7 +552,7 @@ class _CategoryRow extends StatelessWidget {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: _kNavy,
+              color: ac.bgDeep,
               shape: BoxShape.circle,
               border: Border.all(color: ac.goldBorder),
             ),
@@ -561,7 +560,7 @@ class _CategoryRow extends StatelessWidget {
               child: Text(
                 '${index + 1}',
                 style: TextStyle(
-                  color: _kGold,
+                  color: ac.gold,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),
@@ -581,7 +580,7 @@ class _CategoryRow extends StatelessWidget {
               children: [
                 Text(
                   cat.nameAr,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: 'Scheherazade',
@@ -593,7 +592,7 @@ class _CategoryRow extends StatelessWidget {
                 if (cat.nameEl.isNotEmpty)
                   Text(
                     cat.nameEl,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: ac.textSecondary,
@@ -663,7 +662,7 @@ class _Header extends StatelessWidget {
         bottom: 12,
       ),
       decoration: BoxDecoration(
-        color: _kNavy,
+        color: ac.bgDeep,
         border: Border(bottom: BorderSide(color: ac.goldBorder, width: 0.5)),
       ),
       child: Row(
@@ -727,12 +726,12 @@ class _SmallBtn extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: _kGold),
+            Icon(icon, size: 14, color: ac.gold),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: _kGold,
+                color: ac.gold,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -1033,7 +1032,7 @@ class _Field extends StatelessWidget {
               fontSize: 13,
             ),
             filled: true,
-            fillColor: EkklisiaColors.bgPrimary,
+            fillColor: ac.bgPrimary,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,

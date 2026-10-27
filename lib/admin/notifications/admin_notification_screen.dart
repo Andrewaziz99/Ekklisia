@@ -1,7 +1,6 @@
 // lib/admin/notifications/admin_notification_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/colors.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/book_model.dart';
@@ -593,11 +592,11 @@ class _HistoryRow extends StatelessWidget {
           Text(notif.title, style: TextStyle(
               color: ac.textPrimary,
               fontSize: 12, fontWeight: FontWeight.w600),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
+              maxLines: 2, overflow: TextOverflow.ellipsis),
           SizedBox(height: 2),
           Text(notif.body, style: TextStyle(
               color: ac.textSecondary, fontSize: 11),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
+              maxLines: 2, overflow: TextOverflow.ellipsis),
           SizedBox(height: 3),
           Text(notif.time, style: TextStyle(
               color: ac.textSecondary, fontSize: 10)),

@@ -40,11 +40,15 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
   }
 
   Future<void> _bootstrap() async {
-    await _notificationService.init();
-    _notificationService.onNotificationTap = (bookId) {
-      AppRouter.router.push('/home/book/$bookId');
-    };
-    await _registerFcmToken();
+    try {
+      await _notificationService.init();
+      _notificationService.onNotificationTap = (bookId) {
+        AppRouter.router.push('/home/book/$bookId');
+      };
+      await _registerFcmToken();
+    } catch (e) {
+      debugPrint('[Bootstrap] Notification setup failed: $e');
+    }
   }
 
   Future<void> _registerFcmToken() async {
@@ -72,8 +76,15 @@ class _EkklisiaAppState extends State<EkklisiaApp> {
       platform: platform,
     );
 
-    await _notificationService.subscribeToTopic('new_books');
-    await _notificationService.subscribeToTopic('daily_verse');
+    // Subscribe to each topic independently so a failure on one (e.g. a
+    // transient network hiccup) doesn't stop the others from registering.
+    for (final topic in const ['new_books', 'daily_verse', 'new_content']) {
+      try {
+        await _notificationService.subscribeToTopic(topic);
+      } catch (e) {
+        debugPrint('[Bootstrap] Failed to subscribe to topic "$topic": $e');
+      }
+    }
   }
 
   @override

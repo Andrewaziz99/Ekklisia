@@ -34,19 +34,19 @@ const _kHourNamesAr = {
   2: 'صلاة الساعة الثالثة',
   3: 'صلاة الساعة السادسة',
   4: 'صلاة الساعة التاسعة',
-  5: 'صلاة الغروب',
-  6: 'صلاة النوم',
+  5: 'صلاة الساعة الحادية عشرة',
+  6: 'صلاة الساعة الثانية عشرة',
   7: 'صلاة نصف الليل',
 };
 
 const _kHourNamesEl = {
-  1: 'Ακολουθία του Όρθρου',
-  2: 'Ακολουθία Τρίτης Ώρας',
-  3: 'Ακολουθία Έκτης Ώρας',
-  4: 'Ακολουθία Ενάτης Ώρας',
-  5: 'Ακολουθία του Εσπερινού',
-  6: 'Ακολουθία του Αποδείπνου',
-  7: 'Ακολουθία Μεσονυκτικού',
+  1: 'ΠΡΩΙΝΗ ΩΡΑ',
+  2: 'ΤΡΙΤΗ ΩΡΑ',
+  3: 'ΕΚΤΗ ΩΡΑ',
+  4: 'ΕΝΑΤΗ ΩΡΑ',
+  5: 'ΕΝΔΕΚΑΤΗ ΩΡΑ',
+  6: 'ΔΩΔΕΚΑΤΗ ΩΡΑ',
+  7: 'ΜΕΣΟΝΥΧΤΙΚΗ ΠΡΟΣΕΥΧΗ',
 };
 
 class AgbeyaHomeScreen extends StatelessWidget {
@@ -149,6 +149,22 @@ class _AgbeyaHomeView extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+
+          // ── Whole book banner ────────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: StreamBuilder<AgbeyaHour?>(
+              stream: sl<AgbeyaRepository>().watchWholeBook(),
+              builder: (context, snap) {
+                final book = snap.data;
+                if (book == null ||
+                    !book.isPublished ||
+                    (!book.hasPdf && !book.hasAudio)) {
+                  return const SizedBox.shrink();
+                }
+                return _WholeBookCard(book: book, isGreek: isGreek);
+              },
             ),
           ),
 
@@ -479,6 +495,112 @@ class _HourCard extends StatelessWidget {
       return;
     }
     await playOrPickTrack(context, hour, cubit);
+  }
+}
+
+// ── Whole book card ───────────────────────────────────────────────────────────
+// Banner tile linking to a single PDF/audio covering the entire Agbeya book,
+// shown above the seven individual hour cards once an admin uploads it.
+
+class _WholeBookCard extends StatelessWidget {
+  const _WholeBookCard({required this.book, required this.isGreek});
+
+  final AgbeyaHour book;
+  final bool isGreek;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = isGreek
+        ? (book.titleEl.isNotEmpty ? book.titleEl : 'ΟΛΟΚΛΗΡΟ ΩΡΟΛΟΓΙΟ')
+        : (book.titleAr.isNotEmpty ? book.titleAr : 'الأجبية كاملة (كل الساعات)');
+    final subtitle = isGreek
+        ? 'ΟΛΟΚΛΗΡΟ ΩΡΟΛΟΓΙΟ'
+        : 'كل الساعات في كتاب واحد';
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => book.hasPdf
+              ? AgbeyaPdfReaderScreen(hour: book)
+              : AgbeyaHourScreen(hour: book),
+        ),
+      ),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_kNavy, _kCrimson.withValues(alpha: 0.85)],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _kGold, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: _kGold.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: _kGold, width: 1),
+              ),
+              child: const Icon(Icons.menu_book, color: _kGold, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: isGreek
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    title,
+                    textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: isGreek ? null : 'Scheherazade',
+                      color: Colors.white,
+                      fontSize: isGreek ? 15 : 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: isGreek ? null : 'Scheherazade',
+                      color: _kGold.withValues(alpha: 0.9),
+                      fontSize: isGreek ? 11 : 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              book.hasPdf ? Icons.menu_book_outlined : Icons.headphones,
+              color: _kGold,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

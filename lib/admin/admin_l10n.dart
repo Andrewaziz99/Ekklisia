@@ -53,13 +53,13 @@ class AdminL10n {
   String get bible => _t('الكتاب المقدس', 'Αγία Γραφή');
   String get psalmody => _t('الترانيم', 'Ψαλμωδία');
   String get liturgies => _t('القداسات', 'Λειτουργίες');
-  String get readings => _t('القراءات', 'Αναγνώσματα');
+  String get readings => _t('كتب ليتورجية', 'Λειτουργικά βιβλία');
   String get hymns => _t('الألحان', 'Ύμνοι');
-  String get occasions => _t('مناسبات', 'Ευκαιρίες');
+  String get occasions => _t('أسبوع الآلام', 'Εβδομάδα Μ.');
   String get prayers => _t('الصلوات', 'Προσευχές');
   String get saints => _t('القديسون', 'Άγιοι');
   String get dailyVerse => _t('آية اليوم', 'Ημερήσιο Εδάφιο');
-  String get agbeya => _t('الأجبية', 'Αγπεγιά');
+  String get agbeya => _t('الأجبية', 'Προσευχές από το');
   String get bookCategories => _t('تصنيفات الكتب', 'Κατηγορίες Βιβλίων');
   String get games => _t('الألعاب', 'Παιχνίδια');
 
@@ -105,7 +105,7 @@ class AdminL10n {
   String get cmsLiturgies => _t('القداسات', 'Λειτουργίες');
   String get cmsSaints => _t('القديسون', 'Άγιοι');
   String get cmsDailyVerse => _t('آية اليوم', 'Ημερήσιο Εδάφιο');
-  String get cmsAgbeya => _t('الأجبية', 'Αγπεγιά');
+  String get cmsAgbeya => _t('الأجبية', 'Προσευχές από το');
 
   // ── Welcome banner ────────────────────────────────────────────────────────
   String welcomeUser(String name) => _t('مرحباً، $name', 'Καλωσόρισες, $name');
@@ -115,7 +115,7 @@ class AdminL10n {
   // ── Status labels ─────────────────────────────────────────────────────────
   String get statusLive => _t('منشور', 'LIVE');
   String get statusDraft => _t('مسودة', 'DRAFT');
-  String get recentlyAdded => _t('أضيف مؤخراً', 'Πρόσφατα Προσθήκες');
+  String get recentlyAdded => _t('أضيف مؤخراً', 'Πρόσφατες Προσθήκες');
   String get viewAll => _t('عرض الكل', 'Προβολή Όλων');
 
   // ── Common actions ────────────────────────────────────────────────────────

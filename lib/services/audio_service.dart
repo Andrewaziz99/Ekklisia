@@ -44,10 +44,15 @@ class AgbeyaAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     });
 
-    // Auto-stop on completion so the notification clears
-    _player.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) stop();
-    });
+    // NOTE: there is deliberately no "auto-stop on completion" listener
+    // here. AudioPlayerCubit also listens to processingStateStream to
+    // auto-advance a queued playlist (Holy Mass parts, Agbeya intro → hour
+    // track) on completion. Both listeners fire off the same event, and
+    // stop() here used to race play() for the next track there — sometimes
+    // winning and killing the next track right as it started. Whether to
+    // stop or advance is now one decision made in one place: the cubit
+    // calls _handler.stop() itself when a completed track has nothing
+    // queued after it (see AudioPlayerCubit._processSub).
   }
 
   // ── Public API ──────────────────────────────────────────────────────────────
@@ -55,13 +60,21 @@ class AgbeyaAudioHandler extends BaseAudioHandler with SeekHandler {
   /// Load [item] from its Cloudinary URL (item.id) and begin playback.
   ///
   /// Uses [LockCachingAudioSource] so the audio file is cached locally while
-  /// streaming — subsequent plays are served from disk with no network request.
+  /// streaming — subsequent plays are served from disk with no network
+  /// request. On web there's no filesystem for it to cache to at all:
+  /// LockCachingAudioSource needs path_provider's getTemporaryDirectory(),
+  /// which has no web implementation and throws MissingPluginException
+  /// before a single byte plays (same class of gap as flutter_cache_manager
+  /// for PDFs — see cached_pdf_viewer.dart). Stream directly there instead;
+  /// native platforms keep the on-disk caching benefit.
   Future<void> playFromUrl(MediaItem item) async {
     mediaItem.add(item);
     queue.add([item]);
     try {
       await _player.setAudioSource(
-        LockCachingAudioSource(Uri.parse(item.id)),
+        kIsWeb
+            ? AudioSource.uri(Uri.parse(item.id))
+            : LockCachingAudioSource(Uri.parse(item.id)),
         preload: true,
       );
       await _player.play();

@@ -12,22 +12,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import 'dart:core';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/bible_model.dart';
 import '../../data/repositories/bible_repository.dart';
 import '../utils/admin_colors.dart';
 
 // ── Palette aliases ────────────────────────────────────────────────────────────
-const _kGold = EkklisiaColors.darkGold;
-const _kNavy = EkklisiaColors.darkBgDeep;
+// (was: hardcoded-dark _kGold / _kNavy aliases — replaced with ac.gold /
+// ac.bgDeep at each call site so this screen follows the app theme)
 
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN — language tabs + XML config + books list
@@ -61,12 +59,12 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
             pinned: true,
-            backgroundColor: _kNavy,
+            backgroundColor: ac.bgDeep,
             expandedHeight: 90,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
@@ -74,7 +72,7 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
               titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               title: Row(
                 children: [
-                  const Icon(Icons.book, color: _kGold, size: 18),
+                  Icon(Icons.book, color: ac.gold, size: 18),
                   const SizedBox(width: 8),
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -104,11 +102,11 @@ class _BibleManagerScreenState extends State<BibleManagerScreen>
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: Container(
-                color: _kNavy,
+                color: ac.bgDeep,
                 child: TabBar(
                   controller: _tabs,
-                  indicatorColor: _kGold,
-                  labelColor: _kGold,
+                  indicatorColor: ac.gold,
+                  labelColor: ac.gold,
                   unselectedLabelColor: ac.textSecondary,
                   tabs: const [
                     Tab(text: 'Arabic — العربية'),
@@ -262,7 +260,7 @@ class _LangTabState extends State<_LangTab> with AutomaticKeepAliveClientMixin {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm', style: TextStyle(color: _kGold)),
+            child: Text('Confirm', style: TextStyle(color: ac.gold)),
           ),
         ],
       ),
@@ -380,7 +378,7 @@ class _XmlSourceCard extends StatelessWidget {
                     icon: Icons.cloud_done_outlined,
                     label: 'Remote XML active',
                     sublabel: cfg['xml_url'] as String? ?? '',
-                    color: _kGold,
+                    color: ac.gold,
                     trailing: IconButton(
                       icon: Icon(
                         Icons.restore_outlined,
@@ -404,7 +402,7 @@ class _XmlSourceCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: uploadProgress,
                 backgroundColor: ac.bgElevated,
-                valueColor: const AlwaysStoppedAnimation(_kGold),
+                valueColor: AlwaysStoppedAnimation(ac.gold),
                 minHeight: 4,
               ),
             ),
@@ -560,7 +558,7 @@ class _OverrideTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgPrimary,
+        color: ac.bgPrimary,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: ac.goldBorder, width: 0.5),
       ),
@@ -575,7 +573,7 @@ class _OverrideTile extends StatelessWidget {
                   override.reference,
                   style: TextStyle(
                     fontFamily: 'Scheherazade',
-                    color: _kGold,
+                    color: ac.gold,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -770,7 +768,7 @@ class _TestamentGroup extends StatelessWidget {
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.bgPrimary,
+                  color: ac.bgPrimary,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: ac.goldBorder, width: 0.5),
                 ),
@@ -781,7 +779,7 @@ class _TestamentGroup extends StatelessWidget {
                     Text(
                       book.number.toString(),
                       style: TextStyle(
-                        color: _kGold,
+                        color: ac.gold,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -828,11 +826,11 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
       final ac = AdminC(Theme.of(context).brightness);
     final bookName = langCode == 'el' ? book.nameEl : book.nameAr;
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       appBar: AppBar(
-        backgroundColor: _kNavy,
+        backgroundColor: ac.bgDeep,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: _kGold, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new, color: ac.gold, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -894,7 +892,7 @@ class _BibleAdminChaptersScreen extends StatelessWidget {
                 child: Text(
                   '${chapter.number}',
                   style: TextStyle(
-                    color: _kGold,
+                    color: ac.gold,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -979,11 +977,11 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
       final ac = AdminC(Theme.of(context).brightness);
     final bookName = langCode == 'el' ? widget.book.nameEl : widget.book.nameAr;
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       appBar: AppBar(
-        backgroundColor: _kNavy,
+        backgroundColor: ac.bgDeep,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: _kGold, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new, color: ac.gold, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -1031,10 +1029,10 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isOverridden
-                    ? _kGold.withValues(alpha: 0.15)
+                    ? ac.gold.withValues(alpha: 0.15)
                     : ac.bgElevated,
                 border: Border.all(
-                  color: isOverridden ? _kGold : ac.goldBorder,
+                  color: isOverridden ? ac.gold : ac.goldBorder,
                   width: 0.5,
                 ),
               ),
@@ -1042,7 +1040,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
                 child: Text(
                   verse.number.toString(),
                   style: TextStyle(
-                    color: isOverridden ? _kGold : ac.textSecondary,
+                    color: isOverridden ? ac.gold : ac.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1062,7 +1060,7 @@ class _BibleAdminVersesScreenState extends State<_BibleAdminVersesScreen> {
               icon: Icon(
                 Icons.edit_outlined,
                 size: 16,
-                color: isOverridden ? _kGold : ac.textSecondary,
+                color: isOverridden ? ac.gold : ac.textSecondary,
               ),
               onPressed: () => _editVerse(verse),
             ),
@@ -1109,7 +1107,7 @@ class _EditVerseDialog extends StatelessWidget {
             reference,
             style: TextStyle(
               fontFamily: isArabic ? 'Scheherazade' : null,
-              color: _kGold,
+              color: ac.gold,
               fontSize: isArabic ? 14 : 11,
             ),
           ),
@@ -1129,7 +1127,7 @@ class _EditVerseDialog extends StatelessWidget {
             height: 1.6,
           ),
           decoration: InputDecoration(
-            fillColor: EkklisiaColors.bgPrimary,
+            fillColor: ac.bgPrimary,
             filled: true,
             contentPadding: const EdgeInsets.all(12),
             enabledBorder: OutlineInputBorder(
@@ -1138,7 +1136,7 @@ class _EditVerseDialog extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _kGold, width: 1),
+              borderSide: BorderSide(color: ac.gold, width: 1),
             ),
           ),
         ),
@@ -1156,9 +1154,9 @@ class _EditVerseDialog extends StatelessWidget {
             final text = controller.text.trim();
             if (text.isNotEmpty) Navigator.pop(context, text);
           },
-          child: const Text(
+          child: Text(
             'Save',
-            style: TextStyle(color: _kGold, fontWeight: FontWeight.w700),
+            style: TextStyle(color: ac.gold, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -1204,7 +1202,7 @@ class _OutlineBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
-    final color = danger ? const Color(0xFFEF5350) : _kGold;
+    final color = danger ? const Color(0xFFEF5350) : ac.gold;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1243,7 +1241,7 @@ class _MiniShimmer extends StatelessWidget {
       height: 12,
       width: 160,
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgPrimary,
+        color: ac.bgPrimary,
         borderRadius: BorderRadius.circular(4),
       ),
     );

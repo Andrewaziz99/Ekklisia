@@ -38,6 +38,13 @@ class BookModel extends Equatable {
   final Map<String, dynamic> metadata; // flexible extra fields
   final BookMediaType mediaType; // 'pdf', 'video', or 'audio'
 
+  /// Admin drag-to-reorder position (see [BooksRepository.reorder]).
+  /// Docs written before this field existed all default to 0 — the data
+  /// source sorts by this value with a *stable* sort, so those legacy docs
+  /// keep their original newest-first order among themselves until an admin
+  /// explicitly drags them.
+  final int sortOrder;
+
   const BookModel({
     required this.id,
     required this.titleAr,
@@ -58,6 +65,7 @@ class BookModel extends Equatable {
     this.tags = const [],
     this.metadata = const {},
     this.mediaType = BookMediaType.pdf,
+    this.sortOrder = 0,
   });
 
   // ── Display helpers ─────────────────────────────────────────────────────
@@ -112,6 +120,7 @@ class BookModel extends Equatable {
       tags: List<String>.from(data['tags'] ?? []),
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
       mediaType: BookMediaTypeX.fromString(data['media_type'] as String?),
+      sortOrder: (data['sort_order'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -134,6 +143,7 @@ class BookModel extends Equatable {
     'tags': tags,
     'metadata': metadata,
     'media_type': mediaType.value,
+    'sort_order': sortOrder,
   };
 
   BookModel copyWith({
@@ -156,6 +166,7 @@ class BookModel extends Equatable {
     List<String>? tags,
     Map<String, dynamic>? metadata,
     BookMediaType? mediaType,
+    int? sortOrder,
   }) => BookModel(
     id: id ?? this.id,
     titleAr: titleAr ?? this.titleAr,
@@ -176,6 +187,7 @@ class BookModel extends Equatable {
     tags: tags ?? this.tags,
     metadata: metadata ?? this.metadata,
     mediaType: mediaType ?? this.mediaType,
+    sortOrder: sortOrder ?? this.sortOrder,
   );
 
   @override
@@ -189,5 +201,6 @@ class BookModel extends Equatable {
     coverUrl,
     isPublished,
     createdAt,
+    sortOrder,
   ];
 }

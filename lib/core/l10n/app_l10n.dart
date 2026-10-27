@@ -17,9 +17,21 @@ import '../../services/settings_service.dart';
 // ── Context extension ─────────────────────────────────────────────────────────
 
 extension AppL10nExt on BuildContext {
-  /// Reads current language from [SettingsCubit] and rebuilds on change.
+  /// Reads current language from [SettingsCubit] (auto-watches → rebuilds).
+  /// Only call this from a build() method — Provider's `watch` asserts if
+  /// called from an event handler or other callback outside the widget
+  /// tree's build phase. Use [l10nOnce] there instead.
   AppL10n get l10n {
     final lang = watch<SettingsCubit>().state.language;
+    return lang == AppLanguage.arabic ? AppL10n.ar : AppL10n.el;
+  }
+
+  /// Same lookup as [l10n] but via `read` instead of `watch` — safe to call
+  /// from event handlers, async callbacks, etc. (anywhere outside a build()
+  /// method). Doesn't subscribe to rebuilds, which is fine for a one-shot
+  /// read like building a dialog's contents or a SnackBar message.
+  AppL10n get l10nOnce {
+    final lang = read<SettingsCubit>().state.language;
     return lang == AppLanguage.arabic ? AppL10n.ar : AppL10n.el;
   }
 }
@@ -54,7 +66,7 @@ class AppL10n {
   String get search => _t('بحث', 'Αναζήτηση');
   String get seeAll => _t('عرض الكل', 'Δείτε Όλα');
   String get all => _t('الكل', 'ΟΛΑ');
-  String get comingSoon => _t('قريباً', 'Coming soon');
+  String get comingSoon => _t('قريباً', 'Σύντομα');
   String get loadingError => _t('حدث خطأ', 'Σφάλμα φόρτωσης');
   String get loadingErrorLong => _t('حدث خطأ أثناء التحميل', 'Σφάλμα φόρτωσης');
   String get next => _t('← التالي', 'Επόμενο →');
@@ -72,7 +84,7 @@ class AppL10n {
   String get selectLanguage => _t('اختر اللغة', 'Επιλέξτε γλώσσα');
   String get arabicLanguage => _t('العربية', 'Αραβικά');
   String get arabicSubtitle => _t('Arabic / العربية', 'Arabic / العربية');
-  String get greekLanguage => _t('Ελληνικά', 'Ελληνικά');
+  String get greekLanguage => _t('اليونانية', 'Ελληνικά');
   String get greekSubtitle => _t('Greek / Ελληνικά', 'Greek / Ελληνικά');
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -84,19 +96,27 @@ class AppL10n {
   String get appLabel => _t('التطبيق', 'Εφαρμογή');
 
   // Section headers
-  String get contentLibrary => _t('مكتبة المحتوى', 'Βιβλιοθήκη Περιεχομένου');
+  String get contentLibrary => _t('مكتبة المحتوى', 'Βιβλιοθήκη');
   String get recentlyAdded => _t('أحدث الإضافات', 'Πρόσφατα προστέθηκε');
 
   // Category / quick-access grid labels
-  String get categoryAgbeya => _t('الأجبية', 'Ωρολόγιο');
+  String get categoryAgbeya => _t('الأجبية', 'Προσευχές από το');
   String get categoryPsalmody => _t('الترانيم', 'Χριστιανικά Άσματα');
   String get categoryBible => _t('الكتاب المقدس', 'Αγία Γραφή');
   String get categoryLiturgies => _t('القداسات', 'Λειτουργία');
-  String get categoryReadings => _t('القراءات', 'Αναγνώσεις');
-  String get categoryHymns => _t('الألحان', 'Υμνολογίες');
-  String get categoryOccasions => _t('مناسبات', 'Χριστιανικές Εορτές');
+  String get categoryReadings => _t('كتب ليتورجية', 'Λειτουργικά βιβλία');
+  String get categoryHymns => _t('الألحان', 'Μεσονυκτική Ακολουθία');
+  String get categoryOccasions => _t('أسبوع الآلام', 'Μ. ΕΒΔΟΜΑΔA');
   String get categoryCopticCalendar =>
       _t('التقويم القبطي', 'Κοπτικό Ημερολόγιο');
+  String get categoryTheses =>
+      _t('رسائل الدكتوراه والماجستير', 'Διδακτορικά και Μεταπτυχιακές Εργασίες');
+  // ── Theses sub-sections (inside the category-theses tab) ──────────────────
+  String get masterTheses => _t('رسائل الماجستير', 'ΜΕΤΑΠΤΥΧΙΑΚΕΣ ΕΡΓΑΣΙΕΣ');
+  String get doctoralTheses => _t('رسائل الدكتوراه', 'ΔΙΔΑΚΤΟΡΙΚΕΣ ΔΙΑΤΡΙΒΕΣ');
+  String get unspecifiedTheses => _t('أخرى', 'Άλλα');
+  String get categoryChristianBooks => _t('الكتب المسيحية', 'Χριστιανικά Βιβλία');
+  String get categoryServiceBooks => _t('كتب الخدمة', 'Βιβλία Διακονίας');
 
   // Bottom navigation bar
   String get navHome => _t('الرئيسية', 'Αρχική');
@@ -111,8 +131,8 @@ class AppL10n {
   // DAILY VERSE
   // ══════════════════════════════════════════════════════════════════════════
 
-  String get dailyVerseTitle => _t('آية اليوم', 'Το Εδάφιο της Ημέρας');
-  String get dailyVerseTitleUpper => _t('آية اليوم', 'Το Εδάφιο της Ημέρας');
+  String get dailyVerseTitle => _t('آية اليوم', 'Το εδάφιο της ημέρας');
+  String get dailyVerseTitleUpper => _t('آية اليوم', 'Το εδάφιο της ημέρας');
   String get dailyVerseEmpty => _t('القراءة اليومية', 'Καθημερινός Στίχος');
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -144,19 +164,31 @@ class AppL10n {
   // AGBEYA (BOOK OF HOURS)
   // ══════════════════════════════════════════════════════════════════════════
 
-  String get agbeya => _t('الأجبية', 'Ωρολόγιο');
+  String get agbeya => _t('الأجبية', 'Προσευχές από το');
   String get noHours => _t('لا توجد ساعات بعد', 'Δεν βρέθηκαν ώρες');
   String get pickTrack => _t('اختر التسجيل', 'Επιλογή Κομματιού');
+  String get stopPlayback => _t('إيقاف', 'Διακοπή');
+  String get trackLabelFallback => _t('تسجيل', 'Κομμάτι');
+
+  // ── PDF reader chrome (Agbeya / Holy Mass / books readers) ────────────────
+  String get goToPageTooltip => _t('الانتقال إلى صفحة', 'Μετάβαση σε σελίδα');
+  String get readingModeTooltip => _t('وضع القراءة', 'Λειτουργία ανάγνωσης');
+  String get noAudioForHour =>
+      _t('لا يوجد صوت لهذه الساعة', 'Δεν υπάρχει ήχος για αυτή την ώρα');
+  String get pdfLoadError => _t(
+    'تعذّر عرض هذه الصفحة، حاول مرة أخرى.',
+    'Δεν ήταν δυνατή η προβολή αυτής της σελίδας. Δοκιμάστε ξανά.',
+  );
 
   // ══════════════════════════════════════════════════════════════════════════
   // SAINTS
   // ══════════════════════════════════════════════════════════════════════════
 
-  String get saints => _t('القديسون', 'Αγίων');
+  String get saints => _t('القديسين', 'Άγιοι');
 
   /// Alternate-language subtitle shown beside the primary title.
-  String get saintsTitleAlt => _t('Αγίων', 'القديسون');
-  String get noSaints => _t('لا يوجد قديسون', 'Δεν βρέθηκαν Αγίων');
+  String get saintsTitleAlt => _t('Άγιοι', 'القديسين');
+  String get noSaints => _t('لا يوجد قديسين', 'Δεν βρέθηκαν Άγιοι');
   String get searchHint => _t('بحث...', 'Αναζήτηση...');
   String noResultsFor(String q) =>
       _t('لا توجد نتائج لـ "$q"', 'Δεν βρέθηκαν αποτελέσματα για "$q"');
@@ -204,6 +236,7 @@ class AppL10n {
 
   String get gallery => _t('معرض الصور', 'Φωτογραφικό Υλικό');
   String get noImages => _t('لا توجد صور', 'Δεν υπάρχουν εικόνες');
+  String get saintsPhotos => _t('صور من حياة القديسين', 'Φωτογραφίες Βίοι Αγίων');
 
   // ══════════════════════════════════════════════════════════════════════════
   // ELECTRONIC LIBRARY (ELIB)
@@ -228,6 +261,7 @@ class AppL10n {
   // ══════════════════════════════════════════════════════════════════════════
 
   String get settings => _t('الإعدادات', 'Ρυθμίσεις');
+  String get settingsSubtitle => _t('SETTINGS', 'ΡΥΘΜΙΣΕΙΣ');
   String get language => _t('اللغة', 'Γλώσσα');
   String get theme => _t('المظهر', 'Θέμα');
   String get darkMode => _t('الوضع الداكن', 'Σκοτεινή λειτουργία');
@@ -235,6 +269,47 @@ class AppL10n {
   String get offlineMode => _t('وضع عدم الاتصال', 'Λειτουργία εκτός σύνδεσης');
   String get notifications => _t('الإشعارات', 'Ειδοποιήσεις');
   String get signOut => _t('تسجيل الخروج', 'Αποσύνδεση');
+
+  // Section headers
+  String get sectionFontSize => _t('حجم الخط', 'Μέγεθος γραμματοσειράς');
+  String get sectionLanguage => _t('لغة العرض', 'Γλώσσα εμφάνισης');
+  String get sectionAppearance => _t('المظهر', 'Εμφάνιση');
+  String get sectionStorage => _t('التخزين', 'Αποθήκευση');
+  String get sectionConnection => _t('الاتصال', 'Σύνδεση');
+  String get sectionAccount => _t('الحساب', 'Λογαριασμός');
+
+  // Font size card
+  String get chooseFontSize =>
+      _t('اختر الحجم المناسب', 'Επιλέξτε το κατάλληλο μέγεθος');
+  String get fontSizeAppliesEverywhere => _t(
+    'يُطبَّق الحجم على كامل النصوص في التطبيق',
+    'Το μέγεθος εφαρμόζεται σε όλα τα κείμενα της εφαρμογής',
+  );
+
+  // Storage card
+  String get cacheLabel => _t('الذاكرة المؤقتة', 'Προσωρινή μνήμη');
+  String cacheDescription(String size) => _t(
+    'الصور والملفات والصوت المحفوظة • $size',
+    'Αποθηκευμένες εικόνες, αρχεία και ήχος • $size',
+  );
+  String get clearCache => _t('مسح', 'Εκκαθάριση');
+  String get cacheCleared =>
+      _t('تم مسح الذاكرة المؤقتة', 'Η προσωρινή μνήμη εκκαθαρίστηκε');
+
+  // Sign-out confirmation
+  String get confirmSignOutBody => _t(
+    'هل تريد تسجيل الخروج من التطبيق؟',
+    'Θέλετε να αποσυνδεθείτε από την εφαρμογή;',
+  );
+  String get confirmSignOutAction => _t('خروج', 'Έξοδος');
+  String get cancel => _t('إلغاء', 'Ακύρωση');
+
+  // Profile card
+  String get guestReadOnly => _t('ضيف — قراءة فقط', 'Επισκέπτης — μόνο ανάγνωση');
+
+  // Footer
+  String get footerChurchName =>
+      _t('الكنيسة القبطية الأرثوذكسية', 'Κοπτική Ορθόδοξη Εκκλησία');
 
   // ══════════════════════════════════════════════════════════════════════════
   // AUTH SCREENS

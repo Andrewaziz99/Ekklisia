@@ -16,7 +16,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/elib_item_model.dart';
 import '../../data/repositories/elib_repository.dart';
 import '../../features/auth/auth_cubit.dart';
@@ -241,7 +240,7 @@ class _ElibBulkUploadScreenState extends State<ElibBulkUploadScreen> {
         children: [
           // ── Main scaffold ────────────────────────────────────────────────
           Scaffold(
-            backgroundColor: EkklisiaColors.bgPrimary,
+            backgroundColor: ac.bgPrimary,
             body: Column(
               children: [
                 // Toolbar
@@ -251,7 +250,7 @@ class _ElibBulkUploadScreenState extends State<ElibBulkUploadScreen> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: EkklisiaColors.bgPrimary,
+                    color: ac.bgPrimary,
                     border: Border(
                       bottom: BorderSide(color: Color(0xFF2A3A50)),
                     ),

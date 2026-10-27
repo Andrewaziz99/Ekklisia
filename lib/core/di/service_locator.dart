@@ -16,10 +16,17 @@ import '../../features/auth/auth_cubit.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/datasources/firebase/firestore_datasource.dart';
 import '../../data/repositories/agbeya_repository.dart';
+import '../../data/repositories/agbeya_intro_repository.dart';
+import '../../data/repositories/artwork_section_repository.dart';
 import '../../data/repositories/bible_repository.dart';
 import '../../data/repositories/book_category_repository.dart';
+import '../../data/repositories/bookmark_repository.dart';
 import '../../data/repositories/game_repository.dart';
 import '../../data/repositories/pdf_content_repository.dart';
+import '../../data/repositories/category_label_repository.dart';
+import '../../data/repositories/section_description_repository.dart';
+import '../../data/repositories/social_links_repository.dart';
+import '../../data/repositories/home_layout_repository.dart';
 import '../../data/repositories/books_repository.dart';
 import '../../data/repositories/daily_verse_repository.dart';
 import '../../data/repositories/elib_repository.dart';
@@ -107,11 +114,35 @@ class ServiceLocator {
     sl.registerLazySingleton<AgbeyaRepository>(
       () => AgbeyaRepository(sl<FirebaseFirestore>()),
     );
+    sl.registerLazySingleton<AgbeyaIntroRepository>(
+      () => AgbeyaIntroRepository(sl<FirebaseFirestore>()),
+    );
     sl.registerLazySingleton<BookCategoryRepository>(
       () => BookCategoryRepository(sl<FirebaseFirestore>()),
     );
     sl.registerLazySingleton<PdfContentRepository>(
       () => PdfContentRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<ArtworkSectionRepository>(
+      () => ArtworkSectionRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<SectionDescriptionRepository>(
+      () => SectionDescriptionRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<SocialLinksRepository>(
+      () => SocialLinksRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<HomeLayoutRepository>(
+      () => HomeLayoutRepository(
+        sl<FirebaseFirestore>(),
+        sl<CloudinaryDataSource>(),
+      ),
+    );
+    sl.registerLazySingleton<CategoryLabelRepository>(
+      () => CategoryLabelRepository(sl<FirebaseFirestore>()),
+    );
+    sl.registerLazySingleton<BookmarkRepository>(
+      () => BookmarkRepository(sl<FirebaseFirestore>(), sl<FirebaseAuth>()),
     );
     sl.registerLazySingleton<GameRepository>(
       () => GameRepository(sl<FirebaseFirestore>()),

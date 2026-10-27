@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/book_category_model.dart';
 import '../../data/repositories/book_category_repository.dart';
 import '../../data/repositories/books_repository.dart';
@@ -440,7 +439,7 @@ class _UploadBookScreenState extends State<UploadBookScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: EkklisiaColors.tealDark.withOpacity(0.15),
+                  color: ac.tealDark.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(children: [
@@ -1277,17 +1276,18 @@ class _StepNavRow extends StatelessWidget {
     this.onNext,
     this.nextLabel = 'Continue',
     this.nextIcon,
-    this.nextColor = EkklisiaColors.darkGold,
+    this.nextColor,
   });
   final VoidCallback? onBack;
   final VoidCallback? onNext;
   final String  nextLabel;
   final IconData? nextIcon;
-  final Color   nextColor;
+  final Color?  nextColor;
 
   @override
   Widget build(BuildContext context) {
       final ac = AdminC(Theme.of(context).brightness);
+      final resolvedNextColor = nextColor ?? ac.gold;
     return Row(children: [
       if (onBack != null) ...[
         OutlinedButton(
@@ -1320,7 +1320,7 @@ class _StepNavRow extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: onNext == null
                 ? ac.goldDim.withOpacity(0.4)
-                : nextColor,
+                : resolvedNextColor,
             foregroundColor: ac.bgDeep,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(

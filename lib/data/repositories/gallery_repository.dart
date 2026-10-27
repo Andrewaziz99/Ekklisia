@@ -27,21 +27,41 @@ class GalleryRepository {
       _db.collection(AppConstants.galleryCollection);
 
   // ── Read ──────────────────────────────────────────────────────────────────
+  // Note: filtering by galleryType is done in memory (not via a Firestore
+  // `.where()`) so the existing `orderBy('createdAt')` query keeps working
+  // without needing a new composite index — same pattern as
+  // ElibRepository.watchSections. Docs written before `galleryType` existed
+  // default to `general`.
 
-  Stream<List<GalleryItemModel>> watchPublished() => _col
+  Stream<List<GalleryItemModel>> watchPublished({
+    String galleryType = GalleryType.general,
+  }) => _col
       .where('isPublished', isEqualTo: true)
       .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((s) => s.docs.map(GalleryItemModel.fromDoc).toList());
+      .map((s) => s.docs
+          .map(GalleryItemModel.fromDoc)
+          .where((item) => item.galleryType == galleryType)
+          .toList());
 
-  Stream<List<GalleryItemModel>> watchAll() => _col
+  Stream<List<GalleryItemModel>> watchAll({
+    String galleryType = GalleryType.general,
+  }) => _col
       .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((s) => s.docs.map(GalleryItemModel.fromDoc).toList());
+      .map((s) => s.docs
+          .map(GalleryItemModel.fromDoc)
+          .where((item) => item.galleryType == galleryType)
+          .toList());
 
-  Future<List<GalleryItemModel>> fetchAll() async {
+  Future<List<GalleryItemModel>> fetchAll({
+    String galleryType = GalleryType.general,
+  }) async {
     final snap = await _col.orderBy('createdAt', descending: true).get();
-    return snap.docs.map(GalleryItemModel.fromDoc).toList();
+    return snap.docs
+        .map(GalleryItemModel.fromDoc)
+        .where((item) => item.galleryType == galleryType)
+        .toList();
   }
 
   // ── Upload image + save ───────────────────────────────────────────────────
@@ -52,6 +72,7 @@ class GalleryRepository {
     required String titleAr,
     required String titleEl,
     required String createdBy,
+    String galleryType = GalleryType.general,
     void Function(double)? onProgress,
   }) async {
     final result = await _cloudinary.uploadCoverImage(
@@ -68,6 +89,7 @@ class GalleryRepository {
       isPublished: true,
       createdAt: DateTime.now(),
       createdBy: createdBy,
+      galleryType: galleryType,
     );
     return _saveNew(item);
   }
@@ -79,6 +101,7 @@ class GalleryRepository {
     required String titleAr,
     required String titleEl,
     required String createdBy,
+    String galleryType = GalleryType.general,
     void Function(double)? onProgress,
   }) async {
     final result = await _cloudinary.uploadCoverImageBytes(
@@ -96,6 +119,7 @@ class GalleryRepository {
       isPublished: true,
       createdAt: DateTime.now(),
       createdBy: createdBy,
+      galleryType: galleryType,
     );
     return _saveNew(item);
   }

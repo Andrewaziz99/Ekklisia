@@ -31,8 +31,13 @@ class AdminC {
         maroon       = BrightnessColors.maroon(b),
         maroonMid    = BrightnessColors.maroonMid(b),
         tealMid      = BrightnessColors.tealMid(b),
+        tealDark     = BrightnessColors.tealDark(b),
         plum         = BrightnessColors.plum(b),
-        bronze       = BrightnessColors.bronze(b);
+        bronze       = BrightnessColors.bronze(b),
+        ocean        = BrightnessColors.ocean(b),
+        forest       = BrightnessColors.forest(b),
+        textCream    = BrightnessColors.textCream(b),
+        bgPrimary    = BrightnessColors.bgPrimary(b);
 
   final Color bgDeep;
   final Color bgMid;
@@ -47,8 +52,13 @@ class AdminC {
   final Color maroon;
   final Color maroonMid;
   final Color tealMid;
+  final Color tealDark;
   final Color plum;
   final Color bronze;
+  final Color ocean;
+  final Color forest;
+  final Color textCream;
+  final Color bgPrimary;
 
   // ── Shared decoration helpers ─────────────────────────────────────────────
 

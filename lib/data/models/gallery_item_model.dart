@@ -1,6 +1,17 @@
 // lib/data/models/gallery_item_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Which gallery instance an image belongs to — lets one `gallery`
+/// collection back multiple named photo sections in the app (general church
+/// gallery, Saints' lives, …) without duplicating the whole feature.
+/// Mirrors [ElibLibraryType] — filtering is done in memory (see
+/// GalleryRepository), so docs written before this field existed default to
+/// [general] rather than disappearing.
+abstract class GalleryType {
+  static const String general = 'general';
+  static const String saintsLives = 'saints_lives';
+}
+
 class GalleryItemModel {
   final String id;
   final String titleAr;
@@ -10,6 +21,7 @@ class GalleryItemModel {
   final bool isPublished;
   final DateTime createdAt;
   final String createdBy;
+  final String galleryType;
 
   const GalleryItemModel({
     required this.id,
@@ -20,6 +32,7 @@ class GalleryItemModel {
     this.isPublished = true,
     required this.createdAt,
     this.createdBy = '',
+    this.galleryType = GalleryType.general,
   });
 
   bool get hasImage => imageUrl.isNotEmpty;
@@ -33,6 +46,7 @@ class GalleryItemModel {
     bool? isPublished,
     DateTime? createdAt,
     String? createdBy,
+    String? galleryType,
   }) => GalleryItemModel(
     id: id ?? this.id,
     titleAr: titleAr ?? this.titleAr,
@@ -42,6 +56,7 @@ class GalleryItemModel {
     isPublished: isPublished ?? this.isPublished,
     createdAt: createdAt ?? this.createdAt,
     createdBy: createdBy ?? this.createdBy,
+    galleryType: galleryType ?? this.galleryType,
   );
 
   Map<String, dynamic> toMap() => {
@@ -52,6 +67,7 @@ class GalleryItemModel {
     'isPublished': isPublished,
     'createdAt': Timestamp.fromDate(createdAt),
     'createdBy': createdBy,
+    'galleryType': galleryType,
   };
 
   factory GalleryItemModel.fromDoc(DocumentSnapshot doc) {
@@ -65,6 +81,7 @@ class GalleryItemModel {
       isPublished: d['isPublished'] as bool? ?? true,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       createdBy: d['createdBy'] as String? ?? '',
+      galleryType: d['galleryType'] as String? ?? GalleryType.general,
     );
   }
 }

@@ -80,6 +80,7 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
             physics: const BouncingScrollPhysics(),
             slivers: [
               _buildAppBar(context, isDark, isGreek),
+              _buildDescription(isDark),
               _buildSections(isDark, isGreek),
               // Bottom padding so content clears the audio strip
               const SliverToBoxAdapter(child: SizedBox(height: 110)),
@@ -238,6 +239,44 @@ class _AgbeyaHourScreenState extends State<AgbeyaHourScreen>
                   ),
                 ),
               ),
+      ),
+    );
+  }
+
+  // ── Description ──────────────────────────────────────────────────────────────
+  // Short explanatory text about this hour — set by the admin (Arabic Description
+  // field in the CMS) but not shown anywhere until now. Rendered once, above the
+  // language tabs' section list, so it reads as context for the hour rather than
+  // being tied to a single language tab.
+
+  Widget _buildDescription(bool isDark) {
+    final desc = widget.hour.descriptionAr.trim();
+    if (desc.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : _kGold.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _kGold.withValues(alpha: 0.3), width: 0.8),
+        ),
+        child: Text(
+          desc,
+          textAlign: TextAlign.right,
+          textDirection: TextDirection.rtl,
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.85)
+                : const Color(0xFF3A2E1F),
+            fontSize: 15,
+            height: 1.6,
+          ),
+        ),
       ),
     );
   }

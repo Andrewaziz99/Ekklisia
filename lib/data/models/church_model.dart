@@ -7,6 +7,7 @@
 //   nameEn        : String
 //   mapsUrl       : String  — Google Maps link
 //   isPublished   : bool
+//   sortOrder     : int     — admin drag-to-reorder position (default 0)
 //
 // Priests used to be embedded here (a 'priests' array) but now live in their
 // own top-level 'priests' collection — see PriestModel in priest_model.dart
@@ -22,6 +23,7 @@ class ChurchModel {
     required this.nameEn,
     required this.mapsUrl,
     required this.isPublished,
+    this.sortOrder = 0,
   });
 
   final String id;
@@ -29,6 +31,25 @@ class ChurchModel {
   final String nameEn;
   final String mapsUrl;
   final bool isPublished;
+  final int sortOrder;
+
+  ChurchModel copyWith({
+    String? id,
+    String? nameAr,
+    String? nameEn,
+    String? mapsUrl,
+    bool? isPublished,
+    int? sortOrder,
+  }) {
+    return ChurchModel(
+      id:          id ?? this.id,
+      nameAr:      nameAr ?? this.nameAr,
+      nameEn:      nameEn ?? this.nameEn,
+      mapsUrl:     mapsUrl ?? this.mapsUrl,
+      isPublished: isPublished ?? this.isPublished,
+      sortOrder:   sortOrder ?? this.sortOrder,
+    );
+  }
 
   // ── Serialisation ──────────────────────────────────────────────────────────
 
@@ -40,6 +61,7 @@ class ChurchModel {
       nameEn:      d['nameEn']  as String? ?? '',
       mapsUrl:     d['mapsUrl'] as String? ?? '',
       isPublished: d['isPublished'] as bool? ?? false,
+      sortOrder:   d['sortOrder'] as int? ?? 0,
     );
   }
 
@@ -48,5 +70,6 @@ class ChurchModel {
         'nameEn':      nameEn,
         'mapsUrl':     mapsUrl,
         'isPublished': isPublished,
+        'sortOrder':   sortOrder,
       };
 }

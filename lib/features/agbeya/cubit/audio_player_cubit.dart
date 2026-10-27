@@ -43,21 +43,56 @@ class AudioPlayerCubit extends Cubit<AudioPlayerState> {
     );
 
     _processSub = _handler.processingStateStream.listen((ps) {
+      final completed = ps == ProcessingState.completed;
       emit(state.copyWith(
         isBuffering:
             ps == ProcessingState.buffering || ps == ProcessingState.loading,
-        isCompleted: ps == ProcessingState.completed,
+        isCompleted: completed,
       ));
+      // Lives here (the app-wide singleton cubit), NOT in a screen widget —
+      // so a Holy Mass's audio parts (or an Agbeya intro handing off to the
+      // chosen hour track) keep auto-advancing even if the user navigates
+      // to a different screen, or the device screen locks. AgbeyaAudioHandler
+      // runs inside audio_service's Android foreground service / iOS
+      // background-audio session, which keeps this cubit's isolate alive
+      // through both of those, so this listener still fires.
+      //
+      // Stopping vs. advancing is one decision made right here — the
+      // handler itself must NOT also stop on completion, or that stop can
+      // race this advance and kill the next track right as it starts.
+      if (completed && !_advanceIfQueued()) {
+        _handler.stop();
+      }
     });
+  }
+
+  /// Plays the next item in [AudioPlayerState.playlist] after the one that
+  /// just finished, if there is one, and returns whether it did. No-op
+  /// (returns false) for a standalone track (empty playlist) or if the
+  /// finished item was already the last one.
+  bool _advanceIfQueued() {
+    final playlist = state.playlist;
+    final current = state.currentItem;
+    if (playlist.length < 2 || current == null) return false;
+    final idx = playlist.indexWhere((m) => m.id == current.id);
+    if (idx == -1 || idx + 1 >= playlist.length) return false;
+    play(playlist[idx + 1], playlist: playlist);
+    return true;
   }
 
   // ── Public actions ──────────────────────────────────────────────────────────
 
-  /// Load and play an audio track. Creates a [MediaItem] from the Agbeya hour.
-  Future<void> play(MediaItem item) async {
+  /// Load and play an audio track.
+  ///
+  /// [playlist] is the full ordered list [item] belongs to (e.g. every part
+  /// of a Holy Mass) — pass it so completion auto-advances to the next
+  /// entry; omit it (default: none) for a standalone track, which also
+  /// correctly clears out whatever playlist was previously queued.
+  Future<void> play(MediaItem item, {List<MediaItem> playlist = const []}) async {
     // Optimistically update UI before buffering starts
     emit(state.copyWith(
       currentItem: item,
+      playlist: playlist,
       isPlaying: false,
       isBuffering: true,
       isCompleted: false,

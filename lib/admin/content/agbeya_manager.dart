@@ -16,14 +16,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/agbeya_model.dart';
 import '../../data/repositories/agbeya_repository.dart';
@@ -36,8 +34,8 @@ const _kHourNamesAr = {
   2: 'صلاة الساعة الثالثة',
   3: 'صلاة الساعة السادسة',
   4: 'صلاة الساعة التاسعة',
-  5: 'صلاة الغروب',
-  6: 'صلاة النوم',
+  5: 'صلاة الساعة الحادية عشرة',
+  6: 'صلاة الساعة الثانية عشرة',
   7: 'صلاة نصف الليل',
 };
 
@@ -59,12 +57,25 @@ class _AgbeyaManagerScreenState extends State<AgbeyaManagerScreen> {
 
   _ScreenMode _mode = _ScreenMode.list;
   AgbeyaHour? _editing; // null → create new
+  bool _editingWholeBook = false;
 
-  void _openEdit(AgbeyaHour? hour) =>
-      setState(() { _editing = hour; _mode = _ScreenMode.edit; });
+  void _openEdit(AgbeyaHour? hour) => setState(() {
+        _editing = hour;
+        _editingWholeBook = false;
+        _mode = _ScreenMode.edit;
+      });
 
-  void _backToList() =>
-      setState(() { _editing = null; _mode = _ScreenMode.list; });
+  void _openWholeBookEdit(AgbeyaHour? current) => setState(() {
+        _editing = current;
+        _editingWholeBook = true;
+        _mode = _ScreenMode.edit;
+      });
+
+  void _backToList() => setState(() {
+        _editing = null;
+        _editingWholeBook = false;
+        _mode = _ScreenMode.list;
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +84,15 @@ class _AgbeyaManagerScreenState extends State<AgbeyaManagerScreen> {
       return _EditView(
         repo: _repo,
         initial: _editing,
+        isWholeBook: _editingWholeBook,
         onDone: _backToList,
       );
     }
-    return _ListView(repo: _repo, onEdit: _openEdit);
+    return _ListView(
+      repo: _repo,
+      onEdit: _openEdit,
+      onEditWholeBook: _openWholeBookEdit,
+    );
   }
 }
 
@@ -85,9 +101,14 @@ class _AgbeyaManagerScreenState extends State<AgbeyaManagerScreen> {
 // ════════════════════════════════════════════════════════════════════════════
 
 class _ListView extends StatefulWidget {
-  const _ListView({required this.repo, required this.onEdit});
+  const _ListView({
+    required this.repo,
+    required this.onEdit,
+    required this.onEditWholeBook,
+  });
   final AgbeyaRepository repo;
   final void Function(AgbeyaHour?) onEdit;
+  final void Function(AgbeyaHour?) onEditWholeBook;
 
   @override
   State<_ListView> createState() => _ListViewState();
@@ -157,6 +178,16 @@ class _ListViewState extends State<_ListView> {
                 ),
               ),
             ]),
+          ),
+
+          // ── Whole book (singleton) ──────────────────────────────────────
+          StreamBuilder<AgbeyaHour?>(
+            stream: widget.repo.watchWholeBook(),
+            builder: (context, wbSnap) =>
+                _WholeBookAdminCard(
+                  book: wbSnap.data,
+                  onTap: () => widget.onEditWholeBook(wbSnap.data),
+                ),
           ),
 
           // ── Pending reorder banner ────────────────────────────────────
@@ -265,6 +296,90 @@ class _ListViewState extends State<_ListView> {
   }
 }
 
+// ── Whole book admin card ─────────────────────────────────────────────────────
+// Manage the single PDF/audio covering the entire Agbeya book — shown above
+// the seven canonical hours on the app's home screen once published.
+
+class _WholeBookAdminCard extends StatelessWidget {
+  const _WholeBookAdminCard({required this.book, required this.onTap});
+  final AgbeyaHour? book;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    final hasContent = book != null && (book!.hasPdf || book!.hasAudio);
+    final title = book?.titleAr.isNotEmpty == true
+        ? book!.titleAr
+        : 'الأجبية كاملة (كل الساعات)';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: ac.bgMid,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: hasContent ? ac.gold : ac.goldBorder,
+              width: hasContent ? 1 : 0.5,
+            ),
+          ),
+          child: Row(children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: ac.bgDeep,
+                shape: BoxShape.circle,
+                border: Border.all(color: ac.goldBorder, width: 0.5),
+              ),
+              child: Icon(Icons.menu_book, color: ac.gold, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Whole Agbeya Book',
+                      style: TextStyle(
+                          color: ac.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(
+                    hasContent
+                        ? title
+                        : 'Not set up yet — tap to add the whole-book PDF',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: hasContent ? 'Scheherazade' : null,
+                      color: hasContent ? ac.gold : ac.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (hasContent && book?.isPublished == false) ...[
+                    const SizedBox(height: 3),
+                    _Chip(label: 'Draft', color: ac.textSecondary),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              hasContent ? Icons.edit_outlined : Icons.add_circle_outline,
+              color: ac.gold,
+              size: 20,
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Hour Row ──────────────────────────────────────────────────────────────────
 
 class _HourRow extends StatelessWidget {
@@ -345,7 +460,7 @@ class _HourRow extends StatelessWidget {
                     ? hour.titleAr
                     : (_kHourNamesAr[hour.hourNumber] ?? 'Hour ${hour.hourNumber}'),
                 textDirection: TextDirection.rtl,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: 'Scheherazade',
@@ -444,11 +559,11 @@ class _HourRow extends StatelessWidget {
     final colors = [
       ac.maroon,
       ac.bronze,
-      EkklisiaColors.tealDark,
+      ac.tealDark,
       ac.maroonMid,
       ac.plum,
-      EkklisiaColors.ocean,
-      EkklisiaColors.forest,
+      ac.ocean,
+      ac.forest,
     ];
     return colors[(n - 1).clamp(0, colors.length - 1)];
   }
@@ -463,10 +578,15 @@ class _EditView extends StatefulWidget {
     required this.repo,
     required this.initial,
     required this.onDone,
+    this.isWholeBook = false,
   });
   final AgbeyaRepository repo;
   final AgbeyaHour?     initial;
   final VoidCallback    onDone;
+  /// When true, this form edits the singleton "whole book" entry instead of
+  /// one of the 7 canonical hours: the Hour Number picker is hidden and
+  /// saving writes to the fixed whole-book document.
+  final bool isWholeBook;
 
   @override
   State<_EditView> createState() => _EditViewState();
@@ -486,7 +606,7 @@ class _EditViewState extends State<_EditView> {
   int  _hourNumber = 1;
   bool _published  = false;
 
-  // ── Audio tracks (up to 2) ────────────────────────────────────────────────
+  // ── Audio tracks (flat, admin-orderable, any number) ───────────────────────
   late List<_TrackDraft> _tracks; // initialised in initState
 
   // ── Cover ─────────────────────────────────────────────────────────────────
@@ -563,7 +683,7 @@ class _EditViewState extends State<_EditView> {
       _titleCop.text = h.titleCop;
       _titleEl.text  = h.titleEl;
       _descAr.text   = h.descriptionAr;
-      _hourNumber    = h.hourNumber.clamp(1, 7);
+      if (!widget.isWholeBook) _hourNumber = h.hourNumber.clamp(1, 7);
       _published     = h.isPublished;
       _coverUrl         = h.coverUrl;
       _pdfUrl           = h.pdfUrl;
@@ -572,19 +692,20 @@ class _EditViewState extends State<_EditView> {
       _videoUrl          = h.videoUrl;
       _cloudinaryVideoId = h.cloudinaryVideoId;
       _videoUrlCtrl.text = h.videoUrl;
-      // Load audio tracks — fall back to legacy single audioUrl
-      if (h.audioTracks.isNotEmpty) {
-        _tracks = h.audioTracks
-            .take(2)
+      // Load audio tracks — flatten any previously-saved named groups (that
+      // feature was tried and rolled back) so nothing is lost, then fall
+      // back further to the legacy single audioUrl.
+      if (h.trackGroups.isNotEmpty) {
+        _tracks = h.trackGroups
+            .expand((g) => g.tracks)
             .map((t) => _TrackDraft.fromTrack(t))
             .toList();
-        // Pad to exactly 2 slots
-        while (_tracks.length < 2) _tracks.add(_TrackDraft());
+      } else if (h.audioTracks.isNotEmpty) {
+        _tracks = h.audioTracks.map((t) => _TrackDraft.fromTrack(t)).toList();
       } else if (h.audioUrl.isNotEmpty) {
         _tracks = [
           _TrackDraft(label: h.titleAr, url: h.audioUrl,
               durationSecs: h.durationSeconds),
-          _TrackDraft(),
         ];
       } else {
         _tracks = [_TrackDraft(label: 'الشماس'), _TrackDraft(label: 'الكاهن')];
@@ -820,22 +941,25 @@ class _EditViewState extends State<_EditView> {
             ))
         .toList();
 
-    // Build audio tracks — only include tracks with a URL
+    // Build audio tracks — only include tracks with a URL.
     final audioTracks = _tracks
         .where((t) => t.url.isNotEmpty)
         .map((t) => AgbeyaAudioTrack(
               labelAr: t.label.text.trim(),
               url: t.url,
               durationSeconds: int.tryParse(t.duration.text.trim()) ?? 0,
+              lang: t.lang,
             ))
         .toList();
 
     final hour = AgbeyaHour(
       id: widget.initial?.id ?? '',
-      hourNumber: _hourNumber,
+      hourNumber: widget.isWholeBook ? 0 : _hourNumber,
       // Display order is only changed via drag-to-reorder in the list view —
       // preserve it here; new hours default to their hour number.
-      sortOrder: widget.initial?.sortOrder ?? _hourNumber,
+      sortOrder: widget.isWholeBook
+          ? -1
+          : (widget.initial?.sortOrder ?? _hourNumber),
       titleAr: _titleAr.text.trim(),
       titleCop: _titleCop.text.trim(),
       titleEl: _titleEl.text.trim(),
@@ -858,7 +982,9 @@ class _EditViewState extends State<_EditView> {
     );
 
     try {
-      if (widget.initial == null) {
+      if (widget.isWholeBook) {
+        await widget.repo.saveWholeBook(hour);
+      } else if (widget.initial == null) {
         await widget.repo.addHour(hour);
       } else {
         await widget.repo.updateHour(hour);
@@ -915,7 +1041,9 @@ class _EditViewState extends State<_EditView> {
             onPressed: widget.onDone,
           ),
           Text(
-            widget.initial == null ? 'New Agbeya Hour' : 'Edit Hour',
+            widget.isWholeBook
+                ? 'Whole Agbeya Book'
+                : (widget.initial == null ? 'New Agbeya Hour' : 'Edit Hour'),
             style: TextStyle(
                 color: ac.goldLight,
                 fontSize: 14,
@@ -971,32 +1099,51 @@ class _EditViewState extends State<_EditView> {
                           color: ac.maroonMid, fontSize: 12)),
                 ),
 
-              // ── Hour Number ───────────────────────────────────────────
-              _AdminCard(
-                title: 'Hour Number',
-                titleAr: 'رقم الساعة',
-                child: DropdownButtonFormField<int>(
-                  value: _hourNumber,
-                  dropdownColor: ac.bgElevated,
-                  style: TextStyle(
-                      color: ac.textPrimary, fontSize: 14),
-                  decoration: _inputDec(hint: 'Select hour'),
-                  items: List.generate(
-                    7,
-                    (i) => DropdownMenuItem(
-                      value: i + 1,
+              // ── Hour Number (hidden for the whole-book entry) ───────────
+              if (widget.isWholeBook)
+                _AdminCard(
+                  title: 'Whole Book',
+                  titleAr: 'الكتاب كامل',
+                  child: Row(children: [
+                    Icon(Icons.info_outline, color: ac.gold, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: Text(
-                        '${i + 1} — ${_kHourNamesAr[i + 1] ?? ''}',
+                        'This entry appears above the 7 hours on the home '
+                        'screen and links to a single PDF/audio for the '
+                        'whole book.',
                         style: TextStyle(
-                            fontFamily: 'Scheherazade',
-                            color: ac.textPrimary,
-                            fontSize: 14),
+                            color: ac.textSecondary, fontSize: 12),
                       ),
                     ),
+                  ]),
+                )
+              else
+                _AdminCard(
+                  title: 'Hour Number',
+                  titleAr: 'رقم الساعة',
+                  child: DropdownButtonFormField<int>(
+                    value: _hourNumber,
+                    dropdownColor: ac.bgElevated,
+                    style: TextStyle(
+                        color: ac.textPrimary, fontSize: 14),
+                    decoration: _inputDec(hint: 'Select hour'),
+                    items: List.generate(
+                      7,
+                      (i) => DropdownMenuItem(
+                        value: i + 1,
+                        child: Text(
+                          '${i + 1} — ${_kHourNamesAr[i + 1] ?? ''}',
+                          style: TextStyle(
+                              fontFamily: 'Scheherazade',
+                              color: ac.textPrimary,
+                              fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    onChanged: (v) => setState(() => _hourNumber = v ?? 1),
                   ),
-                  onChanged: (v) => setState(() => _hourNumber = v ?? 1),
                 ),
-              ),
               const SizedBox(height: 14),
 
               // ── Titles ────────────────────────────────────────────────
@@ -1042,20 +1189,19 @@ class _EditViewState extends State<_EditView> {
               ),
               const SizedBox(height: 14),
 
-              // ── Audio Tracks (up to 2) ────────────────────────────────
+              // ── Audio — ordered tracks ───────────────────────────────────
               _AdminCard(
                 title: 'Audio Tracks',
-                titleAr: 'أصوات الساعة',
+                titleAr: 'المقاطع الصوتية',
                 child: Column(children: [
-                  ...List.generate(_tracks.length, (i) {
-                    final track    = _tracks[i];
-                    final isFirst  = i == 0;
-                    final accent   = isFirst
-                        ? ac.gold
-                        : ac.tealMid;
+                  ...List.generate(_tracks.length, (ti) {
+                    final track = _tracks[ti];
+                    final canRemoveTrack = _tracks.length > 1;
+                    final accent = ti.isEven ? ac.gold : ac.tealMid;
                     return Container(
-                      margin: EdgeInsets.only(bottom: i < _tracks.length - 1 ? 14 : 0),
-                      padding: const EdgeInsets.all(12),
+                      margin: EdgeInsets.only(
+                          bottom: ti < _tracks.length - 1 ? 12 : 0),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: accent.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(10),
@@ -1065,60 +1211,70 @@ class _EditViewState extends State<_EditView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Track header
                           Row(children: [
-                            Container(
-                              width: 24, height: 24,
-                              decoration: BoxDecoration(
-                                color: accent.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: accent.withOpacity(0.5), width: 0.8),
-                              ),
-                              child: Center(
-                                child: Text('${i + 1}', style: TextStyle(
-                                    color: accent, fontSize: 10,
-                                    fontWeight: FontWeight.w800)),
-                              ),
+                            Text('Track ${ti + 1}', style: TextStyle(
+                                color: accent, fontSize: 12,
+                                fontWeight: FontWeight.w700)),
+                            const Spacer(),
+                            IconButton(
+                              icon: Icon(Icons.arrow_upward, size: 14,
+                                  color: ti > 0
+                                      ? ac.textSecondary
+                                      : ac.textSecondary.withOpacity(0.25)),
+                              tooltip: 'Move track up',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: ti > 0
+                                  ? () => setState(() {
+                                        final t = _tracks.removeAt(ti);
+                                        _tracks.insert(ti - 1, t);
+                                      })
+                                  : null,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isFirst
-                                  ? 'Track 1'
-                                  : 'Track 2 (optional)',
-                              style: TextStyle(
-                                  color: accent, fontSize: 12,
-                                  fontWeight: FontWeight.w700),
+                            IconButton(
+                              icon: Icon(Icons.arrow_downward, size: 14,
+                                  color: ti < _tracks.length - 1
+                                      ? ac.textSecondary
+                                      : ac.textSecondary.withOpacity(0.25)),
+                              tooltip: 'Move track down',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: ti < _tracks.length - 1
+                                  ? () => setState(() {
+                                        final t = _tracks.removeAt(ti);
+                                        _tracks.insert(ti + 1, t);
+                                      })
+                                  : null,
                             ),
-                            if (!isFirst && track.url.isEmpty) ...[
-                              SizedBox(width: 6),
-                              Text('اختياري', style: TextStyle(
-                                  fontFamily: 'Scheherazade',
-                                  color: ac.textSecondary,
-                                  fontSize: 11)),
-                            ],
+                            if (canRemoveTrack)
+                              IconButton(
+                                icon: Icon(Icons.close, size: 14,
+                                    color: ac.maroonMid),
+                                tooltip: 'Remove track',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => setState(() {
+                                  _tracks[ti].dispose();
+                                  _tracks.removeAt(ti);
+                                }),
+                              ),
                           ]),
-                          const SizedBox(height: 10),
-                          // Label field
+                          const SizedBox(height: 8),
                           _ArabicField(
                             controller: track.label,
                             label: 'Label',
                             labelAr: 'الاسم',
-                            hint: isFirst ? 'الشماس' : 'الكاهن',
+                            hint: 'الشماس...',
                             required: false,
                           ),
                           const SizedBox(height: 10),
-                          // File upload zone or URL badge
                           if (track.url.isNotEmpty && !track.uploading)
                             _UrlBadge(
                               icon: Icons.audiotrack,
-                              label: 'Track ${i + 1} uploaded',
+                              label: 'Track ${ti + 1} uploaded',
                               labelAr: 'تم رفع الصوت',
                               url: track.url,
                               onClear: () => setState(() {
                                 track.url = ''; track.progress = 0;
                               }),
-                              onReplace: () => _pickTrackAudio(i),
+                              onReplace: () => _pickTrackAudio(ti),
                             )
                           else
                             _DropZone(
@@ -1133,7 +1289,9 @@ class _EditViewState extends State<_EditView> {
                               borderColor: track.url.isNotEmpty
                                   ? ac.tealMid
                                   : ac.goldBorder,
-                              onTap: track.uploading ? null : () => _pickTrackAudio(i),
+                              onTap: track.uploading
+                                  ? null
+                                  : () => _pickTrackAudio(ti),
                             ),
                           if (track.uploading) ...[
                             const SizedBox(height: 8),
@@ -1148,17 +1306,36 @@ class _EditViewState extends State<_EditView> {
                             ),
                           ],
                           const SizedBox(height: 10),
-                          // Duration per track
                           _AdminField(
                             controller: track.duration,
                             label: 'Duration (seconds)',
                             hint: '1420',
                             keyboardType: TextInputType.number,
                           ),
+                          const SizedBox(height: 10),
+                          _TrackLangToggle(
+                            lang: track.lang,
+                            onChanged: (v) => setState(() => track.lang = v),
+                          ),
                         ],
                       ),
                     );
                   }),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          setState(() => _tracks.add(_TrackDraft())),
+                      icon: Icon(Icons.add, size: 18, color: ac.gold),
+                      label: Text('Add Track', style: TextStyle(
+                          color: ac.gold, fontWeight: FontWeight.w700)),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: ac.gold, width: 1),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
                 ]),
               ),
               const SizedBox(height: 14),
@@ -1562,22 +1739,29 @@ class _TrackDraft {
   String     url;
   double     progress;
   bool       uploading;
+  // The language this track is actually recorded in — 'ar' or 'el'. Drives
+  // which shared intro plays before it (see track_picker_sheet.dart), so
+  // it's independent of the track's bilingual display label.
+  String     lang;
 
   _TrackDraft({
     String label        = '',
     String url          = '',
     int    durationSecs = 0,
+    String lang         = 'ar',
   })  : label    = TextEditingController(text: label),
         duration = TextEditingController(
             text: durationSecs > 0 ? '$durationSecs' : ''),
         url      = url,
         progress = 0,
-        uploading = false;
+        uploading = false,
+        lang      = lang;
 
   factory _TrackDraft.fromTrack(AgbeyaAudioTrack t) => _TrackDraft(
         label:        t.labelAr,
         url:          t.url,
         durationSecs: t.durationSeconds,
+        lang:         t.lang,
       );
 
   void dispose() {
@@ -1740,7 +1924,7 @@ class _SectionCard extends StatelessWidget {
                       color: ac.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -2095,6 +2279,54 @@ class _ToggleRow extends StatelessWidget {
           ]),
         ),
       ),
+    ]);
+  }
+}
+
+// Arabic/Greek toggle for a single track's actual recorded language —
+// drives which shared intro plays before it (see track_picker_sheet.dart).
+class _TrackLangToggle extends StatelessWidget {
+  const _TrackLangToggle({required this.lang, required this.onChanged});
+  final String lang; // 'ar' | 'el'
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final ac = AdminC(Theme.of(context).brightness);
+    Widget option(String value, String label) {
+      final selected = lang == value;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(value),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? ac.gold.withOpacity(0.18) : Colors.transparent,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(
+                color: selected ? ac.gold : ac.goldBorder,
+                width: selected ? 1.0 : 0.5,
+              ),
+            ),
+            child: Text(label,
+                style: TextStyle(
+                    color: selected ? ac.gold : ac.textSecondary,
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+          ),
+        ),
+      );
+    }
+
+    return Row(children: [
+      Text('Track language',
+          style: TextStyle(
+              color: ac.textSecondary, fontSize: 11, letterSpacing: 0.5)),
+      const SizedBox(width: 10),
+      option('ar', 'Arabic'),
+      const SizedBox(width: 6),
+      option('el', 'Greek'),
     ]);
   }
 }

@@ -575,19 +575,24 @@ class _PriestListCard extends StatelessWidget {
                   ),
                 const SizedBox(height: 3),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.church_outlined, color: gold, size: 11),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1.5),
+                      child: Icon(Icons.church_outlined, color: gold, size: 11),
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         priest.churchName,
                         textDirection: l.dir,
-                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
                         style: TextStyle(
                           color: gold,
                           fontFamily: l.bodyFont,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
+                          height: 1.2,
                         ),
                       ),
                     ),

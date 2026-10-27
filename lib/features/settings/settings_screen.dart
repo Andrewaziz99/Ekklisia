@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
@@ -68,32 +69,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const _ProfileCard(),
               const SizedBox(height: 28),
 
-              const _SectionLabel('حجم الخط', 'Μέγεθος γραμματοσειράς'),
+              _SectionLabel(context.l10n.sectionFontSize),
               const SizedBox(height: 10),
               _FontSizeCard(current: _fontScale, onChanged: _setFontScale),
               const SizedBox(height: 28),
 
-              const _SectionLabel('لغة العرض', 'Γλώσσα'),
+              _SectionLabel(context.l10n.sectionLanguage),
               const SizedBox(height: 10),
               _LanguageCard(current: _language, onChanged: _setLanguage),
               const SizedBox(height: 28),
 
-              const _SectionLabel('المظهر', 'Εμφάνιση'),
+              _SectionLabel(context.l10n.sectionAppearance),
               const SizedBox(height: 10),
               _ThemeModeCard(current: _themeMode, onChanged: _setThemeMode),
               const SizedBox(height: 28),
 
-              const _SectionLabel('التخزين', 'Αποθήκευση'),
+              _SectionLabel(context.l10n.sectionStorage),
               const SizedBox(height: 10),
               const _StorageCard(),
               const SizedBox(height: 28),
 
-              const _SectionLabel('الاتصال', 'Σύνδεση'),
+              _SectionLabel(context.l10n.sectionConnection),
               const SizedBox(height: 10),
               const _OfflineModeCard(),
               const SizedBox(height: 28),
 
-              const _SectionLabel('الحساب', 'Λογαριασμός'),
+              _SectionLabel(context.l10n.sectionAccount),
               const SizedBox(height: 10),
               const _SignOutCard(),
               const SizedBox(height: 32),
@@ -120,6 +121,7 @@ class _SettingsAppBar extends StatelessWidget {
     final goldDim = BrightnessColors.goldDim(brightness);
     final goldLight = BrightnessColors.goldLight(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
+    final l = context.l10n;
 
     return SliverAppBar(
       pinned: true,
@@ -145,16 +147,16 @@ class _SettingsAppBar extends StatelessWidget {
                       Text('✦', style: TextStyle(color: goldDim, fontSize: 11)),
                       const SizedBox(height: 4),
                       Text(
-                        'الإعدادات',
+                        l.settings,
                         style: TextStyle(
-                          fontFamily: 'Scheherazade',
+                          fontFamily: l.bodyFont,
                           color: goldLight,
-                          fontSize: 26,
+                          fontSize: l.isAr ? 26 : 22,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
-                        'ΡΥΘΜΙΣΕΙΣ',
+                        l.settingsSubtitle,
                         style: TextStyle(
                           color: goldDim,
                           fontSize: 9,
@@ -181,6 +183,7 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bgMid = BrightnessColors.bgMid(brightness);
     final bgElevated = BrightnessColors.bgElevated(brightness);
@@ -226,17 +229,23 @@ class _ProfileCard extends StatelessWidget {
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                     ],
                     Text(
                       auth.isAnonymous
-                          ? 'ضيف — قراءة فقط'
+                          ? l.guestReadOnly
                           : (user?.email ?? ''),
-                      style: TextStyle(color: textSecondary, fontSize: 12),
-                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: auth.isAnonymous && l.isAr
+                            ? 'Scheherazade'
+                            : null,
+                        color: textSecondary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
@@ -299,6 +308,7 @@ class _FontSizeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bgPrimary = BrightnessColors.bgPrimary(brightness);
     final bgParchment = BrightnessColors.bgParchment(brightness);
@@ -322,9 +332,9 @@ class _FontSizeCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'اختر الحجم المناسب',
+                  l.chooseFontSize,
                   style: TextStyle(
-                    fontFamily: 'Scheherazade',
+                    fontFamily: l.isAr ? 'Scheherazade' : null,
                     color: textSecondary,
                     fontSize: 12,
                   ),
@@ -345,9 +355,9 @@ class _FontSizeCard extends StatelessWidget {
                       border: Border.all(color: goldBorder, width: 0.5),
                     ),
                     child: Text(
-                      current.label,
+                      current.labelFor(l.isAr),
                       style: TextStyle(
-                        fontFamily: 'Scheherazade',
+                        fontFamily: l.isAr ? 'Scheherazade' : null,
                         color: gold,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -386,10 +396,10 @@ class _FontSizeCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'أ',
+                              l.isAr ? 'أ' : 'Α',
                               textScaleFactor: 1,
                               style: TextStyle(
-                                fontFamily: 'Scheherazade',
+                                fontFamily: l.isAr ? 'Scheherazade' : null,
                                 color: isActive ? goldLight : textSecondary,
                                 fontSize: _tileSizes[fs],
                                 fontWeight: isActive
@@ -472,10 +482,10 @@ class _FontSizeCard extends StatelessWidget {
                 Icon(Icons.info_outline, size: 11, color: textSecondary),
                 const SizedBox(width: 5),
                 Text(
-                  'يُطبَّق الحجم على كامل النصوص في التطبيق',
+                  l.fontSizeAppliesEverywhere,
                   textScaleFactor: 1,
                   style: TextStyle(
-                    fontFamily: 'Scheherazade',
+                    fontFamily: l.isAr ? 'Scheherazade' : null,
                     color: textSecondary,
                     fontSize: 10,
                   ),
@@ -670,22 +680,21 @@ class _ThemeModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return _Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Row(
           children: [
             _ThemeModeTile(
-              labelAr: 'فاتح',
-              labelEn: 'Φωτεινή λειτουργία',
+              label: l.lightMode,
               icon: Icons.wb_sunny_outlined,
               isActive: current == AppThemeMode.light,
               onTap: () => onChanged(AppThemeMode.light),
             ),
             const SizedBox(width: 10),
             _ThemeModeTile(
-              labelAr: 'داكن',
-              labelEn: 'Σκοτεινή λειτουργία',
+              label: l.darkMode,
               icon: Icons.nights_stay_outlined,
               isActive: current == AppThemeMode.dark,
               onTap: () => onChanged(AppThemeMode.dark),
@@ -699,27 +708,26 @@ class _ThemeModeCard extends StatelessWidget {
 
 class _ThemeModeTile extends StatelessWidget {
   const _ThemeModeTile({
-    required this.labelAr,
-    required this.labelEn,
+    required this.label,
     required this.icon,
     required this.isActive,
     required this.onTap,
   });
 
-  final String labelAr, labelEn;
+  final String label;
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bgPrimary = BrightnessColors.bgPrimary(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
     final goldSubtle = BrightnessColors.goldSubtle(brightness);
     final goldLight = BrightnessColors.goldLight(brightness);
     final gold = BrightnessColors.gold(brightness);
-    final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Expanded(
@@ -742,21 +750,12 @@ class _ThemeModeTile extends StatelessWidget {
               Icon(icon, size: 20, color: isActive ? gold : textSecondary),
               const SizedBox(height: 6),
               Text(
-                labelAr,
+                label,
                 style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  color: isActive ? goldLight : textPrimary,
-                  fontSize: 14,
+                  fontFamily: l.isAr ? 'Scheherazade' : null,
+                  color: isActive ? goldLight : textSecondary,
+                  fontSize: l.isAr ? 14 : 12,
                   fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                labelEn,
-                style: TextStyle(
-                  color: textSecondary,
-                  fontSize: 10,
-                  letterSpacing: 0.6,
                 ),
               ),
             ],
@@ -797,16 +796,17 @@ class _StorageCardState extends State<_StorageCard> {
   }
 
   Future<void> _clearCache() async {
+    final l = context.l10nOnce; // event handler — must use read, not watch
     setState(() => _clearing = true);
     await CacheService.instance.clearAll();
     await _loadSize();
     if (mounted) {
       setState(() => _clearing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم مسح الذاكرة المؤقتة'),
+        SnackBar(
+          content: Text(l.cacheCleared),
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -814,6 +814,7 @@ class _StorageCardState extends State<_StorageCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bgMid = BrightnessColors.bgMid(brightness);
     final gold = BrightnessColors.gold(brightness);
@@ -842,9 +843,9 @@ class _StorageCardState extends State<_StorageCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'الذاكرة المؤقتة',
+                    l.cacheLabel,
                     style: TextStyle(
-                      fontFamily: 'Scheherazade',
+                      fontFamily: l.isAr ? 'Scheherazade' : null,
                       color: textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -852,9 +853,9 @@ class _StorageCardState extends State<_StorageCard> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'الصور والملفات والصوت المحفوظة • $_cacheSize',
+                    l.cacheDescription(_cacheSize),
                     style: TextStyle(
-                      fontFamily: 'Scheherazade',
+                      fontFamily: l.isAr ? 'Scheherazade' : null,
                       color: textSecondary,
                       fontSize: 12,
                     ),
@@ -885,10 +886,10 @@ class _StorageCardState extends State<_StorageCard> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
-                      'مسح',
+                    child: Text(
+                      l.clearCache,
                       style: TextStyle(
-                        fontFamily: 'Scheherazade',
+                        fontFamily: l.isAr ? 'Scheherazade' : null,
                         fontSize: 13,
                       ),
                     ),
@@ -1016,14 +1017,16 @@ class _SignOutCardState extends State<_SignOutCard> {
   bool _loading = false;
 
   Future<void> _signOut() async {
+    final l = context.l10nOnce; // event handler — must use read, not watch
     final confirm = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.75),
-      builder: (_) => const _ConfirmDialog(
+      builder: (_) => _ConfirmDialog(
         icon: Icons.logout_outlined,
-        title: 'تسجيل الخروج',
-        body: 'هل تريد تسجيل الخروج من التطبيق؟',
-        confirmLabel: 'خروج',
+        title: l.signOut,
+        body: l.confirmSignOutBody,
+        confirmLabel: l.confirmSignOutAction,
+        cancelLabel: l.cancel,
         isDestructive: true,
       ),
     );
@@ -1036,12 +1039,12 @@ class _SignOutCardState extends State<_SignOutCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final maroonColor = BrightnessColors.maroon(brightness);
     final maroonMid = brightness == Brightness.dark
         ? EkklisiaColors.darkMaroonMid
         : EkklisiaColors.lightMaroonMid;
-    final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return _Card(
       child: Material(
@@ -1079,28 +1082,14 @@ class _SignOutCardState extends State<_SignOutCard> {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'تسجيل الخروج',
-                        style: TextStyle(
-                          fontFamily: 'Scheherazade',
-                          color: maroonMid,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'Αποσύνδεση',
-                        style: TextStyle(
-                          color: textSecondary,
-                          fontSize: 10,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    l.signOut,
+                    style: TextStyle(
+                      fontFamily: l.isAr ? 'Scheherazade' : null,
+                      color: maroonMid,
+                      fontSize: l.isAr ? 15 : 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 Icon(
@@ -1126,15 +1115,17 @@ class _ConfirmDialog extends StatelessWidget {
     required this.title,
     required this.body,
     required this.confirmLabel,
+    required this.cancelLabel,
     this.isDestructive = false,
   });
 
   final IconData icon;
-  final String title, body, confirmLabel;
+  final String title, body, confirmLabel, cancelLabel;
   final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final bgMid = BrightnessColors.bgMid(brightness);
     final goldBorder = BrightnessColors.goldBorder(brightness);
@@ -1143,6 +1134,7 @@ class _ConfirmDialog extends StatelessWidget {
     final accentColor = isDestructive
         ? BrightnessColors.maroon(brightness)
         : BrightnessColors.gold(brightness);
+    final fontFamily = l.isAr ? 'Scheherazade' : null;
 
     return Dialog(
       backgroundColor: bgMid,
@@ -1172,7 +1164,7 @@ class _ConfirmDialog extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontFamily: 'Scheherazade',
+                fontFamily: fontFamily,
                 color: textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1183,7 +1175,7 @@ class _ConfirmDialog extends StatelessWidget {
               body,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Scheherazade',
+                fontFamily: fontFamily,
                 color: textSecondary,
                 fontSize: 14,
                 height: 1.6,
@@ -1203,10 +1195,10 @@ class _ConfirmDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'إلغاء',
+                    child: Text(
+                      cancelLabel,
                       style: TextStyle(
-                        fontFamily: 'Scheherazade',
+                        fontFamily: fontFamily,
                         fontSize: 14,
                       ),
                     ),
@@ -1227,8 +1219,8 @@ class _ConfirmDialog extends StatelessWidget {
                     ),
                     child: Text(
                       confirmLabel,
-                      style: const TextStyle(
-                        fontFamily: 'Scheherazade',
+                      style: TextStyle(
+                        fontFamily: fontFamily,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1252,6 +1244,7 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final goldDim = BrightnessColors.goldDim(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
@@ -1264,9 +1257,9 @@ class _Footer extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'الكنيسة القبطية الأرثوذكسية',
+          l.footerChurchName,
           style: TextStyle(
-            fontFamily: 'Scheherazade',
+            fontFamily: l.isAr ? 'Scheherazade' : null,
             color: textSecondary,
             fontSize: 11,
           ),
@@ -1281,15 +1274,15 @@ class _Footer extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.ar, this.en);
-  final String ar, en;
+  const _SectionLabel(this.text);
+  final String text;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final gold = BrightnessColors.gold(brightness);
     final textPrimary = BrightnessColors.textPrimary(brightness);
-    final textSecondary = BrightnessColors.textSecondary(brightness);
 
     return Row(
       children: [
@@ -1303,21 +1296,12 @@ class _SectionLabel extends StatelessWidget {
         ),
         const SizedBox(width: 9),
         Text(
-          ar,
+          text,
           style: TextStyle(
-            fontFamily: 'Scheherazade',
+            fontFamily: l.isAr ? 'Scheherazade' : 'GFSDidot',
             color: textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          en,
-          style: TextStyle(
-            color: textSecondary,
-            fontSize: 10,
-            letterSpacing: 0.8,
           ),
         ),
       ],

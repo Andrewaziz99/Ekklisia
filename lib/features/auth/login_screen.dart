@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/brightness_colors.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/router/app_router.dart';
@@ -445,6 +446,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildFooter() {
+    final l = context.l10n;
     final brightness = Theme.of(context).brightness;
     final goldDim = BrightnessColors.goldDim(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
@@ -454,9 +456,9 @@ class _LoginScreenState extends State<LoginScreen>
           style: TextStyle(
               color: goldDim, fontSize: 9, letterSpacing: 8)),
       const SizedBox(height: 8),
-      Text('الكنيسة القبطية الأرثوذكسية',
+      Text(l.footerChurchName,
           style: TextStyle(
-              fontFamily: 'Scheherazade',
+              fontFamily: l.isAr ? 'Scheherazade' : null,
               color: textSecondary,
               fontSize: 11)),
     ]);

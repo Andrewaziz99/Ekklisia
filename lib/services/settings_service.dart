@@ -48,16 +48,19 @@ extension AppLanguageX on AppLanguage {
 enum FontScale { small, medium, large, extraLarge }
 
 extension FontScaleX on FontScale {
-  String get label {
+  /// Deprecated — kept for backwards compatibility. Prefer [labelFor].
+  String get label => labelFor(true);
+
+  String labelFor(bool isAr) {
     switch (this) {
       case FontScale.small:
-        return 'صغير';
+        return isAr ? 'صغير' : 'Μικρό';
       case FontScale.medium:
-        return 'متوسط';
+        return isAr ? 'متوسط' : 'Μεσαίο';
       case FontScale.large:
-        return 'كبير';
+        return isAr ? 'كبير' : 'Μεγάλο';
       case FontScale.extraLarge:
-        return 'كبير جداً';
+        return isAr ? 'كبير جداً' : 'Πολύ μεγάλο';
     }
   }
 

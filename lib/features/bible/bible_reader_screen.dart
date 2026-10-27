@@ -7,9 +7,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
 import '../../data/models/bible_model.dart';
+import '../../data/repositories/bible_repository.dart';
+import '../../data/repositories/bookmark_repository.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
 import '../../services/settings_service.dart';
 
@@ -134,6 +137,50 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                   ),
                 ),
                 actions: [
+                  // Bookmark this chapter
+                  StreamBuilder<bool>(
+                    stream: sl<BookmarkRepository>().watchIsBibleBookmarked(
+                      bookNumber: widget.book.number,
+                      chapter:    chapterNum,
+                    ),
+                    builder: (context, snap) {
+                      final isBookmarked = snap.data ?? false;
+                      return IconButton(
+                        icon: Icon(
+                          isBookmarked
+                              ? Icons.bookmark
+                              : Icons.bookmark_border,
+                          color: gold,
+                          size: 20,
+                        ),
+                        tooltip: isGreek
+                            ? 'Σελιδοδείκτης κεφαλαίου'
+                            : 'إشارة مرجعية للأصحاح',
+                        onPressed: () async {
+                          try {
+                            await sl<BookmarkRepository>()
+                                .toggleBibleBookmark(
+                              bookNumber: widget.book.number,
+                              bookNameAr: widget.book.nameAr,
+                              bookNameEl: widget.book.nameEl,
+                              chapter:    chapterNum,
+                            );
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text(isGreek
+                                        ? 'Αποτυχία αποθήκευσης: $e'
+                                        : 'تعذّر الحفظ: $e'),
+                                backgroundColor: Colors.red.shade800,
+                              ),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
                   // Previous chapter
                   IconButton(
                     icon: Icon(
@@ -176,6 +223,8 @@ class _BibleReaderScreenState extends State<BibleReaderScreen> {
                         isGreek: isGreek,
                         brightness: brightness,
                         showDivider: showDivider,
+                        book: widget.book,
+                        chapter: chapterNum,
                       );
                     },
                     childCount: _currentChapter.verses.length,
@@ -215,12 +264,73 @@ class _VerseItem extends StatelessWidget {
     required this.isGreek,
     required this.brightness,
     required this.showDivider,
+    required this.book,
+    required this.chapter,
   });
 
   final BibleVerse verse;
   final bool isGreek;
   final Brightness brightness;
   final bool showDivider;
+  final BibleBook book;
+  final int chapter;
+
+  Future<void> _toggleVerseBookmark(BuildContext context) async {
+    try {
+      // The current language's text is already on hand; fetch the other
+      // language's verse text too (bundled asset, cached after first load —
+      // essentially free) so the Bookmarks screen can show a preview no
+      // matter which language the app is in when the user looks at it later.
+      var textAr = isGreek ? '' : verse.text;
+      var textEl = isGreek ? verse.text : '';
+      try {
+        final otherLangCode = isGreek ? 'ar' : 'el';
+        final otherBooks = await BibleRepository.instance.loadBooks(otherLangCode);
+        final otherBook =
+            otherBooks.firstWhere((b) => b.number == book.number);
+        final otherChapter =
+            otherBook.chapters.firstWhere((c) => c.number == chapter);
+        final otherVerse =
+            otherChapter.verses.firstWhere((v) => v.number == verse.number);
+        if (isGreek) {
+          textAr = otherVerse.text;
+        } else {
+          textEl = otherVerse.text;
+        }
+      } catch (_) {
+        // Non-fatal — the bookmark still saves with just the current
+        // language's text if the other language can't be resolved.
+      }
+
+      final added = await sl<BookmarkRepository>().toggleBibleBookmark(
+        bookNumber: book.number,
+        bookNameAr: book.nameAr,
+        bookNameEl: book.nameEl,
+        chapter:    chapter,
+        verse:      verse.number,
+        textAr:     textAr,
+        textEl:     textEl,
+      );
+      if (!context.mounted) return;
+      final bookName = isGreek ? book.nameEl : book.nameAr;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(isGreek
+            ? (added
+                ? 'Αποθηκεύτηκε: $bookName $chapter:${verse.number}'
+                : 'Αφαιρέθηκε ο σελιδοδείκτης')
+            : (added
+                ? 'تم حفظ إشارة $bookName $chapter:${verse.number}'
+                : 'تم حذف الإشارة')),
+        duration: const Duration(seconds: 2),
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(isGreek ? 'Αποτυχία αποθήκευσης: $e' : 'تعذّر الحفظ: $e'),
+        backgroundColor: Colors.red.shade800,
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -264,16 +374,20 @@ class _VerseItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
-            children: [
-              numberBadge,
-              const SizedBox(width: 10),
-              verseText,
-            ],
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: () => _toggleVerseBookmark(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              textDirection: isGreek ? TextDirection.ltr : TextDirection.rtl,
+              children: [
+                numberBadge,
+                const SizedBox(width: 10),
+                verseText,
+              ],
+            ),
           ),
         ),
         if (showDivider)

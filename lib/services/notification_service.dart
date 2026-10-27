@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/constants/app_constants.dart';
 import '../data/models/book_model.dart';
+import '../data/models/pdf_content_model.dart';
 
 /// Top-level handler required by Firebase — must be a top-level function.
 @pragma('vm:entry-point')
@@ -60,6 +61,14 @@ class NotificationService {
       playSound: true,
     );
 
+    const androidNewContent = AndroidNotificationChannel(
+      AppConstants.newContentChannelId,
+      AppConstants.newContentChannelName,
+      description: AppConstants.newContentChannelDesc,
+      importance: Importance.high,
+      playSound: true,
+    );
+
     final androidImpl = _localPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -67,6 +76,7 @@ class NotificationService {
 
     await androidImpl?.createNotificationChannel(androidNewBook);
     await androidImpl?.createNotificationChannel(androidDailyVerse);
+    await androidImpl?.createNotificationChannel(androidNewContent);
 
     const initSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -141,16 +151,23 @@ class NotificationService {
     if (notification == null) return;
 
     final isDailyVerse = message.data['type'] == 'daily_verse';
+    final isNewContent = message.data['type'] == 'new_content';
 
     final channelId   = isDailyVerse
         ? AppConstants.dailyVerseChannelId
-        : AppConstants.newBookChannelId;
+        : isNewContent
+            ? AppConstants.newContentChannelId
+            : AppConstants.newBookChannelId;
     final channelName = isDailyVerse
         ? AppConstants.dailyVerseChannelName
-        : AppConstants.newBookChannelName;
+        : isNewContent
+            ? AppConstants.newContentChannelName
+            : AppConstants.newBookChannelName;
     final channelDesc = isDailyVerse
         ? AppConstants.dailyVerseChannelDesc
-        : AppConstants.newBookChannelDesc;
+        : isNewContent
+            ? AppConstants.newContentChannelDesc
+            : AppConstants.newBookChannelDesc;
 
     _localPlugin.show(
       notification.hashCode,
@@ -212,6 +229,7 @@ class NotificationService {
     String? topic,
     String? title,
     String? body,
+    String  channelId = AppConstants.newBookChannelId,
   }) async {
     final hasTopic = topic != null && topic.trim().isNotEmpty;
     if (fcmTokens.isEmpty && !hasTopic) {
@@ -244,6 +262,7 @@ class NotificationService {
           if (fcmTokens.isNotEmpty) 'tokens': fcmTokens,
           if (hasTopic) 'topic': topic,
           if (data.isNotEmpty) 'data': data,
+          'channelId': channelId,
         },
         headers: {
           'Content-Type': 'application/json',
@@ -260,6 +279,87 @@ class NotificationService {
       debugPrint('[Notifications] Edge function error: $e');
       rethrow;
     }
+  }
+
+  // ── Admin: Send Push Notification (generic PDF content) ─────────────────
+
+  /// Same idea as [sendNewBookNotification] but for the shared `pdf_contents`
+  /// collection (Psalmody, Liturgies, Readings, Hymns, Occasions, Theses,
+  /// Christian Books, Service Books, Art Works, …).
+  ///
+  /// Call this immediately after [PdfContentRepository.add] succeeds, from
+  /// the admin CMS — [contentId] is the freshly-created document's ID
+  /// (returned by `add()`) since [item] itself was built before the ID was
+  /// known.
+  Future<void> sendNewContentNotification({
+    required PdfContent item,
+    required String contentId,
+    required List<String> fcmTokens,
+    String? topic,
+    String? title,
+    String? body,
+    String  channelId = AppConstants.newContentChannelId,
+  }) async {
+    final hasTopic = topic != null && topic.trim().isNotEmpty;
+    if (fcmTokens.isEmpty && !hasTopic) {
+      debugPrint('[Notifications] No FCM tokens or topic — skipping push.');
+      return;
+    }
+
+    final resolvedTitle = _resolveContentNotificationTitle(item, title);
+    final resolvedBody  = _resolveContentNotificationBody(item, body);
+
+    final data = <String, String>{
+      'type': 'new_content',
+      'content_id': contentId,
+      'category': item.category,
+      if (item.coverUrl.trim().isNotEmpty) 'cover_url': item.coverUrl,
+    };
+
+    final session = _supabase.auth.currentSession;
+    final accessToken = session?.accessToken;
+
+    try {
+      await _supabase.functions.invoke(
+        AppConstants.sendNotificationsFunction,
+        body: {
+          'title': resolvedTitle,
+          'body': resolvedBody,
+          if (fcmTokens.isNotEmpty) 'tokens': fcmTokens,
+          if (hasTopic) 'topic': topic,
+          'data': data,
+          'channelId': channelId,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': AppConstants.supabaseAnonKey,
+          if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+        },
+      );
+      if (fcmTokens.isNotEmpty) {
+        debugPrint('[Notifications] Push sent to ${fcmTokens.length} devices.');
+      } else {
+        debugPrint('[Notifications] Push sent to topic: $topic');
+      }
+    } catch (e) {
+      debugPrint('[Notifications] Edge function error: $e');
+      rethrow;
+    }
+  }
+
+  String _resolveContentNotificationTitle(PdfContent item, String? title) {
+    final custom = title?.trim() ?? '';
+    if (custom.isNotEmpty) return custom;
+    final fallback = item.titleAr.trim().isNotEmpty
+        ? item.titleAr.trim()
+        : (item.titleEl.trim().isNotEmpty ? item.titleEl.trim() : 'محتوى جديد');
+    return '✦ $fallback';
+  }
+
+  String _resolveContentNotificationBody(PdfContent item, String? body) {
+    final custom = body?.trim() ?? '';
+    if (custom.isNotEmpty) return custom;
+    return 'محتوى جديد متاح الآن';
   }
 
   String _resolveNotificationTitle(BookModel book, String? title) {

@@ -302,7 +302,7 @@ class _SaintCard extends StatelessWidget {
               child: Text(
                 saint.nameEn,
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: textSecondary, fontSize: 10),
               ),

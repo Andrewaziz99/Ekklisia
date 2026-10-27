@@ -12,13 +12,71 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../core/di/service_locator.dart';
+import '../../core/l10n/app_l10n.dart';
 import '../../core/theme/brightness_colors.dart';
+import '../../data/repositories/bookmark_repository.dart';
+import '../../shared/widgets/cached_image.dart';
 import '../../shared/widgets/cached_pdf_viewer.dart';
+import '../../shared/widgets/pdf_nav_tools.dart';
 import '../../shared/widgets/video_player_widget.dart';
 
 import '../../data/models/pdf_content_model.dart';
 import '../agbeya/cubit/audio_player_cubit.dart';
 import '../agbeya/cubit/audio_player_state.dart';
+
+// ── MediaItem builders ──────────────────────────────────────────────────────
+// Shared by every "start playing this content's audio" call site below
+// (auto-play on open, strip tap, picker-sheet tap) so they all build the
+// exact same bilingual extras and — critically — the exact same [playlist]
+// list, which AudioPlayerCubit now uses to auto-advance through every part
+// of a Holy Mass on its own (see audio_player_cubit.dart._advanceIfQueued).
+// That auto-advance lives on the app-wide singleton cubit rather than in a
+// screen widget, so it keeps working whichever screen is on top, and
+// through the device screen locking — audio_service's foreground service /
+// background-audio session keeps the isolate running through both.
+
+MediaItem _contentMediaItem({
+  required ContentAudioTrack track,
+  required String contentId,
+  required String titleAr,
+  required String titleEl,
+  required String coverUrl,
+}) => MediaItem(
+  id: track.url,
+  title: track.labelAr.isNotEmpty ? track.labelAr : titleAr,
+  album: titleAr,
+  artUri: coverUrl.isNotEmpty ? Uri.tryParse(coverUrl) : null,
+  duration: track.durationSeconds > 0
+      ? Duration(seconds: track.durationSeconds)
+      : null,
+  extras: {
+    'contentId': contentId,
+    'titleAr':
+        track.labelFor('ar').isNotEmpty ? track.labelFor('ar') : titleAr,
+    'titleEl':
+        track.labelFor('el').isNotEmpty ? track.labelFor('el') : titleEl,
+    'albumAr': titleAr,
+    'albumEl': titleEl,
+  },
+);
+
+List<MediaItem> _contentPlaylist({
+  required List<ContentAudioTrack> tracks,
+  required String contentId,
+  required String titleAr,
+  required String titleEl,
+  required String coverUrl,
+}) =>
+    tracks
+        .map((t) => _contentMediaItem(
+              track: t,
+              contentId: contentId,
+              titleAr: titleAr,
+              titleEl: titleEl,
+              coverUrl: coverUrl,
+            ))
+        .toList();
 
 class GenericPdfViewerScreen extends StatefulWidget {
   const GenericPdfViewerScreen({
@@ -28,7 +86,10 @@ class GenericPdfViewerScreen extends StatefulWidget {
     this.titleEl = '',
     this.audioTracks = const [],
     this.contentId   = '',
+    this.category    = '',
     this.videoUrl    = '',
+    this.coverUrl    = '',
+    this.initialPage = 0,
   });
 
   final String url;
@@ -42,8 +103,20 @@ class GenericPdfViewerScreen extends StatefulWidget {
   /// Use PdfContent.id when available.
   final String contentId;
 
+  /// PdfCategory slug — only needed so a page-level bookmark saved from this
+  /// screen can be grouped correctly on the Bookmarks screen.
+  final String category;
+
   /// Optional video URL. When non-empty, a videocam icon appears in the AppBar.
   final String videoUrl;
+
+  /// Optional cover image — shown on the audio strip and as the artwork in
+  /// the full-screen player / lock-screen media notification.
+  final String coverUrl;
+
+  /// When set (>1), jumps to this page once the document finishes loading —
+  /// used when opening from a page-level bookmark.
+  final int initialPage;
 
   bool get hasAudio => audioTracks.isNotEmpty;
   bool get hasVideo => videoUrl.isNotEmpty;
@@ -56,9 +129,51 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
   // Set by CachedPdfViewer once the document is open
   PdfScrollController? _pdfCtrl;
 
-  bool _showToolbar = true;
   final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(1);
   int _totalPages = 0;
+
+  String get _audioId =>
+      widget.contentId.isNotEmpty ? widget.contentId : widget.url;
+
+  @override
+  void initState() {
+    super.initState();
+    // Deferred to after the first frame — same pattern as
+    // AgbeyaPdfReaderScreen._autoStartAudio — so the ancestor
+    // BlocProvider<AudioPlayerCubit> is guaranteed mounted before we read it.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoStartAudio());
+  }
+
+  /// Auto-plays the FIRST track in [widget.audioTracks] as soon as the
+  /// screen opens — no picker, straight into playback. Once that track
+  /// finishes, AudioPlayerCubit itself (see `_advanceIfQueued`) advances
+  /// through the rest of the [playlist] on its own — not tied to this
+  /// screen's widget tree — so opening a Liturgy plays through all of its
+  /// audio parts back-to-back even if the user navigates elsewhere or the
+  /// device screen locks.
+  ///
+  /// Skipped if this same content is already the cubit's current item —
+  /// e.g. the user backed out and re-opened the same Liturgy — so we don't
+  /// yank playback back to track 1 mid-listen.
+  Future<void> _autoStartAudio() async {
+    if (!mounted || !widget.hasAudio) return;
+    final cubit = context.read<AudioPlayerCubit>();
+    final isCurrent = cubit.state.currentItem?.extras?['contentId'] == _audioId;
+    if (isCurrent) return;
+
+    final playlist = _contentPlaylist(
+      tracks: widget.audioTracks,
+      contentId: _audioId,
+      titleAr: widget.titleAr,
+      titleEl: widget.titleEl,
+      coverUrl: widget.coverUrl,
+    );
+    // playlist: the cubit auto-advances through the rest on its own as each
+    // part finishes — including with the screen locked or this screen no
+    // longer on top — so opening a Liturgy plays through all of its audio
+    // parts back-to-back with no further taps.
+    await cubit.play(playlist.first, playlist: playlist);
+  }
 
   @override
   void dispose() {
@@ -67,217 +182,205 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
     super.dispose();
   }
 
-  void _onBodyTap(TapUpDetails details) {
-    final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
-    final x = details.globalPosition.dx;
-    final y = details.globalPosition.dy;
-    if (x > w * 0.25 && x < w * 0.75 && y > h * 0.25 && y < h * 0.75) {
-      setState(() => _showToolbar = !_showToolbar);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final stripH = widget.hasAudio ? _ContentAudioStrip.height : 0.0;
 
     return Scaffold(
       backgroundColor: BrightnessColors.bgPrimary(brightness),
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapUp: _onBodyTap,
-        child: Stack(
-          children: [
-            // ── PDF Viewer (or inline video / placeholder) ───────────────
-            Positioned(
-              top: 0, left: 0, right: 0, bottom: stripH,
-              child: widget.url.isEmpty
-                  ? (widget.hasVideo
-                      ? _InlineVideoView(
-                          videoUrl: widget.videoUrl,
-                          titleAr:  widget.titleAr,
-                        )
-                      : _NoPdfPlaceholder(hasVideo: false))
-                  : CachedPdfViewer(
-                      url: widget.url,
-                      scrollDirection: Axis.vertical,
-                      pageSnapping: false,
-                      onControllerReady: (ctrl) {
-                        _pdfCtrl = ctrl;
-                      },
-                      onDocumentLoaded: (totalPages) {
-                        if (mounted) setState(() => _totalPages = totalPages);
-                      },
-                      onPageChanged: (page) {
-                        _pageNotifier.value = page;
-                      },
-                    ),
+      // A real AppBar (not a Positioned/Stack overlay) reserves its own
+      // layout space, so it never paints over the PDF page content — same
+      // for the audio strip, now docked via bottomNavigationBar instead of
+      // floating over the last page.
+      appBar: _buildAppBar(context),
+      body: widget.url.isEmpty
+          ? (widget.hasVideo
+              ? _InlineVideoView(
+                  videoUrl: widget.videoUrl,
+                  titleAr: widget.titleAr,
+                )
+              : _NoPdfPlaceholder(hasVideo: false))
+          : CachedPdfViewer(
+              url: widget.url,
+              scrollDirection: Axis.vertical,
+              pageSnapping: false,
+              onControllerReady: (ctrl) {
+                _pdfCtrl = ctrl;
+              },
+              onDocumentLoaded: (totalPages) {
+                if (mounted) setState(() => _totalPages = totalPages);
+                if (widget.initialPage > 1) {
+                  _pdfCtrl?.jumpToPage(widget.initialPage);
+                }
+              },
+              onPageChanged: (page) {
+                _pageNotifier.value = page;
+              },
             ),
-
-            // ── AppBar — always visible so video button is always reachable
-            AnimatedOpacity(
-              opacity: _showToolbar ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 250),
-              child: IgnorePointer(
-                ignoring: !_showToolbar,
-                child: _buildAppBar(context),
-              ),
-            ),
-
-            // ── Page indicator (only once pages are known) ───────────────
-            if (_totalPages > 0)
-              Positioned(
-                left: 0, right: 0, bottom: stripH,
-                child: AnimatedOpacity(
-                  opacity: _showToolbar ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 250),
-                  child: IgnorePointer(
-                    ignoring: !_showToolbar,
-                    child: ValueListenableBuilder<int>(
-                      valueListenable: _pageNotifier,
-                      builder: (ctx, page, _) =>
-                          _buildPageIndicator(ctx, page),
-                    ),
-                  ),
-                ),
-              ),
-
-            // ── Persistent audio strip ───────────────────────────────────
-            if (widget.hasAudio)
-              Positioned(
-                left: 0, right: 0, bottom: 0,
-                child: _ContentAudioStrip(
-                  tracks:    widget.audioTracks,
-                  contentId: widget.contentId.isNotEmpty
-                      ? widget.contentId
-                      : widget.url,
-                  titleAr:   widget.titleAr,
-                ),
-              ),
-          ],
-        ),
-      ),
+      bottomNavigationBar: widget.hasAudio
+          ? _ContentAudioStrip(
+              tracks: widget.audioTracks,
+              contentId: _audioId,
+              titleAr: widget.titleAr,
+              titleEl: widget.titleEl,
+              coverUrl: widget.coverUrl,
+            )
+          : null,
     );
   }
 
   // ── AppBar ───────────────────────────────────────────────────────────────
 
-  Widget _buildAppBar(BuildContext context) {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     final brightness  = Theme.of(context).brightness;
     final bgDeep      = BrightnessColors.bgDeep(brightness);
     final gold        = BrightnessColors.gold(brightness);
     final goldBorder  = BrightnessColors.goldBorder(brightness);
     final textPrimary = BrightnessColors.textPrimary(brightness);
     final textSecondary = BrightnessColors.textSecondary(brightness);
-    final topPadding  = MediaQuery.of(context).padding.top;
 
-    return Container(
-      padding: EdgeInsets.only(top: topPadding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            bgDeep,
-            bgDeep.withOpacity(0.95),
-            bgDeep.withOpacity(0),
-          ],
-          stops: const [0.0, 0.7, 1.0],
-        ),
+    return AppBar(
+      backgroundColor: bgDeep,
+      elevation: 2,
+      leadingWidth: 56,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new, size: 18, color: gold),
+        onPressed: () => Navigator.pop(context),
+        tooltip: 'رجوع',
       ),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leadingWidth: 56,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: bgDeep.withOpacity(0.85),
-              shape: BoxShape.circle,
-              border: Border.all(color: goldBorder, width: 0.5),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.titleAr,
+            style: TextStyle(
+              fontFamily: 'Scheherazade',
+              color: textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
             ),
-            child: Icon(Icons.arrow_back_ios_new, size: 15, color: gold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'رجوع',
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
+          if (widget.titleEl.isNotEmpty)
             Text(
-              widget.titleAr,
+              widget.titleEl,
               style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+                color: textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
                 height: 1.2,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            if (widget.titleEl.isNotEmpty)
-              Text(
-                widget.titleEl,
-                style: TextStyle(
-                  color: textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  height: 1.2,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-          ],
-        ),
-        actions: [
-          // Show video icon only when there IS a PDF — otherwise the video
-          // is already displayed inline in the body.
-          if (widget.hasVideo && widget.url.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.videocam_outlined, color: gold, size: 22),
-              tooltip: 'مشاهدة الفيديو',
-              onPressed: () => showVideoSheet(
-                context,
-                widget.videoUrl,
-                titleAr: widget.titleAr,
-              ),
-            ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(0.5),
-          child: Container(height: 0.5, color: goldBorder),
-        ),
       ),
+      actions: [
+        // Bookmark the current page — only meaningful once we know which
+        // content item and page we're on.
+        if (widget.contentId.isNotEmpty && _totalPages > 0)
+          IconButton(
+            key: const ValueKey('generic_pdf_bookmark_page_btn'),
+            icon: Icon(Icons.bookmark_add_outlined, color: gold, size: 22),
+            tooltip: 'إضافة إشارة مرجعية لهذه الصفحة',
+            onPressed: () async {
+              final page = _pdfCtrl?.currentPage ?? _pageNotifier.value;
+              try {
+                final added = await sl<BookmarkRepository>()
+                    .toggleContentBookmark(
+                  contentId: widget.contentId,
+                  category:  widget.category,
+                  titleAr:   widget.titleAr,
+                  titleEl:   widget.titleEl,
+                  coverUrl:  widget.coverUrl,
+                  pdfUrl:    widget.url,
+                  page:      page,
+                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(added
+                      ? 'تم حفظ إشارة مرجعية للصفحة $page'
+                      : 'تم حذف إشارة الصفحة $page'),
+                  duration: const Duration(seconds: 2),
+                ));
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('تعذّر حفظ الإشارة المرجعية: $e'),
+                  backgroundColor: Colors.red.shade800,
+                ));
+              }
+            },
+          ),
+        // Show video icon only when there IS a PDF — otherwise the video
+        // is already displayed inline in the body.
+        if (widget.hasVideo && widget.url.isNotEmpty)
+          IconButton(
+            key: const ValueKey('generic_pdf_video_btn'),
+            icon: Icon(Icons.videocam_outlined, color: gold, size: 22),
+            tooltip: 'مشاهدة الفيديو',
+            onPressed: () => showVideoSheet(
+              context,
+              widget.videoUrl,
+              titleAr: widget.titleAr,
+            ),
+          ),
+        if (_totalPages > 0 && _pdfCtrl != null)
+          IconButton(
+            key: const ValueKey('generic_pdf_gotopage_btn'),
+            icon: Icon(Icons.numbers, color: gold, size: 22),
+            tooltip: 'الانتقال إلى صفحة',
+            onPressed: () => showPdfGoToPageDialog(
+              context,
+              controller: _pdfCtrl!,
+              totalPages: _totalPages,
+              currentPage: _pdfCtrl!.currentPage,
+            ),
+          ),
+        if (_totalPages > 0 && _pdfCtrl != null)
+          IconButton(
+            key: const ValueKey('generic_pdf_search_btn'),
+            icon: Icon(Icons.search, color: gold, size: 22),
+            tooltip: 'بحث في الملف',
+            onPressed: () => showPdfSearchSheet(
+              context,
+              controller: _pdfCtrl!,
+            ),
+          ),
+      ],
+      // Page prev/next + tap-to-jump indicator — part of the same AppBar
+      // (via PreferredSize) rather than a separate floating bar; falls back
+      // to a plain divider once page count isn't known yet.
+      bottom: _totalPages > 0
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _pageNotifier,
+                builder: (ctx, page, _) =>
+                    _buildPageNavRow(bgDeep, gold, goldBorder, page),
+              ),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(0.5),
+              child: Container(height: 0.5, color: goldBorder),
+            ),
     );
   }
 
-  // ── Page Indicator ───────────────────────────────────────────────────────
+  // ── Page navigation row ──────────────────────────────────────────────────────
 
-  Widget _buildPageIndicator(BuildContext context, int page) {
-    final brightness    = Theme.of(context).brightness;
-    final bgDeep        = BrightnessColors.bgDeep(brightness);
-    final goldBorder    = BrightnessColors.goldBorder(brightness);
-    final textSecondary = BrightnessColors.textSecondary(brightness);
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
+  Widget _buildPageNavRow(
+    Color bgDeep,
+    Color gold,
+    Color goldBorder,
+    int page,
+  ) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 10, 20, 12 + bottomPadding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            bgDeep,
-            bgDeep.withOpacity(0.9),
-            bgDeep.withOpacity(0),
-          ],
-          stops: const [0.0, 0.65, 1.0],
-        ),
-      ),
+      color: bgDeep,
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -290,20 +393,31 @@ class _GenericPdfViewerScreenState extends State<GenericPdfViewerScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-            decoration: BoxDecoration(
-              color: bgDeep.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: goldBorder, width: 0.5),
-            ),
-            child: Text(
-              'صفحة $page / $_totalPages',
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                color: textSecondary,
-                fontSize: 13,
-                height: 1.2,
+          GestureDetector(
+            onTap: _pdfCtrl == null
+                ? null
+                : () => showPdfGoToPageDialog(
+                      context,
+                      controller: _pdfCtrl!,
+                      totalPages: _totalPages,
+                      currentPage: page,
+                    ),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              decoration: BoxDecoration(
+                color: bgDeep.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: goldBorder, width: 0.5),
+              ),
+              child: Text(
+                'صفحة $page / $_totalPages',
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  color: gold,
+                  fontSize: 13,
+                  height: 1.2,
+                ),
               ),
             ),
           ),
@@ -389,6 +503,7 @@ class _NoPdfPlaceholder extends StatelessWidget {
   }
 }
 
+
 // ── Page navigation button ────────────────────────────────────────────────────
 
 class _PageNavButton extends StatelessWidget {
@@ -440,16 +555,24 @@ class _ContentAudioStrip extends StatelessWidget {
     required this.tracks,
     required this.contentId,
     required this.titleAr,
+    this.titleEl = '',
+    this.coverUrl = '',
   });
 
   final List<ContentAudioTrack> tracks;
   final String contentId;
   final String titleAr;
+  final String titleEl;
+  final String coverUrl;
 
   static const double height = 72;
 
   @override
   Widget build(BuildContext context) {
+    // Auto-advance to the next track now lives on AudioPlayerCubit itself
+    // (see _advanceIfQueued) — not here — so it isn't lost if this widget
+    // gets unmounted (user navigates away) or the screen locks. A plain
+    // BlocBuilder is all this strip needs now.
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
         final cubit     = context.read<AudioPlayerCubit>();
@@ -491,6 +614,21 @@ class _ContentAudioStrip extends StatelessWidget {
     bool isCurrent,
     bool isPlaying,
   ) {
+    final l = context.l10n;
+    final isGreek = !l.isAr;
+    // Prefer the currently-playing item's own (bilingual) title when this
+    // content is the one actually playing, so a specific track's label
+    // (e.g. "Deacon") shows instead of the generic content title — same
+    // language-aware fallback pattern as AudioPlayerBar.
+    final displayTitle = isCurrent
+        ? ((isGreek
+                ? (state.currentItem?.extras?['titleEl'] as String?)
+                : (state.currentItem?.extras?['titleAr'] as String?)) ??
+            (isGreek && titleEl.isNotEmpty ? titleEl : titleAr))
+        : (isGreek && titleEl.isNotEmpty ? titleEl : titleAr);
+    final trackCountLabel = tracks.length == 1
+        ? (isGreek ? 'κομμάτι' : 'تسجيل')
+        : (isGreek ? 'κομμάτια' : 'تسجيلات');
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -508,10 +646,15 @@ class _ContentAudioStrip extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(children: [
-              // Cross decoration
+              // Cover thumbnail (falls back to a cross glyph)
               Builder(builder: (ctx) {
                 final gold = BrightnessColors.gold(Theme.of(ctx).brightness);
                 final bgDeep = BrightnessColors.bgDeep(Theme.of(ctx).brightness);
+                Widget cross() => Center(
+                      child: Text('✦',
+                          style: TextStyle(
+                              color: gold.withOpacity(0.6), fontSize: 16)),
+                    );
                 return Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
@@ -519,10 +662,16 @@ class _ContentAudioStrip extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: gold.withOpacity(0.4), width: 0.8),
                   ),
-                  child: Center(
-                    child: Text('✦',
-                        style: TextStyle(color: gold.withOpacity(0.6), fontSize: 16)),
-                  ),
+                  child: coverUrl.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(7),
+                          child: CachedImage(
+                            url: coverUrl,
+                            fit: BoxFit.cover,
+                            errorWidget: cross(),
+                          ),
+                        )
+                      : cross(),
                 );
               }),
               const SizedBox(width: 10),
@@ -534,11 +683,11 @@ class _ContentAudioStrip extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      titleAr,
-                      textDirection: TextDirection.rtl,
+                      displayTitle,
+                      textDirection: l.dir,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Scheherazade',
+                      style: TextStyle(
+                        fontFamily: l.bodyFont,
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -561,9 +710,9 @@ class _ContentAudioStrip extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.4)),
                           const SizedBox(width: 3),
                           Text(
-                            '${tracks.length} ${tracks.length == 1 ? 'تسجيل' : 'تسجيلات'}',
+                            '${tracks.length} $trackCountLabel',
                             style: TextStyle(
-                              fontFamily: 'Scheherazade',
+                              fontFamily: l.bodyFont,
                               color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
@@ -574,6 +723,13 @@ class _ContentAudioStrip extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+
+              // Browse all tracks — always reachable, not just when idle
+              if (tracks.length > 1)
+                _StripBtn(
+                  icon: Icons.queue_music,
+                  onTap: () => _openPicker(context, cubit),
+                ),
 
               // ⏪ -10s
               _StripBtn(
@@ -609,12 +765,19 @@ class _ContentAudioStrip extends StatelessWidget {
   Future<void> _playOrPick(BuildContext context, AudioPlayerCubit cubit) async {
     if (tracks.isEmpty) return;
     if (tracks.length == 1) {
-      await cubit.play(_mediaItem(tracks.first));
+      await cubit.play(_mediaItem(tracks.first), playlist: _playlist);
       return;
     }
+    await _openPicker(context, cubit);
+  }
+
+  /// Opens the full, scrollable track list — reachable at any time (not just
+  /// before playback starts) via the queue icon in the strip.
+  Future<void> _openPicker(BuildContext context, AudioPlayerCubit cubit) async {
     if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: cubit,
@@ -622,19 +785,30 @@ class _ContentAudioStrip extends StatelessWidget {
           tracks:    tracks,
           contentId: contentId,
           titleAr:   titleAr,
+          titleEl:   titleEl,
+          coverUrl:  coverUrl,
         ),
       ),
     );
   }
 
-  MediaItem _mediaItem(ContentAudioTrack track) => MediaItem(
-    id:       track.url,
-    title:    track.labelAr.isNotEmpty ? track.labelAr : titleAr,
-    album:    titleAr,
-    duration: track.durationSeconds > 0
-        ? Duration(seconds: track.durationSeconds)
-        : null,
-    extras: {'contentId': contentId},
+  MediaItem _mediaItem(ContentAudioTrack track) => _contentMediaItem(
+    track: track,
+    contentId: contentId,
+    titleAr: titleAr,
+    titleEl: titleEl,
+    coverUrl: coverUrl,
+  );
+
+  /// Full ordered list — passed to `cubit.play(..., playlist:)` so the
+  /// cubit can auto-advance through the rest regardless of which track the
+  /// user actually started from.
+  List<MediaItem> get _playlist => _contentPlaylist(
+    tracks: tracks,
+    contentId: contentId,
+    titleAr: titleAr,
+    titleEl: titleEl,
+    coverUrl: coverUrl,
   );
 }
 
@@ -707,97 +881,130 @@ class _ContentTrackPickerSheet extends StatelessWidget {
     required this.tracks,
     required this.contentId,
     required this.titleAr,
+    this.titleEl = '',
+    this.coverUrl = '',
   });
 
   final List<ContentAudioTrack> tracks;
   final String contentId;
   final String titleAr;
+  final String titleEl;
+  final String coverUrl;
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final sheetBg = BrightnessColors.bgDeep(brightness);
+    final l = context.l10n;
+    final isGreek = !l.isAr;
+    final displayTitle = isGreek && titleEl.isNotEmpty ? titleEl : titleAr;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: sheetBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(
-            color: BrightnessColors.gold(brightness).withValues(alpha: 0.2), width: 0.8),
+    return ConstrainedBox(
+      // Cap the sheet's height so a long track list scrolls instead of
+      // overflowing off the top of the screen.
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: BrightnessColors.gold(brightness).withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Header
-              Row(children: [
+      child: Container(
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+              color: BrightnessColors.gold(brightness).withValues(alpha: 0.2), width: 0.8),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
                 Container(
                   width: 36,
-                  height: 36,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: BrightnessColors.maroon(brightness).withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: BrightnessColors.gold(brightness).withValues(alpha: 0.4), width: 0.8),
+                    color: BrightnessColors.gold(brightness).withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(Icons.headphones,
-                      color: BrightnessColors.gold(brightness), size: 18),
                 ),
-                const SizedBox(width: 12),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('اختر تسجيل',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700)),
-                  Text(titleAr,
-                      textDirection: TextDirection.rtl,
-                      style: TextStyle(
-                        fontFamily: 'Scheherazade',
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 12,
-                      )),
+                const SizedBox(height: 18),
+
+                // Header
+                Row(children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: BrightnessColors.maroon(brightness).withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: BrightnessColors.gold(brightness).withValues(alpha: 0.4), width: 0.8),
+                    ),
+                    child: coverUrl.isNotEmpty
+                        ? ClipOval(
+                            child: CachedImage(
+                              url: coverUrl,
+                              fit: BoxFit.cover,
+                              errorWidget: Icon(Icons.headphones,
+                                  color: BrightnessColors.gold(brightness), size: 18),
+                            ),
+                          )
+                        : Icon(Icons.headphones,
+                            color: BrightnessColors.gold(brightness), size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(l.pickTrack,
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700)),
+                      Text(displayTitle,
+                          textDirection: l.dir,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: l.bodyFont,
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                          )),
+                    ]),
+                  ),
                 ]),
-              ]),
-              const SizedBox(height: 16),
-              Divider(color: BrightnessColors.gold(brightness).withValues(alpha: 0.15), height: 1),
-              const SizedBox(height: 14),
+                const SizedBox(height: 16),
+                Divider(color: BrightnessColors.gold(brightness).withValues(alpha: 0.15), height: 1),
+                const SizedBox(height: 14),
 
-              // Track cards
-              ...tracks.asMap().entries.map((e) {
-                final idx   = e.key;
-                final track = e.value;
-                final accents = [BrightnessColors.gold(brightness), const Color(0xFF7EB8C9)];
-                final accent  = accents[idx % accents.length];
+                // Track cards — scrollable so long lists never overflow
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(children: [
+                      ...tracks.asMap().entries.map((e) {
+                        final idx   = e.key;
+                        final track = e.value;
+                        final accents = [BrightnessColors.gold(brightness), const Color(0xFF7EB8C9)];
+                        final accent  = accents[idx % accents.length];
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<AudioPlayerCubit>().play(MediaItem(
-                      id:       track.url,
-                      title:    track.labelAr.isNotEmpty ? track.labelAr : titleAr,
-                      album:    titleAr,
-                      duration: track.durationSeconds > 0
-                          ? Duration(seconds: track.durationSeconds)
-                          : null,
-                      extras: {'contentId': contentId},
-                    ));
-                  },
-                  child: Container(
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            final playlist = _contentPlaylist(
+                              tracks: tracks,
+                              contentId: contentId,
+                              titleAr: titleAr,
+                              titleEl: titleEl,
+                              coverUrl: coverUrl,
+                            );
+                            // Picking a track mid-list still keeps auto-
+                            // advance going for whatever comes after it.
+                            context.read<AudioPlayerCubit>().play(
+                                  playlist[idx],
+                                  playlist: playlist,
+                                );
+                          },
+                          child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 13),
@@ -834,12 +1041,12 @@ class _ContentTrackPickerSheet extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              track.labelAr.isNotEmpty
-                                  ? track.labelAr
-                                  : 'تسجيل ${idx + 1}',
-                              textDirection: TextDirection.rtl,
+                              track.labelFor(isGreek ? 'el' : 'ar').isNotEmpty
+                                  ? track.labelFor(isGreek ? 'el' : 'ar')
+                                  : '${l.trackLabelFallback} ${idx + 1}',
+                              textDirection: l.dir,
                               style: TextStyle(
-                                fontFamily:  'Scheherazade',
+                                fontFamily:  l.bodyFont,
                                 color:       Colors.white,
                                 fontSize:    17,
                                 fontWeight:  FontWeight.w700,
@@ -884,10 +1091,15 @@ class _ContentTrackPickerSheet extends StatelessWidget {
                   ),
                 );
               }),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

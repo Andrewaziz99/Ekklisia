@@ -14,7 +14,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/daily_verse_model.dart';
 import '../../data/repositories/daily_verse_repository.dart';
 import '../utils/admin_colors.dart';
@@ -674,7 +673,7 @@ class _VerseFormState extends State<_VerseForm> {
           color: ac.textPrimary,
           fontSize: fontFamily != null ? 16 : 14,
         ),
-        decoration: ac.inputDeco(hint ?? label ?? ''),
+        decoration: ac.inputDeco(hint ?? label ),
       );
   }
 

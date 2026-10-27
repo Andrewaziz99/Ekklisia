@@ -12,10 +12,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/models/agbeya_model.dart';
 import '../../../shared/widgets/cached_image.dart';
 import '../../../shared/widgets/cached_pdf_viewer.dart';
+import '../../../shared/widgets/pdf_nav_tools.dart';
 import '../../../shared/widgets/video_player_widget.dart';
 import '../cubit/audio_player_cubit.dart';
 import '../cubit/audio_player_state.dart';
@@ -41,7 +43,6 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
   // Page tracking — ValueNotifier avoids full-screen rebuilds on every scroll
   final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(1);
 
-  bool _showToolbar = true;
   int _totalPages = 0;
   _ReadingMode _mode = _ReadingMode.dark;
 
@@ -83,160 +84,135 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgColor,
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapUp: (_) => setState(() => _showToolbar = !_showToolbar),
-        child: Stack(
-          children: [
-            // ── PDF Viewer ──────────────────────────────────────────────────
-            Positioned.fill(
-              child: Padding(
-                // Leave room for the persistent audio strip at the bottom
-                padding: const EdgeInsets.only(bottom: _AudioStrip.height),
-                child: CachedPdfViewer(
-                  url: widget.hour.pdfUrl,
-                  scrollDirection: Axis.vertical,
-                  pageSnapping: false,
-                  onControllerReady: (ctrl) {
-                    _pdfCtrl = ctrl;
-                  },
-                  onDocumentLoaded: (totalPages) {
-                    setState(() => _totalPages = totalPages);
-                  },
-                  onDocumentLoadFailed: (error) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('تعذّر عرض هذه الصفحة، حاول مرة أخرى.'),
-                          backgroundColor: EkklisiaColors.maroon,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  onPageChanged: (page) {
-                    _pageNotifier.value = page;
-                  },
-                ),
+      // A real AppBar (not a Positioned/Stack overlay) reserves its own
+      // layout space, so it never paints over the PDF page content — same
+      // for the audio strip, now docked via bottomNavigationBar instead of
+      // floating over the last page.
+      appBar: _buildAppBar(context),
+      body: CachedPdfViewer(
+        url: widget.hour.pdfUrl,
+        scrollDirection: Axis.vertical,
+        pageSnapping: false,
+        onControllerReady: (ctrl) {
+          _pdfCtrl = ctrl;
+        },
+        onDocumentLoaded: (totalPages) {
+          setState(() => _totalPages = totalPages);
+        },
+        onDocumentLoadFailed: (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.l10nOnce.pdfLoadError),
+                backgroundColor: EkklisiaColors.maroon,
+                behavior: SnackBarBehavior.floating,
               ),
-            ),
-
-            // ── Top toolbar (auto-hides on tap) ─────────────────────────────
-            AnimatedSlide(
-              offset: _showToolbar ? Offset.zero : const Offset(0, -1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
-              child: _buildTopBar(context),
-            ),
-
-            // ── Page nav bar (auto-hides, sits above audio strip) ───────────
-            if (_totalPages > 0)
-              Positioned(
-                bottom: _AudioStrip.height,
-                left: 0,
-                right: 0,
-                child: AnimatedSlide(
-                  offset: _showToolbar ? Offset.zero : const Offset(0, 1),
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOut,
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: _pageNotifier,
-                    builder: (_, page, __) => _buildPageBar(page),
-                  ),
-                ),
-              ),
-
-            // ── Persistent audio strip ──────────────────────────────────────
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _AudioStrip(hour: widget.hour),
-            ),
-          ],
-        ),
+            );
+          }
+        },
+        onPageChanged: (page) {
+          _pageNotifier.value = page;
+        },
       ),
+      bottomNavigationBar: _AudioStrip(hour: widget.hour),
     );
   }
 
-  // ── Top bar ────────────────────────────────────────────────────────────────
+  // ── AppBar ─────────────────────────────────────────────────────────────────
 
-  Widget _buildTopBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [EkklisiaColors.bgDeep, EkklisiaColors.bgDeep.withOpacity(0)],
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final l = context.l10n;
+    final isGreek = !l.isAr;
+    return AppBar(
+      backgroundColor: EkklisiaColors.bgDeep,
+      elevation: 2,
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          size: 18,
+          color: EkklisiaColors.gold,
         ),
+        onPressed: () => Navigator.pop(context),
       ),
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: EkklisiaColors.bgDeep.withOpacity(0.8),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              size: 16,
-              color: EkklisiaColors.gold,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
+      title: Text(
+        widget.hour.titleFor(isGreek ? 'el' : 'ar'),
+        textDirection: l.dir,
+        style: TextStyle(
+          fontFamily: l.bodyFont,
+          color: EkklisiaColors.goldLight,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
         ),
-        title: Text(
-          widget.hour.titleAr,
-          style: const TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkklisiaColors.goldLight,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          if (widget.hour.hasVideo)
-            IconButton(
-              tooltip: 'مشاهدة الفيديو',
-              icon: const Icon(Icons.videocam_outlined,
-                  color: EkklisiaColors.gold),
-              onPressed: () => showVideoSheet(
-                context,
-                widget.hour.videoUrl,
-                titleAr: widget.hour.titleAr,
-              ),
-            ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      actions: [
+        if (widget.hour.hasVideo)
           IconButton(
-            tooltip: 'وضع القراءة',
-            icon: Icon(_modeIcon, color: EkklisiaColors.gold),
-            onPressed: () => setState(() {
-              _mode = _ReadingMode
-                  .values[(_mode.index + 1) % _ReadingMode.values.length];
-            }),
+            key: const ValueKey('agbeya_pdf_video_btn'),
+            tooltip: l.video,
+            icon: const Icon(Icons.videocam_outlined,
+                color: EkklisiaColors.gold),
+            onPressed: () => showVideoSheet(
+              context,
+              widget.hour.videoUrl,
+              titleAr: widget.hour.titleFor(isGreek ? 'el' : 'ar'),
+              isGreek: isGreek,
+            ),
           ),
-        ],
-      ),
+        if (_totalPages > 0)
+          IconButton(
+            key: const ValueKey('agbeya_pdf_gotopage_btn'),
+            tooltip: l.goToPageTooltip,
+            icon: const Icon(Icons.numbers, color: EkklisiaColors.gold),
+            onPressed: () => showPdfGoToPageDialog(
+              context,
+              controller: _pdfCtrl!,
+              totalPages: _totalPages,
+              currentPage: _pdfCtrl!.currentPage,
+              isGreek: isGreek,
+            ),
+          ),
+        if (_totalPages > 0)
+          IconButton(
+            key: const ValueKey('agbeya_pdf_search_btn'),
+            tooltip: l.search,
+            icon: const Icon(Icons.search, color: EkklisiaColors.gold),
+            onPressed: () => showPdfSearchSheet(
+              context,
+              controller: _pdfCtrl!,
+              isGreek: isGreek,
+            ),
+          ),
+        IconButton(
+          key: const ValueKey('agbeya_pdf_mode_btn'),
+          tooltip: l.readingModeTooltip,
+          icon: Icon(_modeIcon, color: EkklisiaColors.gold),
+          onPressed: () => setState(() {
+            _mode = _ReadingMode
+                .values[(_mode.index + 1) % _ReadingMode.values.length];
+          }),
+        ),
+      ],
+      // Page prev/next + tap-to-jump indicator — part of the same AppBar
+      // (via PreferredSize) rather than a second floating bar.
+      bottom: _totalPages > 0
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _pageNotifier,
+                builder: (_, page, __) => _buildPageBar(page, isGreek),
+              ),
+            )
+          : null,
     );
   }
 
-  // ── Page navigation bar ────────────────────────────────────────────────────
+  // ── Page navigation row ──────────────────────────────────────────────────────
 
-  Widget _buildPageBar(int page) {
+  Widget _buildPageBar(int page, bool isGreek) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [EkklisiaColors.bgDeep, EkklisiaColors.bgDeep.withOpacity(0)],
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
+      color: EkklisiaColors.bgDeep,
       child: Row(
         children: [
           IconButton(
@@ -249,38 +225,27 @@ class _AgbeyaPdfReaderScreenState extends State<AgbeyaPdfReaderScreen> {
                 : null,
           ),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
+            child: Center(
+              child: GestureDetector(
+                onTap: _pdfCtrl == null
+                    ? null
+                    : () => showPdfGoToPageDialog(
+                          context,
+                          controller: _pdfCtrl!,
+                          totalPages: _totalPages,
+                          currentPage: page,
+                          isGreek: isGreek,
+                        ),
+                child: Text(
                   '$page / $_totalPages',
                   style: const TextStyle(
-                    color: EkklisiaColors.textSecondary,
-                    fontSize: 11,
+                    color: EkklisiaColors.gold,
+                    fontSize: 12,
+                    decoration: TextDecoration.underline,
+                    decorationColor: EkklisiaColors.goldBorder,
                   ),
                 ),
-                const SizedBox(height: 3),
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: EkklisiaColors.gold,
-                    inactiveTrackColor: EkklisiaColors.goldBorder,
-                    thumbColor: EkklisiaColors.gold,
-                    overlayColor: EkklisiaColors.goldSubtle,
-                    trackHeight: 2,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 6,
-                    ),
-                  ),
-                  child: Slider(
-                    value: page.toDouble(),
-                    min: 1,
-                    max: _totalPages.toDouble(),
-                    // Visual-only during drag — jumpToPage only on release
-                    onChanged: (_) {},
-                    onChangeEnd: (v) => _pdfCtrl?.jumpToPage(v.round()),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           IconButton(
@@ -319,6 +284,7 @@ class _AudioStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
       builder: (context, state) {
         final cubit = context.read<AudioPlayerCubit>();
@@ -349,8 +315,8 @@ class _AudioStrip extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: hasAudio
-                  ? _audioRow(context, cubit, state, isCurrent, isPlaying)
-                  : _noAudioRow(),
+                  ? _audioRow(context, l, cubit, state, isCurrent, isPlaying)
+                  : _noAudioRow(l),
             ),
           ),
         );
@@ -360,6 +326,7 @@ class _AudioStrip extends StatelessWidget {
 
   Widget _audioRow(
     BuildContext context,
+    AppL10n l,
     AudioPlayerCubit cubit,
     AudioPlayerState state,
     bool isCurrent,
@@ -411,11 +378,11 @@ class _AudioStrip extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        hour.titleAr,
-                        textDirection: TextDirection.rtl,
+                        hour.titleFor(l.isAr ? 'ar' : 'el'),
+                        textDirection: l.dir,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Scheherazade',
+                        style: TextStyle(
+                          fontFamily: l.bodyFont,
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -431,9 +398,10 @@ class _AudioStrip extends StatelessWidget {
                         )
                       else
                         Text(
-                          'الأجبية',
+                          l.agbeya,
+                          textDirection: l.dir,
                           style: TextStyle(
-                            fontFamily: 'Scheherazade',
+                            fontFamily: l.bodyFont,
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 11,
                           ),
@@ -474,7 +442,7 @@ class _AudioStrip extends StatelessWidget {
     );
   }
 
-  Widget _noAudioRow() => Center(
+  Widget _noAudioRow(AppL10n l) => Center(
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -485,9 +453,10 @@ class _AudioStrip extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          'لا يوجد صوت لهذه الساعة',
+          l.noAudioForHour,
+          textDirection: l.dir,
           style: TextStyle(
-            fontFamily: 'Scheherazade',
+            fontFamily: l.bodyFont,
             color: Colors.white.withValues(alpha: 0.4),
             fontSize: 13,
           ),

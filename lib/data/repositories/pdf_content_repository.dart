@@ -48,14 +48,18 @@ class PdfContentRepository {
 
   // ── Write ────────────────────────────────────────────────────────────────
 
-  Future<void> add(PdfContent item) async {
+  /// Returns the new document's auto-generated Firestore ID — used by the
+  /// admin CMS to build the push-notification payload right after add().
+  Future<String> add(PdfContent item) async {
     // Assign sort_order = current count so it lands at the end
     final existing = await _col
         .where('category', isEqualTo: item.category)
         .count()
         .get();
     final order = existing.count ?? 0;
-    await _col.doc().set({...item.toFirestore(), 'sort_order': order});
+    final ref = _col.doc();
+    await ref.set({...item.toFirestore(), 'sort_order': order});
+    return ref.id;
   }
 
   Future<void> update(PdfContent item) => _col.doc(item.id).update({
@@ -68,6 +72,10 @@ class PdfContentRepository {
     'audio_tracks':         item.audioTracks.map((t) => t.toMap()).toList(),
     'video_url':            item.videoUrl,
     'cloudinary_video_id':  item.cloudinaryVideoId,
+    'level':                item.level,
+    'description_ar':       item.descriptionAr,
+    'description_el':       item.descriptionEl,
+    'section_id':           item.sectionId,
   });
 
   Future<void> toggleVisibility(PdfContent item) =>

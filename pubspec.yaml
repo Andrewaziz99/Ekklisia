@@ -83,8 +83,9 @@ dependencies:
 
 
   # ── PDF Viewer ────────────────────────────────────────────────
-  # pdfx uses platform-native rendering (PDFKit/PdfRenderer) — no inter-page lag
-  pdfx: ^2.8.0
+  # pdfrx renders via PDFium (native on Android/iOS/Windows/macOS/Linux,
+  # WASM on Web) — continuous scroll, built-in zoom, native link handling.
+  pdfrx: ^2.4.7
 
   # ── Programmatic PDF (page counting on upload) ────────────────
   syncfusion_flutter_pdf: ^29.1.38       # page counting without a UI widget

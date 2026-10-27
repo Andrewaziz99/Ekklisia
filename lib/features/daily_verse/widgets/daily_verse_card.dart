@@ -153,10 +153,9 @@ class _VerseContent extends StatelessWidget {
                       return Text(
                         verseText,
                         textDirection: textDir,
-                        textAlign:
-                            isGreek ? TextAlign.left : TextAlign.right,
+                        textAlign: TextAlign.left,
                         style: TextStyle(
-                          fontFamily: fontFamily,
+                          fontFamily: 'GFSDidot',
                           color: BrightnessColors.textPrimary(brightness),
                           fontSize: fontSize,
                           height: 1.7,
@@ -183,7 +182,7 @@ class _VerseContent extends StatelessWidget {
                       reference,
                       textDirection: textDir,
                       style: TextStyle(
-                        fontFamily: fontFamily,
+                        fontFamily: 'GFSDidot',
                         color: goldLight,
                         fontSize: isGreek ? 11 : 13,
                         fontWeight: FontWeight.w700,

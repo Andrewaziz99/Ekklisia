@@ -16,7 +16,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/colors.dart';
 import '../../data/models/elib_item_model.dart';
 import '../../data/models/elib_section_model.dart';
 import '../../data/repositories/elib_repository.dart';
@@ -26,7 +25,19 @@ import '../admin_l10n.dart';
 import '../utils/admin_colors.dart';
 
 class ElibManagerScreen extends StatefulWidget {
-  const ElibManagerScreen({super.key});
+  const ElibManagerScreen({
+    super.key,
+    this.libraryType = ElibLibraryType.general,
+    this.labelAr = 'المكتبة الإلكترونية',
+    this.labelEl = 'Ηλεκτρονική Βιβλιοθήκη',
+  });
+
+  /// Which library instance this manager edits — see [ElibLibraryType].
+  /// Defaults to the original, single "Electronic Library" so the existing
+  /// route/call site keeps working unchanged.
+  final String libraryType;
+  final String labelAr;
+  final String labelEl;
 
   @override
   State<ElibManagerScreen> createState() => _ElibManagerScreenState();
@@ -42,7 +53,7 @@ class _ElibManagerScreenState extends State<ElibManagerScreen> {
   @override
   void initState() {
     super.initState();
-    _repo.watchSections().listen(
+    _repo.watchSections(libraryType: widget.libraryType).listen(
       (sections) => setState(() {
         _sections = sections;
         _sectionsLoading = false;
@@ -103,6 +114,7 @@ class _ElibManagerScreenState extends State<ElibManagerScreen> {
         titleAr: arCtrl.text.trim(),
         titleEl: elCtrl.text.trim(),
         createdAt: DateTime.now(),
+        libraryType: widget.libraryType,
       );
       final saved = await _repo.saveSection(section);
       setState(() => _selectedSectionId = saved.id);
@@ -247,12 +259,12 @@ class _ElibManagerScreenState extends State<ElibManagerScreen> {
     final wide = MediaQuery.of(context).size.width >= 720;
 
     return Scaffold(
-      backgroundColor: EkklisiaColors.bgPrimary,
+      backgroundColor: ac.bgPrimary,
       body: Column(
         children: [
           // ── Top toolbar ───────────────────────────────────────────────
           _TopBar(
-            title: l.elibManager,
+            title: isGreek ? widget.labelEl : widget.labelAr,
             isGreek: isGreek,
             l: l,
             onBulk: _selectedSectionId == null
@@ -355,7 +367,7 @@ class _TopBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgPrimary,
+        color: ac.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
       child: Row(
@@ -747,7 +759,7 @@ class _ItemTile extends StatelessWidget {
                     fontSize: isGreek ? 12 : 15,
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(

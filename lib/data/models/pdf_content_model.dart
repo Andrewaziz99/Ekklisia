@@ -39,6 +39,15 @@ class ContentAudioTrack extends Equatable {
   final String cloudinaryAudioId;
   final int durationSeconds;
 
+  String labelFor(String langCode) {
+    switch (langCode) {
+      case 'el':
+        return labelEl.isNotEmpty ? labelEl : labelAr;
+      default:
+        return labelAr;
+    }
+  }
+
   String get formattedDuration {
     if (durationSeconds <= 0) return '';
     final m = durationSeconds ~/ 60;
@@ -90,6 +99,10 @@ class PdfContent extends Equatable {
     this.audioTracks = const [],
     this.videoUrl = '',
     this.cloudinaryVideoId = '',
+    this.level = '',
+    this.descriptionAr = '',
+    this.descriptionEl = '',
+    this.sectionId = '',
   });
 
   final String id;
@@ -106,6 +119,36 @@ class PdfContent extends Equatable {
   final List<ContentAudioTrack> audioTracks;
   final String videoUrl;
   final String cloudinaryVideoId;
+
+  /// Bilingual description shown on the item's detail view. Used by the
+  /// [PdfCategory.artworks] category in place of a PDF — tapping an artwork
+  /// card shows the cover image plus this text instead of opening a file.
+  final String descriptionAr;
+  final String descriptionEl;
+
+  bool get hasDescription =>
+      descriptionAr.isNotEmpty || descriptionEl.isNotEmpty;
+
+  String descriptionFor(String langCode) {
+    switch (langCode) {
+      case 'el':
+        return descriptionEl.isNotEmpty ? descriptionEl : descriptionAr;
+      default:
+        return descriptionAr.isNotEmpty ? descriptionAr : descriptionEl;
+    }
+  }
+
+  /// Only meaningful for [PdfCategory.theses] — see [ThesisLevel]. Empty for
+  /// every other category, and for theses items uploaded before this field
+  /// existed (the list screen buckets those into a fallback "unspecified"
+  /// section rather than hiding them).
+  final String level;
+
+  /// Only meaningful for [PdfCategory.artworks] — id of an [ArtworkSection]
+  /// document (admin-editable, see ArtworkSectionRepository). Empty when
+  /// unset — the list screen buckets those into a fallback "unspecified"
+  /// section rather than hiding them.
+  final String sectionId;
 
   bool get hasAudio => audioTracks.isNotEmpty;
   bool get hasVideo => videoUrl.isNotEmpty;
@@ -135,6 +178,10 @@ class PdfContent extends Equatable {
       audioTracks: tracks,
       videoUrl: (d['video_url'] as String? ?? ''),
       cloudinaryVideoId: (d['cloudinary_video_id'] as String? ?? ''),
+      level: (d['level'] as String? ?? ''),
+      descriptionAr: (d['description_ar'] as String? ?? ''),
+      descriptionEl: (d['description_el'] as String? ?? ''),
+      sectionId: (d['section_id'] as String? ?? ''),
     );
   }
 
@@ -153,6 +200,10 @@ class PdfContent extends Equatable {
     'audio_tracks': audioTracks.map((t) => t.toMap()).toList(),
     'video_url': videoUrl,
     'cloudinary_video_id': cloudinaryVideoId,
+    'level': level,
+    'description_ar': descriptionAr,
+    'description_el': descriptionEl,
+    'section_id': sectionId,
   };
 
   // ── CopyWith ─────────────────────────────────────────────────────────────
@@ -168,6 +219,10 @@ class PdfContent extends Equatable {
     List<ContentAudioTrack>? audioTracks,
     String? videoUrl,
     String? cloudinaryVideoId,
+    String? level,
+    String? descriptionAr,
+    String? descriptionEl,
+    String? sectionId,
   }) => PdfContent(
     id: id,
     titleAr: titleAr ?? this.titleAr,
@@ -182,6 +237,10 @@ class PdfContent extends Equatable {
     audioTracks: audioTracks ?? this.audioTracks,
     videoUrl: videoUrl ?? this.videoUrl,
     cloudinaryVideoId: cloudinaryVideoId ?? this.cloudinaryVideoId,
+    level: level ?? this.level,
+    descriptionAr: descriptionAr ?? this.descriptionAr,
+    descriptionEl: descriptionEl ?? this.descriptionEl,
+    sectionId: sectionId ?? this.sectionId,
   );
 
   @override
@@ -199,7 +258,118 @@ class PdfContent extends Equatable {
     audioTracks,
     videoUrl,
     cloudinaryVideoId,
+    level,
+    descriptionAr,
+    descriptionEl,
+    sectionId,
   ];
+}
+
+// ── Section description (constant top-of-screen card, per category) ──────────
+// Editable from the admin CMS — describes the whole category (e.g. Art
+// Works) rather than a single item. Optional bilingual body text plus a list
+// of "available at" link buttons (e.g. a partner church, an external shop).
+//
+// Firestore collection: section_descriptions, doc id == category slug.
+
+class SectionLink extends Equatable {
+  const SectionLink({
+    required this.labelAr,
+    required this.labelEl,
+    required this.url,
+  });
+
+  final String labelAr;
+  final String labelEl;
+  final String url;
+
+  String labelFor(String langCode) {
+    switch (langCode) {
+      case 'el':
+        return labelEl.isNotEmpty ? labelEl : labelAr;
+      default:
+        return labelAr.isNotEmpty ? labelAr : labelEl;
+    }
+  }
+
+  factory SectionLink.fromMap(Map<String, dynamic> m) => SectionLink(
+        labelAr: m['label_ar'] as String? ?? '',
+        labelEl: m['label_el'] as String? ?? '',
+        url: m['url'] as String? ?? '',
+      );
+
+  Map<String, dynamic> toMap() => {
+        'label_ar': labelAr,
+        'label_el': labelEl,
+        'url': url,
+      };
+
+  @override
+  List<Object?> get props => [labelAr, labelEl, url];
+}
+
+class SectionDescription extends Equatable {
+  const SectionDescription({
+    required this.category,
+    this.descriptionAr = '',
+    this.descriptionEl = '',
+    this.links = const [],
+  });
+
+  final String category;
+  final String descriptionAr;
+  final String descriptionEl;
+  final List<SectionLink> links;
+
+  bool get hasDescription =>
+      descriptionAr.isNotEmpty || descriptionEl.isNotEmpty;
+  bool get hasLinks => links.isNotEmpty;
+  bool get isEmpty => !hasDescription && !hasLinks;
+
+  factory SectionDescription.fromFirestore(DocumentSnapshot doc) {
+    final d = doc.data() as Map<String, dynamic>? ?? {};
+    final rawLinks = d['links'];
+    final links = rawLinks is List
+        ? rawLinks
+            .whereType<Map<String, dynamic>>()
+            .map(SectionLink.fromMap)
+            .toList()
+        : const <SectionLink>[];
+    return SectionDescription(
+      category: doc.id,
+      descriptionAr: d['description_ar'] as String? ?? '',
+      descriptionEl: d['description_el'] as String? ?? '',
+      links: links,
+    );
+  }
+
+  Map<String, dynamic> toFirestore() => {
+        'description_ar': descriptionAr,
+        'description_el': descriptionEl,
+        'links': links.map((l) => l.toMap()).toList(),
+      };
+
+  SectionDescription copyWith({
+    String? descriptionAr,
+    String? descriptionEl,
+    List<SectionLink>? links,
+  }) =>
+      SectionDescription(
+        category: category,
+        descriptionAr: descriptionAr ?? this.descriptionAr,
+        descriptionEl: descriptionEl ?? this.descriptionEl,
+        links: links ?? this.links,
+      );
+
+  @override
+  List<Object?> get props => [category, descriptionAr, descriptionEl, links];
+}
+
+// ── Thesis level (only meaningful for PdfCategory.theses) ─────────────────────
+
+abstract class ThesisLevel {
+  static const String masters = 'masters';
+  static const String doctoral = 'doctoral';
 }
 
 // ── Category slugs ────────────────────────────────────────────────────────────
@@ -210,20 +380,32 @@ abstract class PdfCategory {
   static const String readings = 'readings';
   static const String hymns = 'hymns';
   static const String occasions = 'occasions';
+  static const String theses = 'theses';
+  static const String christianBooks = 'christian_books';
+  static const String serviceBooks = 'service_books';
+  static const String artworks = 'artworks';
 
   static const Map<String, String> labelAr = {
     psalmody: 'الترانيم',
     liturgy: 'القداسات',
-    readings: 'القراءات',
+    readings: 'كتب ليتورجية',
     hymns: 'الألحان',
-    occasions: 'مناسبات',
+    occasions: 'أسبوع الآلام',
+    theses: 'رسائل الدكتوراه والماجستير',
+    christianBooks: 'الكتب المسيحية',
+    serviceBooks: 'كتب الخدمة',
+    artworks: 'أعمال فنية',
   };
 
   static const Map<String, String> labelEl = {
     psalmody: 'Ψαλμωδία',
     liturgy: 'Λειτουργία',
-    readings: 'Αναγνώσεις',
+    readings: 'Λειτουργικά βιβλία',
     hymns: 'Ύμνοι',
-    occasions: 'Εορτές',
+    occasions: 'Εβδομάδα Μ.',
+    theses: 'Διδακτορικά και Μεταπτυχιακές Εργασίες',
+    christianBooks: 'Χριστιανικά Βιβλία',
+    serviceBooks: 'Βιβλία Διακονίας',
+    artworks: 'Έργα τέχνης',
   };
 }

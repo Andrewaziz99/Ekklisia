@@ -14,6 +14,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/l10n/app_l10n.dart';
 import '../../../data/models/agbeya_model.dart';
 import '../../../shared/widgets/cached_image.dart';
 import '../cubit/audio_player_cubit.dart';
@@ -24,14 +25,35 @@ const _kCrimson = Color(0xFF6B1A1A);
 const _kGold = Color(0xFFC9A84C);
 
 class FullAudioPlayerSheet extends StatelessWidget {
-  const FullAudioPlayerSheet({super.key, required this.hour});
+  const FullAudioPlayerSheet({
+    super.key,
+    required this.hour,
+    this.sectionLabelAr,
+    this.sectionLabelEl,
+  });
   final AgbeyaHour hour;
+
+  /// Eyebrow label shown above the title, in both languages so it can react
+  /// live to an app-language change instead of being frozen at whichever
+  /// language was active when the sheet opened. Defaults to l.agbeya (the
+  /// two real Agbeya call sites rely on that default). The global mini-player
+  /// (see AudioPlayerBar) passes the actual playing item's own title here
+  /// instead, since it can show audio from any section of the app, not
+  /// just the Agbeya hours.
+  final String? sectionLabelAr;
+  final String? sectionLabelEl;
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF0E1A2E) : const Color(0xFF1B2A4A);
+    final l = context.l10n;
+    final isGreek = !l.isAr;
+    final rawLabel = isGreek
+        ? (sectionLabelEl?.isNotEmpty == true ? sectionLabelEl : sectionLabelAr)
+        : sectionLabelAr;
+    final eyebrow = (rawLabel?.isNotEmpty ?? false) ? rawLabel! : l.agbeya;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.88,
@@ -48,7 +70,14 @@ class FullAudioPlayerSheet extends StatelessWidget {
           child: BlocBuilder<AudioPlayerCubit, AudioPlayerState>(
             builder: (context, state) {
               final cubit = context.read<AudioPlayerCubit>();
-              final isCurrent = state.currentItem?.extras?['hourId'] == hour.id;
+              // hour.id is populated from whichever id the playing item
+              // actually carries — 'hourId' for Agbeya hours, 'contentId'
+              // for everything else played via the global mini-player (see
+              // AudioPlayerBar._openFullPlayer) — so check both keys.
+              final currentExtras = state.currentItem?.extras;
+              final isCurrent = hour.id.isNotEmpty &&
+                  (currentExtras?['hourId'] == hour.id ||
+                      currentExtras?['contentId'] == hour.id);
 
               return Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -96,9 +125,13 @@ class FullAudioPlayerSheet extends StatelessWidget {
 
                     // ── Title ────────────────────────────────────────────
                     Text(
-                      'الأجبية',
+                      eyebrow,
+                      textDirection: l.dir,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'Scheherazade',
+                        fontFamily: l.bodyFont,
                         color: _kGold.withValues(alpha: 0.7),
                         fontSize: 13,
                         letterSpacing: 1.5,
@@ -107,11 +140,11 @@ class FullAudioPlayerSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      hour.titleAr,
-                      textDirection: TextDirection.rtl,
+                      hour.titleFor(isGreek ? 'el' : 'ar'),
+                      textDirection: l.dir,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Scheherazade',
+                      style: TextStyle(
+                        fontFamily: l.bodyFont,
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -220,10 +253,10 @@ class FullAudioPlayerSheet extends StatelessWidget {
                         color: Colors.redAccent,
                         size: 18,
                       ),
-                      label: const Text(
-                        'إيقاف',
+                      label: Text(
+                        l.stopPlayback,
                         style: TextStyle(
-                          fontFamily: 'Scheherazade',
+                          fontFamily: l.bodyFont,
                           color: Colors.redAccent,
                           fontSize: 14,
                         ),
@@ -249,7 +282,13 @@ class FullAudioPlayerSheet extends StatelessWidget {
         duration: hour.durationSeconds > 0
             ? Duration(seconds: hour.durationSeconds)
             : null,
-        extras: {'hourId': hour.id},
+        extras: {
+          'hourId': hour.id,
+          'titleAr': hour.titleAr,
+          'titleEl': hour.titleFor('el'),
+          'albumAr': 'الأجبية',
+          'albumEl': 'Προσευχές από το',
+        },
       ),
     );
   }

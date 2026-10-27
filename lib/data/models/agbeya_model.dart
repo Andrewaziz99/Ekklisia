@@ -110,6 +110,13 @@ class AgbeyaAudioTrack extends Equatable {
   final String labelEl;
   final String url;            // Cloudinary video (audio) URL
   final int    durationSeconds;
+  // The language this track is actually recorded/read in — 'ar' or 'el'.
+  // Distinct from labelAr/labelEl (which are just the bilingual DISPLAY
+  // label for whichever single recording this is). Used to pick the
+  // matching-language shared Agbeya intro when this track is played (see
+  // track_picker_sheet.dart) — independent of the app's current UI language,
+  // since an hour can mix Arabic- and Greek-language recordings.
+  final String lang;
 
   const AgbeyaAudioTrack({
     this.labelAr         = '',
@@ -117,6 +124,7 @@ class AgbeyaAudioTrack extends Equatable {
     this.labelEl         = '',
     required this.url,
     this.durationSeconds = 0,
+    this.lang            = 'ar',
   });
 
   String labelFor(String langCode) {
@@ -126,6 +134,8 @@ class AgbeyaAudioTrack extends Equatable {
       default:    return labelAr;
     }
   }
+
+  bool get isGreek => lang == 'el';
 
   String get formattedDuration {
     if (durationSeconds <= 0) return '';
@@ -140,6 +150,7 @@ class AgbeyaAudioTrack extends Equatable {
         labelEl:         m['label_el']  as String? ?? '',
         url:             m['url']       as String? ?? '',
         durationSeconds: (m['duration_seconds'] as num?)?.toInt() ?? 0,
+        lang:            m['lang']      as String? ?? 'ar',
       );
 
   Map<String, dynamic> toMap() => {
@@ -148,10 +159,74 @@ class AgbeyaAudioTrack extends Equatable {
         'label_el':         labelEl,
         'url':              url,
         'duration_seconds': durationSeconds,
+        'lang':             lang,
       };
 
   @override
-  List<Object?> get props => [url, labelAr];
+  List<Object?> get props => [url, labelAr, lang];
+}
+
+// ── AgbeyaTrackGroup ────────────────────────────────────────────────────────
+// A named sub-section within an hour's audio (e.g. "المزمور" / "الإنجيل"),
+// holding its own ordered list of tracks. Lets an hour be split into more
+// than the legacy fixed "الشماس / الكاهن" pair, with the admin free to name
+// and reorder both the groups and the tracks inside each one.
+
+class AgbeyaTrackGroup extends Equatable {
+  final String titleAr;
+  final String titleCop;
+  final String titleEl;
+  final List<AgbeyaAudioTrack> tracks;
+
+  const AgbeyaTrackGroup({
+    this.titleAr = '',
+    this.titleCop = '',
+    this.titleEl = '',
+    this.tracks = const [],
+  });
+
+  String titleFor(String langCode) {
+    switch (langCode) {
+      case 'cop':
+        return titleCop.isNotEmpty ? titleCop : titleAr;
+      case 'el':
+        return titleEl.isNotEmpty ? titleEl : titleAr;
+      default:
+        return titleAr;
+    }
+  }
+
+  factory AgbeyaTrackGroup.fromMap(Map<String, dynamic> m) => AgbeyaTrackGroup(
+        titleAr: m['title_ar'] as String? ?? '',
+        titleCop: m['title_cop'] as String? ?? '',
+        titleEl: m['title_el'] as String? ?? '',
+        tracks: (m['tracks'] as List<dynamic>? ?? [])
+            .map((t) => AgbeyaAudioTrack.fromMap(t as Map<String, dynamic>))
+            .toList(),
+      );
+
+  Map<String, dynamic> toMap() => {
+        'title_ar': titleAr,
+        'title_cop': titleCop,
+        'title_el': titleEl,
+        'tracks': tracks.map((t) => t.toMap()).toList(),
+      };
+
+  AgbeyaTrackGroup copyWith({
+    String? titleAr,
+    String? titleCop,
+    String? titleEl,
+    List<AgbeyaAudioTrack>? tracks,
+  }) =>
+      AgbeyaTrackGroup(
+        titleAr: titleAr ?? this.titleAr,
+        titleCop: titleCop ?? this.titleCop,
+        titleEl: titleEl ?? this.titleEl,
+        tracks: tracks ?? this.tracks,
+      );
+
+  @override
+  List<Object?> get props => [titleAr, titleEl, tracks];
 }
 
 // ── AgbeyaHour ────────────────────────────────────────────────────────────────
@@ -172,8 +247,14 @@ class AgbeyaHour extends Equatable {
   final String pdfUrl;          // Cloudinary PDF URL (Phase 1)
   final String cloudinaryPdfId;
   final int durationSeconds;    // Legacy — use audioTracks[i].durationSeconds
-  // Multi-track audio (up to 2 tracks; admin sets labels like "الشماس" / "الكاهن")
+  // Legacy multi-track audio (flat, no named sub-sections). Superseded by
+  // [trackGroups] but kept so hours saved before grouping existed keep
+  // playing exactly as before.
   final List<AgbeyaAudioTrack> audioTracks;
+  // Named sub-sections (e.g. "المزمور" / "الإنجيل"), each with its own
+  // ordered list of tracks — both the groups and the tracks inside a group
+  // are independently admin-orderable.
+  final List<AgbeyaTrackGroup> trackGroups;
   final List<AgbeyaSection> sections;
   final bool isPublished;
   final DateTime createdAt;
@@ -195,6 +276,7 @@ class AgbeyaHour extends Equatable {
     this.cloudinaryPdfId = '',
     this.durationSeconds = 0,
     this.audioTracks = const [],
+    this.trackGroups = const [],
     this.sections = const [],
     this.isPublished = true,
     required this.createdAt,
@@ -227,15 +309,29 @@ class AgbeyaHour extends Equatable {
   bool get hasPdf   => pdfUrl.isNotEmpty;
   bool get hasVideo => videoUrl.isNotEmpty;
 
-  /// True if there is at least one playable audio track.
-  bool get hasAudio => audioTracks.isNotEmpty || audioUrl.isNotEmpty;
+  /// True if there is at least one playable audio track, grouped or not.
+  bool get hasAudio =>
+      trackGroups.any((g) => g.tracks.isNotEmpty) ||
+      audioTracks.isNotEmpty ||
+      audioUrl.isNotEmpty;
 
   /// True when multiple tracks are available and user should be prompted to pick.
-  bool get isMultiTrack => audioTracks.length > 1;
+  bool get isMultiTrack => effectiveTracks.length > 1;
 
-  /// The tracks to offer for playback.
-  /// Falls back to the legacy [audioUrl] for documents created before multi-track.
+  /// True when this hour uses named sub-sections rather than (or in addition
+  /// to) a flat track list — drives whether the picker shows group headers.
+  bool get hasNamedGroups =>
+      trackGroups.any((g) => g.titleAr.isNotEmpty || g.titleEl.isNotEmpty);
+
+  /// Every track across every group, in play order — used to build the
+  /// auto-advance playlist (see AudioPlayerCubit._advanceIfQueued) without
+  /// the caller needing to care whether the hour is grouped.
+  /// Falls back to the legacy flat [audioTracks], then the legacy single
+  /// [audioUrl], for hours saved before grouping existed.
   List<AgbeyaAudioTrack> get effectiveTracks {
+    if (trackGroups.isNotEmpty) {
+      return trackGroups.expand((g) => g.tracks).toList();
+    }
     if (audioTracks.isNotEmpty) return audioTracks;
     if (audioUrl.isNotEmpty) {
       return [
@@ -247,6 +343,15 @@ class AgbeyaHour extends Equatable {
       ];
     }
     return const [];
+  }
+
+  /// The groups to render in the track picker. Ungrouped hours (legacy
+  /// [audioTracks]/[audioUrl] only) are wrapped in a single untitled group
+  /// so the picker can always iterate over groups uniformly.
+  List<AgbeyaTrackGroup> get effectiveGroups {
+    if (trackGroups.isNotEmpty) return trackGroups;
+    final flat = effectiveTracks;
+    return flat.isEmpty ? const [] : [AgbeyaTrackGroup(tracks: flat)];
   }
 
   // ── Firestore serialization ─────────────────────────────────────────────────
@@ -272,6 +377,9 @@ class AgbeyaHour extends Equatable {
       durationSeconds: (d['duration_seconds'] as num?)?.toInt() ?? 0,
       audioTracks: (d['audio_tracks'] as List<dynamic>? ?? [])
           .map((t) => AgbeyaAudioTrack.fromMap(t as Map<String, dynamic>))
+          .toList(),
+      trackGroups: (d['track_groups'] as List<dynamic>? ?? [])
+          .map((g) => AgbeyaTrackGroup.fromMap(g as Map<String, dynamic>))
           .toList(),
       sections: (d['sections'] as List<dynamic>? ?? [])
           .map((s) => AgbeyaSection.fromMap(s as Map<String, dynamic>))
@@ -299,6 +407,7 @@ class AgbeyaHour extends Equatable {
         'cloudinary_pdf_id': cloudinaryPdfId,
         'duration_seconds': durationSeconds,
         'audio_tracks': audioTracks.map((t) => t.toMap()).toList(),
+        'track_groups': trackGroups.map((g) => g.toMap()).toList(),
         'sections': sections.map((s) => s.toMap()).toList(),
         'is_published': isPublished,
         'created_at': Timestamp.fromDate(createdAt),
@@ -321,6 +430,7 @@ class AgbeyaHour extends Equatable {
     String? cloudinaryPdfId,
     int? durationSeconds,
     List<AgbeyaAudioTrack>? audioTracks,
+    List<AgbeyaTrackGroup>? trackGroups,
     List<AgbeyaSection>? sections,
     bool? isPublished,
     DateTime? createdAt,
@@ -342,6 +452,7 @@ class AgbeyaHour extends Equatable {
         cloudinaryPdfId: cloudinaryPdfId ?? this.cloudinaryPdfId,
         durationSeconds: durationSeconds ?? this.durationSeconds,
         audioTracks: audioTracks ?? this.audioTracks,
+        trackGroups: trackGroups ?? this.trackGroups,
         sections: sections ?? this.sections,
         isPublished: isPublished ?? this.isPublished,
         createdAt: createdAt ?? this.createdAt,

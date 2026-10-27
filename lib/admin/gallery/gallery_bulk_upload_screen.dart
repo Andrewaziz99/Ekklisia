@@ -15,7 +15,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
+import '../../data/models/gallery_item_model.dart';
 import '../../data/repositories/gallery_repository.dart';
 import '../../features/auth/auth_cubit.dart';
 import '../../features/settings/cubit/settings_cubit.dart';
@@ -53,7 +53,21 @@ class _FileRow {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class GalleryBulkUploadScreen extends StatefulWidget {
-  const GalleryBulkUploadScreen({super.key});
+  const GalleryBulkUploadScreen({
+    super.key,
+    this.galleryType = GalleryType.general,
+    this.titleAr,
+    this.titleEl,
+  });
+
+  /// Which gallery instance to upload into — see [GalleryType]. Defaults to
+  /// the general church photo gallery.
+  final String galleryType;
+
+  /// Optional toolbar title override — falls back to the generic bulk
+  /// upload label when unset.
+  final String? titleAr;
+  final String? titleEl;
 
   @override
   State<GalleryBulkUploadScreen> createState() =>
@@ -139,6 +153,7 @@ class _GalleryBulkUploadScreenState extends State<GalleryBulkUploadScreen> {
             titleAr: row.titleArCtrl.text.trim(),
             titleEl: row.titleElCtrl.text.trim(),
             createdBy: _uid,
+            galleryType: widget.galleryType,
             onProgress: (p) => setState(() => row.progress = p),
           );
         } else if (!kIsWeb && row.file.path != null) {
@@ -147,6 +162,7 @@ class _GalleryBulkUploadScreenState extends State<GalleryBulkUploadScreen> {
             titleAr: row.titleArCtrl.text.trim(),
             titleEl: row.titleElCtrl.text.trim(),
             createdBy: _uid,
+            galleryType: widget.galleryType,
             onProgress: (p) => setState(() => row.progress = p),
           );
         }
@@ -173,6 +189,9 @@ class _GalleryBulkUploadScreenState extends State<GalleryBulkUploadScreen> {
     final pending = _rows.where((r) => r.status == _RowStatus.pending).length;
     final done = _rows.where((r) => r.status == _RowStatus.done).length;
     final failed = _rows.where((r) => r.status == _RowStatus.failed).length;
+    final title = isGreek
+        ? (widget.titleEl ?? l.galleryBulkUpload)
+        : (widget.titleAr ?? l.galleryBulkUpload);
 
     return DropTarget(
       onDragEntered: (_) => setState(() => _isDragging = true),
@@ -185,12 +204,12 @@ class _GalleryBulkUploadScreenState extends State<GalleryBulkUploadScreen> {
         children: [
           // ── Main scaffold ──────────────────────────────────────────────
           Scaffold(
-            backgroundColor: EkklisiaColors.bgPrimary,
+            backgroundColor: ac.bgPrimary,
             body: Column(
               children: [
                 // Toolbar
                 _Toolbar(
-                  title: l.galleryBulkUpload,
+                  title: title,
                   isGreek: isGreek,
                   onAdd: _uploading ? null : _pickFiles,
                 ),
@@ -299,7 +318,7 @@ class _Toolbar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: EkklisiaColors.bgPrimary,
+        color: ac.bgPrimary,
         border: Border(bottom: BorderSide(color: Color(0xFF2A3A50), width: 1)),
       ),
       child: Row(
@@ -339,10 +358,10 @@ class _RowTile extends StatelessWidget {
   final AdminL10n l;
   final bool isGreek;
 
-  Color get _statusColor => switch (row.status) {
+  Color _statusColor(Color gold) => switch (row.status) {
     _RowStatus.done => Colors.green,
     _RowStatus.failed => Colors.red,
-    _RowStatus.uploading => EkklisiaColors.darkGold,
+    _RowStatus.uploading => gold,
     _RowStatus.pending => Colors.white24,
   };
 
@@ -369,7 +388,7 @@ class _RowTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(_statusIcon, color: _statusColor, size: 18),
+              Icon(_statusIcon, color: _statusColor(ac.gold), size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

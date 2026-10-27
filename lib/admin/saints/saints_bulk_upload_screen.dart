@@ -15,9 +15,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
-import '../../core/theme/colors.dart';
 import '../../data/datasources/cloudinary/cloudinary_datasource.dart';
 import '../../data/models/saint_model.dart';
 import '../../data/repositories/saints_repository.dart';
@@ -505,12 +503,12 @@ class _FileRowCard extends StatelessWidget {
   final VoidCallback? onRemove;
   final VoidCallback onSetState;
 
-  Color get _borderColor {
+  Color _borderColor(AdminC ac) {
     switch (row.status) {
       case _RowStatus.done:     return Colors.green.withOpacity(0.6);
       case _RowStatus.error:    return Colors.redAccent.withOpacity(0.6);
-      case _RowStatus.uploading: return EkklisiaColors.darkGold.withOpacity(0.5);
-      default:                  return EkklisiaColors.darkGoldBorder;
+      case _RowStatus.uploading: return ac.gold.withOpacity(0.5);
+      default:                  return ac.goldBorder;
     }
   }
 
@@ -527,7 +525,7 @@ class _FileRowCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: ac.bgElevated,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _borderColor, width: 0.8),
+        border: Border.all(color: _borderColor(ac), width: 0.8),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/colors.dart';
 import '../../../data/models/book_model.dart';
 import '../../../shared/widgets/cached_pdf_viewer.dart';
+import '../../../shared/widgets/pdf_nav_tools.dart';
 
 /// Full-screen PDF reader powered by pdfx (platform-native rendering).
 ///
@@ -27,7 +28,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   // Page tracking via ValueNotifier — only rebuilds _BottomBar, not the screen
   final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(1);
 
-  bool _showToolbar = true;
   int _totalPages = 0;
   _ReadingMode _readingMode = _ReadingMode.dark;
 
@@ -53,114 +53,100 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgColor,
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapUp: (_) => setState(() => _showToolbar = !_showToolbar),
-        child: Stack(
-          children: [
-            // ── PDF Viewer ───────────────────────────────────────────────
-            Positioned.fill(
-              child: CachedPdfViewer(
-                url: widget.book.pdfUrl,
-                scrollDirection: Axis.vertical,
-                pageSnapping: false,
-                onControllerReady: (ctrl) {
-                  // Don't call setState — just store the reference
-                  _pdfCtrl = ctrl;
-                },
-                onDocumentLoaded: (totalPages) {
-                  setState(() => _totalPages = totalPages);
-                },
-                onDocumentLoadFailed: (error) {
-                  _showErrorSnack('تعذّر عرض هذه الصفحة، حاول مرة أخرى.');
-                },
-                onPageChanged: (page) {
-                  _pageNotifier.value = page;
-                },
-              ),
-            ),
-
-            // ── Top toolbar ──────────────────────────────────────────────
-            AnimatedSlide(
-              offset: _showToolbar ? Offset.zero : const Offset(0, -1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
-              child: _buildTopBar(context),
-            ),
-
-            // ── Bottom toolbar ───────────────────────────────────────────
-            if (_totalPages > 0)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: AnimatedSlide(
-                  offset: _showToolbar ? Offset.zero : const Offset(0, 1),
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOut,
-                  child: _BottomBar(
-                    pageNotifier: _pageNotifier,
-                    totalPages: _totalPages,
-                    getCtrl: () => _pdfCtrl,
-                  ),
-                ),
-              ),
-          ],
-        ),
+      // A real AppBar (not a Positioned/Stack overlay) reserves its own
+      // layout space, so it never paints over the PDF page content —
+      // unlike the previous floating-gradient-bar approach.
+      appBar: _buildAppBar(context),
+      body: CachedPdfViewer(
+        url: widget.book.pdfUrl,
+        scrollDirection: Axis.vertical,
+        pageSnapping: false,
+        onControllerReady: (ctrl) {
+          // Don't call setState — just store the reference
+          _pdfCtrl = ctrl;
+        },
+        onDocumentLoaded: (totalPages) {
+          setState(() => _totalPages = totalPages);
+        },
+        onDocumentLoadFailed: (error) {
+          _showErrorSnack('تعذّر عرض هذه الصفحة، حاول مرة أخرى.');
+        },
+        onPageChanged: (page) {
+          _pageNotifier.value = page;
+        },
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            EkklisiaColors.bgDeep,
-            EkklisiaColors.bgDeep.withOpacity(0),
-          ],
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: EkklisiaColors.bgDeep,
+      elevation: 2,
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          size: 18,
+          color: EkklisiaColors.gold,
         ),
+        onPressed: () => Navigator.pop(context),
       ),
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: EkklisiaColors.bgDeep.withOpacity(0.8),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              size: 16,
-              color: EkklisiaColors.gold,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
+      title: Text(
+        widget.book.titleAr,
+        style: const TextStyle(
+          fontFamily: 'Scheherazade',
+          color: EkklisiaColors.goldLight,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
-        title: Text(
-          widget.book.titleAr,
-          style: const TextStyle(
-            fontFamily: 'Scheherazade',
-            color: EkklisiaColors.goldLight,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      actions: [
+        if (_totalPages > 0 && _pdfCtrl != null)
           IconButton(
-            tooltip: 'وضع القراءة',
-            icon: Icon(_readingModeIcon, color: EkklisiaColors.gold),
-            onPressed: _cycleReadingMode,
+            key: const ValueKey('book_pdf_gotopage_btn'),
+            tooltip: 'الانتقال إلى صفحة',
+            icon: const Icon(Icons.numbers, color: EkklisiaColors.gold),
+            onPressed: () => showPdfGoToPageDialog(
+              context,
+              controller: _pdfCtrl!,
+              totalPages: _totalPages,
+              currentPage: _pdfCtrl!.currentPage,
+            ),
           ),
-        ],
-      ),
+        if (_totalPages > 0 && _pdfCtrl != null)
+          IconButton(
+            key: const ValueKey('book_pdf_search_btn'),
+            tooltip: 'بحث في الملف',
+            icon: const Icon(Icons.search, color: EkklisiaColors.gold),
+            onPressed: () => showPdfSearchSheet(
+              context,
+              controller: _pdfCtrl!,
+            ),
+          ),
+        IconButton(
+          key: const ValueKey('book_pdf_mode_btn'),
+          tooltip: 'وضع القراءة',
+          icon: Icon(_readingModeIcon, color: EkklisiaColors.gold),
+          onPressed: _cycleReadingMode,
+        ),
+      ],
+      // Page prev/next + tap-to-jump indicator — part of the same AppBar
+      // (via PreferredSize) rather than a second floating bar, so it too
+      // reserves its own space instead of sitting over the last page.
+      bottom: _totalPages > 0
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _pageNotifier,
+                builder: (_, page, __) => _PageNavRow(
+                  page: page,
+                  totalPages: _totalPages,
+                  getCtrl: () => _pdfCtrl,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -193,97 +179,70 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 }
 
-// ── Bottom bar — isolated widget so page changes don't rebuild the whole screen
+// ── Page nav row — lives in AppBar.bottom, isolated so page changes only
+// rebuild this row (not the whole screen).
 
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.pageNotifier,
+class _PageNavRow extends StatelessWidget {
+  const _PageNavRow({
+    required this.page,
     required this.totalPages,
     required this.getCtrl,
   });
 
-  final ValueNotifier<int> pageNotifier;
+  final int page;
   final int totalPages;
   // Getter so we always get the current (possibly null) controller reference
   final PdfScrollController? Function() getCtrl;
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = getCtrl();
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            EkklisiaColors.bgDeep,
-            EkklisiaColors.bgDeep.withOpacity(0),
-          ],
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      child: ValueListenableBuilder<int>(
-        valueListenable: pageNotifier,
-        builder: (_, page, __) {
-          final ctrl = getCtrl();
-          return Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left,
-                    color: EkklisiaColors.gold),
-                onPressed: (ctrl != null && page > 1)
-                    ? () => ctrl.previousPage(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeInOut,
-                        )
-                    : null,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$page / $totalPages',
-                      style: const TextStyle(
-                        color: EkklisiaColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    SliderTheme(
-                      data: SliderThemeData(
-                        activeTrackColor: EkklisiaColors.gold,
-                        inactiveTrackColor: EkklisiaColors.goldBorder,
-                        thumbColor: EkklisiaColors.gold,
-                        overlayColor: EkklisiaColors.goldSubtle,
-                        trackHeight: 2,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 6,
+      color: EkklisiaColors.bgDeep,
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left, color: EkklisiaColors.gold),
+            onPressed: (ctrl != null && page > 1)
+                ? () => ctrl.previousPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    )
+                : null,
+          ),
+          Expanded(
+            child: Center(
+              child: GestureDetector(
+                onTap: ctrl == null
+                    ? null
+                    : () => showPdfGoToPageDialog(
+                          context,
+                          controller: ctrl,
+                          totalPages: totalPages,
+                          currentPage: page,
                         ),
-                      ),
-                      child: Slider(
-                        value: page.toDouble(),
-                        min: 1,
-                        max: totalPages.toDouble(),
-                        onChanged: (_) {},
-                        onChangeEnd: (v) => ctrl?.jumpToPage(v.round()),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '$page / $totalPages',
+                  style: const TextStyle(
+                    color: EkklisiaColors.gold,
+                    fontSize: 13,
+                    decoration: TextDecoration.underline,
+                    decorationColor: EkklisiaColors.goldBorder,
+                  ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right,
-                    color: EkklisiaColors.gold),
-                onPressed: (ctrl != null && page < totalPages)
-                    ? () => ctrl.nextPage(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeInOut,
-                        )
-                    : null,
-              ),
-            ],
-          );
-        },
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right, color: EkklisiaColors.gold),
+            onPressed: (ctrl != null && page < totalPages)
+                ? () => ctrl.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                    )
+                : null,
+          ),
+        ],
       ),
     );
   }

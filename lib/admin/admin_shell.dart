@@ -18,7 +18,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/router/app_router.dart';
 import '../core/theme/brightness_colors.dart';
-import '../core/theme/colors.dart';
 import '../core/widgets/app_logo.dart';
 import '../features/auth/auth_cubit.dart';
 import '../features/auth/auth_state.dart';
@@ -84,6 +83,11 @@ const _quickActions = <_NavItem>[
 // CMS items — live in drawer on mobile, sidebar section on wide
 const _cmsItems = <_NavItem>[
   _NavItem(
+    path: Routes.adminCmsHomeLayout,
+    icon: Icons.home_outlined, activeIcon: Icons.home,
+    labelAr: 'الشاشة الرئيسية', labelEl: 'Αρχική Οθόνη',
+  ),
+  _NavItem(
     path: Routes.adminCmsBibles,
     icon: Icons.book_outlined, activeIcon: Icons.book,
     labelAr: 'الكتاب المقدس', labelEl: 'Αγία Γραφή',
@@ -101,7 +105,7 @@ const _cmsItems = <_NavItem>[
   _NavItem(
     path: Routes.adminCmsReadings,
     icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book,
-    labelAr: 'القراءات', labelEl: 'Αναγνώσματα',
+    labelAr: 'كتب ليتورجية', labelEl: 'Λειτουργικά βιβλία',
   ),
   _NavItem(
     path: Routes.adminCmsHymns,
@@ -111,7 +115,7 @@ const _cmsItems = <_NavItem>[
   _NavItem(
     path: Routes.adminCmsOccasions,
     icon: Icons.celebration_outlined, activeIcon: Icons.celebration,
-    labelAr: 'مناسبات', labelEl: 'Ευκαιρίες',
+    labelAr: 'أسبوع الآلام', labelEl: 'Εβδομάδα Μ.',
   ),
   _NavItem(
     path: Routes.adminCmsPrayers,
@@ -131,7 +135,12 @@ const _cmsItems = <_NavItem>[
   _NavItem(
     path: Routes.adminCmsAgbeya,
     icon: Icons.access_time_outlined, activeIcon: Icons.access_time,
-    labelAr: 'الأجبية', labelEl: 'Αγπεγιά',
+    labelAr: 'الأجبية', labelEl: 'Προσευχές από το',
+  ),
+  _NavItem(
+    path: Routes.adminCmsAgbeyaIntro,
+    icon: Icons.play_circle_outline, activeIcon: Icons.play_circle,
+    labelAr: 'مقدمة الأجبية', labelEl: 'Εισαγωγή Προσευχών',
   ),
   _NavItem(
     path: Routes.adminCmsCategories,
@@ -146,7 +155,12 @@ const _cmsItems = <_NavItem>[
   _NavItem(
     path: Routes.adminCmsGallery,
     icon: Icons.photo_library_outlined, activeIcon: Icons.photo_library,
-    labelAr: 'معرض الصور', labelEl: 'Gallery',
+    labelAr: 'معرض الصور', labelEl: 'Γκαλερί',
+  ),
+  _NavItem(
+    path: Routes.adminCmsSaintsGallery,
+    icon: Icons.photo_camera_outlined, activeIcon: Icons.photo_camera,
+    labelAr: 'صور من حياة القديسين', labelEl: 'Φωτογραφίες Βίοι Αγίων',
   ),
   _NavItem(
     path: Routes.adminCmsElib,
@@ -154,9 +168,35 @@ const _cmsItems = <_NavItem>[
     labelAr: 'المكتبة الالكترونية', labelEl: 'Ηλ. Βιβλιοθήκη',
   ),
   _NavItem(
+    path: Routes.adminCmsArtworks,
+    icon: Icons.palette_outlined, activeIcon: Icons.palette,
+    labelAr: 'أعمال فنية', labelEl: 'Καλλιτεχνικά Έργα',
+  ),
+  _NavItem(
     path: Routes.adminCmsChurches,
     icon: Icons.church_outlined, activeIcon: Icons.church,
     labelAr: 'الكنائس', labelEl: 'Εκκλησίες',
+  ),
+  _NavItem(
+    path: Routes.adminCmsSocialLinks,
+    icon: Icons.share_outlined, activeIcon: Icons.share,
+    labelAr: 'روابط التواصل', labelEl: 'Σύνδεσμοι Social Media',
+  ),
+  _NavItem(
+    path: Routes.adminCmsTheses,
+    icon: Icons.school_outlined, activeIcon: Icons.school,
+    labelAr: 'رسائل الدكتوراه والماجستير',
+    labelEl: 'Διδακτορικά και Μεταπτυχιακές Εργασίες',
+  ),
+  _NavItem(
+    path: Routes.adminCmsChristianBooks,
+    icon: Icons.auto_stories_outlined, activeIcon: Icons.auto_stories,
+    labelAr: 'الكتب المسيحية', labelEl: 'Χριστιανικά Βιβλία',
+  ),
+  _NavItem(
+    path: Routes.adminCmsServiceBooks,
+    icon: Icons.volunteer_activism_outlined, activeIcon: Icons.volunteer_activism,
+    labelAr: 'كتب الخدمة', labelEl: 'Βιβλία Διακονίας',
   ),
 ];
 

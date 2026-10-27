@@ -11,9 +11,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/l10n/app_l10n.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/brightness_colors.dart';
+import '../../data/models/home_layout_model.dart';
+import '../../data/repositories/home_layout_repository.dart';
 import '../../features/agbeya/cubit/audio_player_cubit.dart';
 import '../../features/agbeya/cubit/audio_player_state.dart';
 import '../../features/auth/auth_cubit.dart';
@@ -22,6 +25,7 @@ import '../../features/bookmarks/bookmarks_screen.dart';
 import '../../features/books/screens/books_home.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../shared/widgets/audio_player_bar.dart';
+import 'home_layout_defaults.dart';
 import 'home_tab_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -33,6 +37,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  late final Stream<HomeLayoutModel> _layoutStream =
+      sl<HomeLayoutRepository>().watch();
 
   void _goToLibrary() => setState(() => _selectedIndex = 1);
 
@@ -73,9 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? const AudioPlayerBar()
                 : const SizedBox.shrink(),
           ),
-          _EkklisiaBottomNav(
-            selectedIndex: _selectedIndex,
-            onTap: (i) => setState(() => _selectedIndex = i),
+          // Tab labels are admin-editable (config/home_layout).
+          StreamBuilder<HomeLayoutModel>(
+            stream: _layoutStream,
+            initialData: HomeLayoutModel.empty,
+            builder: (ctx, snap) => _EkklisiaBottomNav(
+              layout: snap.data ?? HomeLayoutModel.empty,
+              selectedIndex: _selectedIndex,
+              onTap: (i) => setState(() => _selectedIndex = i),
+            ),
           ),
         ],
       ),
@@ -86,8 +98,13 @@ class _HomeScreenState extends State<HomeScreen> {
 // ── Bottom Navigation Bar ─────────────────────────────────────────────────────
 
 class _EkklisiaBottomNav extends StatelessWidget {
-  const _EkklisiaBottomNav({required this.selectedIndex, required this.onTap});
+  const _EkklisiaBottomNav({
+    required this.layout,
+    required this.selectedIndex,
+    required this.onTap,
+  });
 
+  final HomeLayoutModel layout;
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
@@ -105,28 +122,44 @@ class _EkklisiaBottomNav extends StatelessWidget {
       _NavItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home,
-        label: l.navHome,
+        label: layout.sectionLabel(
+          HomeSectionKeys.navHome,
+          isAr: l.isAr,
+          fallback: l.navHome,
+        ),
         isActive: selectedIndex == 0,
         onTap: () => onTap(0),
       ),
       _NavItem(
         icon: Icons.library_books_outlined,
         activeIcon: Icons.library_books,
-        label: l.navLibrary,
+        label: layout.sectionLabel(
+          HomeSectionKeys.navLibrary,
+          isAr: l.isAr,
+          fallback: l.navLibrary,
+        ),
         isActive: selectedIndex == 1,
         onTap: () => onTap(1),
       ),
       _NavItem(
         icon: Icons.bookmarks_outlined,
         activeIcon: Icons.bookmarks,
-        label: l.navBookmarks,
+        label: layout.sectionLabel(
+          HomeSectionKeys.navBookmarks,
+          isAr: l.isAr,
+          fallback: l.navBookmarks,
+        ),
         isActive: selectedIndex == 2,
         onTap: () => onTap(2),
       ),
       _NavItem(
         icon: Icons.settings_outlined,
         activeIcon: Icons.settings,
-        label: l.navSettings,
+        label: layout.sectionLabel(
+          HomeSectionKeys.navSettings,
+          isAr: l.isAr,
+          fallback: l.navSettings,
+        ),
         isActive: selectedIndex == 3,
         onTap: () => onTap(3),
       ),

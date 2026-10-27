@@ -3,7 +3,6 @@
 // Reusable data table component for CMS listing & CRUD operations
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
-import '../../core/theme/colors.dart';
 import '../../core/theme/theme.dart';
 import '../utils/admin_colors.dart';
 
@@ -261,7 +260,7 @@ class _AdminDataTableState<T> extends State<AdminDataTable<T>> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: EkklisiaColors.bgPrimary,
+        backgroundColor: ac.bgPrimary,
         title: Text(
           'Delete Item?',
           style: TextStyle(
